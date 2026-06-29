@@ -1,34 +1,103 @@
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "My Invitations — Mazoom",
-  description: "Manage your wedding invitations and track RSVPs.",
-};
+import { useEffect, useState, useCallback } from "react";
+import api from "@/lib/api";
+import type { InvitationData } from "@/types/invitation";
+import {
+  InvitationEditor,
+  RsvpTracker,
+  LiveLinkBanner,
+} from "./_components";
+
+type PageStatus = "loading" | "no-invitation" | "has-invitation" | "error";
 
 export default function ClientDashboardPage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-rose-50 via-white to-amber-50 p-6">
-      <div className="w-full max-w-2xl rounded-2xl border border-rose-100 bg-white/90 p-10 text-center shadow-xl backdrop-blur-md">
-        <h1 className="mb-2 text-3xl font-bold tracking-tight text-gray-900">
-          💌 My Invitations
-        </h1>
-        <p className="text-gray-500">
-          Create, customize, and share your wedding invitations.
-        </p>
+  const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [status, setStatus] = useState<PageStatus>("loading");
 
-        <div className="mt-8 grid grid-cols-2 gap-4">
-          {["My Invitations", "Guest List", "RSVP Tracking", "Settings"].map(
-            (item) => (
-              <div
-                key={item}
-                className="rounded-xl border border-rose-200 bg-rose-50/50 px-6 py-8 transition-colors hover:border-rose-400 hover:bg-rose-50"
-              >
-                <p className="text-lg font-medium text-gray-700">{item}</p>
-              </div>
-            ),
-          )}
-        </div>
+  // ── Fetch existing invitation on mount ───────────────────────────────
+  // Since there's no "list my invitations" endpoint, we store the
+  // invitation ID locally after creation and re-fetch it.
+  const fetchInvitation = useCallback(async () => {
+    const invitationId = localStorage.getItem("my_invitation_id");
+    const invitationSlug = localStorage.getItem("my_invitation_slug");
+
+    if (!invitationId && !invitationSlug) {
+      setStatus("no-invitation");
+      return;
+    }
+
+    try {
+      // Try fetching by slug first (public endpoint — more reliable)
+      if (invitationSlug) {
+        const res = await api.get<InvitationData>(
+          `/invitations/slug/${invitationSlug}`,
+        );
+        setInvitation(res.data);
+        setStatus("has-invitation");
+        return;
+      }
+    } catch {
+      // Slug might have changed — clear and let user create again
+      localStorage.removeItem("my_invitation_slug");
+      localStorage.removeItem("my_invitation_id");
+      setStatus("no-invitation");
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvitation();
+  }, [fetchInvitation]);
+
+  // ── Handle successful save ───────────────────────────────────────────
+  const handleSaved = (saved: InvitationData) => {
+    setInvitation(saved);
+    setStatus("has-invitation");
+    localStorage.setItem("my_invitation_id", saved.id);
+    localStorage.setItem("my_invitation_slug", saved.slug);
+  };
+
+  // ── Loading state ────────────────────────────────────────────────────
+  if (status === "loading") {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="h-8 w-48 animate-pulse rounded-lg bg-gray-800" />
+        <div className="h-96 animate-pulse rounded-xl bg-gray-800/50" />
       </div>
-    </main>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-8">
+      {/* ── Page header ────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-2xl font-bold text-white sm:text-3xl">
+          My Invitation
+        </h1>
+        <p className="mt-1 text-sm text-gray-400">
+          {status === "has-invitation"
+            ? "Edit your invitation details and track RSVPs."
+            : "Create your digital wedding invitation."}
+        </p>
+      </div>
+
+      {/* ── Live link banner (if slug exists) ──────────────────── */}
+      {invitation?.slug && <LiveLinkBanner slug={invitation.slug} />}
+
+      {/* ── Editor ─────────────────────────────────────────────── */}
+      <section className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 sm:p-8">
+        <InvitationEditor
+          invitation={invitation}
+          onSaved={handleSaved}
+        />
+      </section>
+
+      {/* ── RSVP Tracker (only when invitation exists) ─────────── */}
+      {invitation && (
+        <section className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 sm:p-8">
+          <RsvpTracker invitationId={invitation.id} />
+        </section>
+      )}
+    </div>
   );
 }

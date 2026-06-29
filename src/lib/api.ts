@@ -34,8 +34,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("access_token");
 
-      // Avoid redirect loops if the user is already on /login
-      if (!window.location.pathname.startsWith("/login")) {
+      // Avoid redirect loops if the user is already on an auth page
+      const path = window.location.pathname;
+      if (
+        !path.startsWith("/login") &&
+        !path.startsWith("/auth")
+      ) {
         window.location.href = "/login";
       }
     }
