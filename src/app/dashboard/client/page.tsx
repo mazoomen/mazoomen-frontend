@@ -141,7 +141,7 @@ export default function ClientDashboardPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10">
+    <div className="max-w-[1700px] mx-auto space-y-10">
       {/* ── Page Header ────────────────────────────────────────────── */}
       <div>
         <h1 className="text-3xl font-serif font-medium text-neutral-800" dir={lang === "ar" ? "rtl" : "ltr"}>{t("My Purchases")}</h1>

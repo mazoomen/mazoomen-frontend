@@ -149,7 +149,7 @@ export default function ProfilePage() {
   return (
     <PageLayout>
       {/* ── PROFILE SECTION WORKSPACE ───────────────────────────────── */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-6 sm:px-10 py-12">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 py-12">
         {/* Header */}
         <div className="mb-10 text-center sm:text-left">
           <h1 className="text-3xl sm:text-4xl font-serif font-medium text-[#2D3142] tracking-tight">

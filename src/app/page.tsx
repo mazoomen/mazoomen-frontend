@@ -237,7 +237,7 @@ export default function Home() {
         {/* ── HERO BANNER ─────────────────────────────────────────────── */}
         <section className="px-6 sm:px-10 pt-8 pb-4">
           <div 
-            className="max-w-7xl mx-auto rounded-[32px] border border-[#1E2E4A] p-12 sm:p-16 relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[460px] bg-cover bg-center shadow-lg"
+            className="max-w-[1700px] mx-auto rounded-[32px] border border-[#1E2E4A] p-12 sm:p-16 relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[460px] bg-cover bg-center shadow-lg"
             style={{ backgroundImage: "url('/images/hero-couple.jpg')" }}
           >
             {/* Dark Navy overlay to make text pop */}
@@ -396,7 +396,7 @@ export default function Home() {
         </section>
 
         {/* ── TEMPLATES GRID SECTION ──────────────────────────────────── */}
-        <section id="templates" className="px-6 sm:px-10 py-6 max-w-7xl mx-auto w-full flex-1">
+        <section id="templates" className="px-6 sm:px-10 py-6 max-w-[1700px] mx-auto w-full flex-1">
           <div className="w-full flex flex-col gap-6">
 
             {/* Tab Selector & Header */}
@@ -514,7 +514,7 @@ export default function Home() {
 
         {/* ── HOW IT WORKS SECTION ───────────────────────────────────── */}
         <section id="features" className="px-6 sm:px-10 py-16 bg-white border-t border-b border-[#E6E2DA]">
-          <div className="max-w-5xl mx-auto flex flex-col gap-10">
+          <div className="max-w-[1700px] mx-auto flex flex-col gap-10">
             <div className="text-center flex flex-col gap-1.5">
               <h2 className="text-2xl font-serif font-medium text-neutral-800">{t("How It Works")}</h2>
             </div>
@@ -578,7 +578,7 @@ export default function Home() {
 
         {/* ── TESTIMONIALS SECTION ───────────────────────────────────── */}
         <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
-          <div className="max-w-7xl mx-auto flex flex-col gap-10 relative">
+          <div className="max-w-[1700px] mx-auto flex flex-col gap-10 relative">
             <div className="text-center flex flex-col gap-1">
               <h2 className="text-[26px] font-serif font-medium text-neutral-800">{t("Testimonials")}</h2>
             </div>
@@ -655,7 +655,7 @@ export default function Home() {
 
         {/* ── FOOTER ──────────────────────────────────────────────────── */}
         <footer className="bg-[#FAF8F5] border-t border-[#E6E2DA] px-6 sm:px-10 py-16 mt-auto">
-          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-xs mb-12">
+          <div className="max-w-[1700px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-xs mb-12">
             <div className="flex flex-col gap-4">
               <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">Explore</h4>
               <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
@@ -715,7 +715,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium">
+          <div className="max-w-[1700px] mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium">
             <p>&copy; Copyright - 2023 MarketPlace. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-black transition-colors">Privacy Policy</a>
