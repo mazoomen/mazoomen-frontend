@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
-import type { RsvpListResponse, RsvpResponse } from "@/types/invitation";
+import type { RsvpListResponse } from "@/types/invitation";
 
 interface RsvpTrackerProps {
   invitationId: string;

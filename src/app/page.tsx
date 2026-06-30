@@ -144,7 +144,6 @@ export default function Home() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -180,11 +179,6 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<"all" | "ready">("all");
   const [showEventTypesOverlay, setShowEventTypesOverlay] = useState(false);
-  const [filterMyActivity, setFilterMyActivity] = useState(false);
-  const [filterTemplates, setFilterTemplates] = useState(true);
-  const [filterFlyers, setFilterFlyers] = useState(false);
-  const [filterBirthdays, setFilterBirthdays] = useState(false);
-  const [filterOthers, setFilterOthers] = useState(false);
 
   useEffect(() => {
     // Check if token exists
@@ -219,12 +213,10 @@ export default function Home() {
         } else {
           setTemplates(MOCK_TEMPLATES);
         }
-        setError(null);
       } catch (err: any) {
         console.error("Error fetching templates:", err);
         // Fallback gracefully to mocks if API server is not up, keeping home page intact
         setTemplates(MOCK_TEMPLATES);
-        setError(null);
       } finally {
         setLoading(false);
       }
@@ -337,13 +329,7 @@ export default function Home() {
     // 'ready' corresponds to non-premium (standard) templates, 'all' is all
     const matchesTab = selectedTab === "ready" ? !template.isPremium : true;
 
-    // Checkbox filters (Right sidebar group)
-    let matchesCheckboxes = true;
-    if (filterBirthdays && template.category !== "Birthdays") {
-      matchesCheckboxes = false;
-    }
-
-    return matchesSearch && matchesCategory && matchesTab && matchesCheckboxes;
+    return matchesSearch && matchesCategory && matchesTab;
   });
 
   return (

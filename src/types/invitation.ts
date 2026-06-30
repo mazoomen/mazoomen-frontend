@@ -36,10 +36,6 @@ export interface InvitationData {
   template: InvitationTemplate;
 }
 
-/** Full invitation response including userId (returned on create/update) */
-export interface InvitationFull extends InvitationData {
-  userId: string;
-}
 
 // ── RSVP ───────────────────────────────────────────────────────────────
 
