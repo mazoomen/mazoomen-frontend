@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { AuthUser } from "@/types/invitation";
+import { useLanguage } from "@/components/LanguageContext";
 
 interface SidebarProps {
   isSidebarExpanded: boolean;
@@ -23,6 +24,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { lang, setLang, t } = useLanguage();
 
   const handleNav = (path: string, requiresAuth = false) => {
     if (requiresAuth && !isLoggedIn) {
@@ -109,11 +111,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              Marketplace
+              {t("Marketplace")}
             </span>
             {!isSidebarExpanded && (
               <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                Marketplace
+                {t("Marketplace")}
               </span>
             )}
           </button>
@@ -146,11 +148,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              My Profile
+              {t("My Profile")}
             </span>
             {!isSidebarExpanded && (
               <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                My Profile
+                {t("My Profile")}
               </span>
             )}
           </button>
@@ -180,11 +182,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              Tickets
+              {t("Tickets")}
             </span>
             {!isSidebarExpanded && (
               <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                Tickets
+                {t("Tickets")}
               </span>
             )}
           </button>
@@ -223,11 +225,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              My Purchases
+              {t("My Purchases")}
             </span>
             {!isSidebarExpanded && (
               <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                My Purchases
+                {t("My Purchases")}
               </span>
             )}
           </button>
@@ -236,6 +238,30 @@ export default function Sidebar({
 
       {/* Bottom Section */}
       <div className="flex flex-col gap-4 w-full">
+        {/* Language Switcher */}
+        <button
+          onClick={() => setLang(lang === "ar" ? "en" : "ar")}
+          className={`flex items-center transition-all duration-300 group cursor-pointer ${
+            isSidebarExpanded
+              ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
+              : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
+          }`}
+        >
+          <span className="w-5 h-5 flex items-center justify-center shrink-0 text-sm">🌐</span>
+          <span
+            className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
+              isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
+            }`}
+          >
+            {lang === "ar" ? "English" : "العربية"}
+          </span>
+          {!isSidebarExpanded && (
+            <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
+              {lang === "ar" ? "English" : "العربية"}
+            </span>
+          )}
+        </button>
+
         <button
           className={`flex items-center transition-all duration-300 group cursor-pointer ${
             isSidebarExpanded
@@ -262,11 +288,11 @@ export default function Sidebar({
               isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
             }`}
           >
-            Settings
+            {t("Settings")}
           </span>
           {!isSidebarExpanded && (
             <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-              Settings
+              {t("Settings")}
             </span>
           )}
         </button>
@@ -298,11 +324,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              Log Out
+              {t("Log Out")}
             </span>
             {!isSidebarExpanded && (
               <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                Log Out
+                {t("Log Out")}
               </span>
             )}
           </button>
