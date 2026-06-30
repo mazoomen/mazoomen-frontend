@@ -37,6 +37,10 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Sidebar navigation states
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     // 1. Check Auth token
     if (typeof window !== "undefined") {
@@ -168,110 +172,243 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen bg-[#FAF9F6] text-[#2D3142] font-sans antialiased">
       {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
-      <aside className="w-[72px] bg-white border-r border-[#E6E2DA] flex flex-col items-center py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen hidden sm:flex">
-        <div className="flex flex-col items-center gap-8 w-full">
-          {/* Logo / Brand Icon */}
-          <button onClick={() => router.push("/")} className="w-10 h-10 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm cursor-pointer hover:border-black transition-colors">
-            <span className="font-serif font-semibold text-lg text-black">I</span>
-          </button>
+      <aside className={`bg-[#0B1528] border-r border-[#1E2E4A] flex flex-col py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen hidden sm:flex transition-all duration-300 ${isSidebarExpanded ? "w-56 px-4" : "w-[72px] px-0"}`}>
+        <div className="flex flex-col gap-8 w-full items-stretch">
+          {/* Logo / Brand Icon & Toggle Button */}
+          <div className={`flex items-center gap-3 w-full ${isSidebarExpanded ? "px-2 justify-between" : "flex-col gap-4 items-center"}`}>
+            <button onClick={() => router.push("/")} className="w-10 h-10 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 cursor-pointer hover:border-[#E5C38B] transition-colors overflow-hidden">
+              <img src="/favicon.ico" alt="Logo" className="w-6 h-6 object-contain" />
+            </button>
+            
+            {/* Toggle Button */}
+            <button
+              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+              className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm hover:bg-[#1A2D4C] transition-all cursor-pointer"
+              title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+            >
+              <svg className="w-3.5 h-3.5 text-neutral-300 hover:text-[#E5C38B]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                {isSidebarExpanded ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                )}
+              </svg>
+            </button>
+          </div>
 
           {/* Sidebar Nav Icons */}
-          <nav className="flex flex-col items-center gap-6 w-full">
+          <nav className="flex flex-col gap-4 w-full">
             <button
               onClick={() => router.push("/")}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[#7F8487] hover:text-black hover:bg-neutral-100 transition-all group relative cursor-pointer"
+              className={`flex items-center transition-all duration-300 group cursor-pointer ${
+                isSidebarExpanded 
+                  ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]" 
+                  : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
+              }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
               </svg>
-              <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">Marketplace</span>
+              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
+                Marketplace
+              </span>
+              {!isSidebarExpanded && (
+                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">Marketplace</span>
+              )}
             </button>
 
             <button
               onClick={() => {}}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-black bg-[#F5F2EB] transition-all group relative"
+              className={`flex items-center transition-all duration-300 group cursor-pointer ${
+                isSidebarExpanded 
+                  ? "w-full h-11 px-4 rounded-xl gap-3 text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]" 
+                  : "w-10 h-10 mx-auto justify-center rounded-full text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]"
+              }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">My Profile</span>
+              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
+                My Profile
+              </span>
+              {!isSidebarExpanded && (
+                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">My Profile</span>
+              )}
             </button>
 
-            <button className="w-10 h-10 rounded-full flex items-center justify-center text-[#7F8487] hover:text-black hover:bg-neutral-100 transition-all group relative cursor-pointer">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <button className={`flex items-center transition-all duration-300 group cursor-pointer ${
+              isSidebarExpanded 
+                ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]" 
+                : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
+            }`}>
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
               </svg>
-              <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">Tickets</span>
+              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
+                Tickets
+              </span>
+              {!isSidebarExpanded && (
+                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">Tickets</span>
+              )}
             </button>
 
             <button
               onClick={() => {
                 router.push(user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client");
               }}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[#7F8487] hover:text-black hover:bg-neutral-100 transition-all group relative cursor-pointer"
+              className={`flex items-center transition-all duration-300 group cursor-pointer ${
+                isSidebarExpanded 
+                  ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]" 
+                  : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
+              }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">My Purchases</span>
+              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
+                My Purchases
+              </span>
+              {!isSidebarExpanded && (
+                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">My Purchases</span>
+              )}
             </button>
           </nav>
         </div>
 
         {/* Bottom Settings Icon */}
-        <button className="w-10 h-10 rounded-full flex items-center justify-center text-[#7F8487] hover:text-black hover:bg-neutral-100 transition-all group relative cursor-pointer">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <button className={`flex items-center transition-all duration-300 group cursor-pointer ${
+          isSidebarExpanded 
+            ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]" 
+            : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
+        }`}>
+          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">Settings</span>
+          <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
+            Settings
+          </span>
+          {!isSidebarExpanded && (
+            <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">Settings</span>
+          )}
         </button>
       </aside>
 
       {/* ── MAIN CONTENT CONTAINER ────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* ── TOP HEADER ──────────────────────────────────────────────── */}
-        <header className="h-20 bg-white border-b border-[#E6E2DA] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => router.push("/")}>
-            <div className="w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm shrink-0">
-              <span className="font-serif font-semibold text-sm text-black">I</span>
+        <header className="h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => router.push("/")}>
+              <div className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden">
+                <img src="/favicon.ico" alt="Logo" className="w-5 h-5 object-contain" />
+              </div>
+              <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B] font-sans">Mazoom</span>
             </div>
-            <span className="text-lg font-bold tracking-tight text-[#2D3142] font-sans">MarketPlace</span>
+            
+            {/* Mobile Navigation Dropdown Toggle Chevron */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="sm:hidden w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] hover:bg-[#1A2D4C] shadow-sm transition-all focus:outline-none ml-1 cursor-pointer"
+              title="Toggle Menu"
+            >
+              <svg 
+                className={`w-4 h-4 text-neutral-300 transition-transform duration-300 ${isMobileMenuOpen ? "rotate-180" : ""}`}
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
 
+          {/* Mobile Navigation Dropdown Menu */}
+          {isMobileMenuOpen && (
+            <div className="absolute top-20 left-6 right-6 bg-[#0F1C36] border border-[#1E2E4A] rounded-2xl shadow-xl p-4 flex flex-col gap-2 z-50 sm:hidden animate-fadeIn text-neutral-200">
+              <button 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  router.push("/");
+                }}
+                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+                </svg>
+                <span className="text-xs font-semibold">Marketplace</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A] text-left cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-xs font-semibold">My Profile</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                <span className="text-xs font-semibold">Tickets</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  router.push(user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client");
+                }}
+                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                <span className="text-xs font-semibold">My Purchases</span>
+              </button>
+
+              <hr className="border-[#1E2E4A] my-1" />
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
+              >
+                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-xs font-semibold">Settings</span>
+              </button>
+            </div>
+          )}
+
           <nav className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wide uppercase text-neutral-400">
-            <button onClick={() => router.push("/#templates")} className="hover:text-[#B89C72] transition-colors cursor-pointer">Templates</button>
-            <button onClick={() => router.push("/#features")} className="hover:text-[#B89C72] transition-colors cursor-pointer">Features</button>
-            <button onClick={() => router.push("/#pricing")} className="hover:text-[#B89C72] transition-colors cursor-pointer">Pricing</button>
+            <button onClick={() => router.push("/#templates")} className="text-white hover:text-[#E5C38B] transition-colors cursor-pointer">Templates</button>
+            <button onClick={() => router.push("/#features")} className="hover:text-[#E5C38B] transition-colors cursor-pointer">Features</button>
+            <button onClick={() => router.push("/#pricing")} className="hover:text-[#E5C38B] transition-colors cursor-pointer">Pricing</button>
           </nav>
 
-          <div className="flex items-center gap-4">
-            {/* Purchases Icon */}
-            <button
-              onClick={() => {
-                router.push(user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client");
-              }}
-              className="w-10 h-10 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm hover:bg-neutral-50 transition-colors relative group cursor-pointer"
-              title="My Purchases"
-            >
-              <svg className="w-5 h-5 text-[#2D3142]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              {isLoggedIn && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#B89C72] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">
-                  ✓
-                </span>
-              )}
-            </button>
-
+          <div className="flex-none flex items-center gap-4">
             {isLoggedIn && (
               <div className="flex items-center gap-3">
-                <span className="hidden md:inline text-xs text-[#7F8487] font-semibold bg-[#FAF9F6] border border-[#E6E2DA] rounded-full px-3 py-1">
-                  🔑 {user?.role}: {user?.name}
+                <span className="hidden md:inline text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] rounded-full px-3 py-1">
+                  {user?.name}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="px-3 h-9 text-xs font-semibold text-[#7F8487] hover:text-red-500 rounded-lg transition-all cursor-pointer"
+                  className="px-3 h-9 text-xs font-semibold text-neutral-300 hover:text-[#E5C38B] rounded-lg transition-all cursor-pointer"
                 >
                   Log Out
                 </button>

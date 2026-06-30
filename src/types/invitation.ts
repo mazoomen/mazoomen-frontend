@@ -81,6 +81,7 @@ export interface Template {
   editableFields: any;
   demoLink?: string | null;
   isPremium: boolean;
+  category?: string;
   createdAt: string;
 }
 
