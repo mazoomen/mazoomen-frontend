@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { Template } from "@/types/invitation";
+import PageLayout from "@/components/PageLayout";
+import AuthModal from "@/components/AuthModal";
 
 // ── MOCK TEMPLATES CATALOG (Matches the user design exactly) ─────────
 const MOCK_TEMPLATES: Template[] = [
@@ -147,33 +149,13 @@ export default function Home() {
 
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(null);
 
   // Popup Modal Auth State
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [authError, setAuthError] = useState("");
-  const [authSubmitting, setAuthSubmitting] = useState(false);
-
-  // Login inputs
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-
-  // Register inputs
-  const [regFirstName, setRegFirstName] = useState("");
-  const [regLastName, setRegLastName] = useState("");
-  const [regEmail, setRegEmail] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regPassword, setRegPassword] = useState("");
-  const [showRegPassword, setShowRegPassword] = useState(false);
 
   // Details Modal Alert State
   const [modalMessage, setModalMessage] = useState<string | null>(null);
-
-  // Sidebar navigation states
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Redesign filter and category states
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -185,17 +167,9 @@ export default function Home() {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("access_token");
       if (token) {
-        setIsLoggedIn(true);
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          setUser({
-            name: payload.email.split("@")[0].toUpperCase(),
-            role: payload.role,
-            email: payload.email,
-          });
-        } catch {
-          // Ignore decode errors
-        }
+        setTimeout(() => {
+          setIsLoggedIn(true);
+        }, 0);
       }
     }
 
@@ -205,7 +179,7 @@ export default function Home() {
         const res = await api.get("/templates");
         if (res.data && res.data.length > 0) {
           // Merge API templates with mock templates to ensure full grid matches image
-          const apiTemplates = res.data.map((t: any) => ({
+          const apiTemplates = res.data.map((t: Template) => ({
             ...t,
             price: parseFloat(t.price.toString()),
           }));
@@ -213,7 +187,7 @@ export default function Home() {
         } else {
           setTemplates(MOCK_TEMPLATES);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error fetching templates:", err);
         // Fallback gracefully to mocks if API server is not up, keeping home page intact
         setTemplates(MOCK_TEMPLATES);
@@ -225,95 +199,10 @@ export default function Home() {
     fetchTemplates();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUser(null);
-    window.location.reload();
-  };
-
   const handleAction = (actionName: string, templateTitle: string) => {
     setModalMessage(
       `You selected "${actionName}" for "${templateTitle}". This page will connect to customize/purchase pages shortly.`
     );
-  };
-
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError("");
-
-    if (!loginEmail.trim() || !loginPassword.trim()) {
-      setAuthError("Please fill in all fields.");
-      return;
-    }
-
-    setAuthSubmitting(true);
-    try {
-      const res = await api.post("/auth/login", {
-        email: loginEmail.trim(),
-        password: loginPassword,
-      });
-
-      const { accessToken, user: loggedUser } = res.data;
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(loggedUser));
-
-      // Redirect based on role
-      window.location.href = loggedUser.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        setAuthError("Invalid email or password. Please try again.");
-      } else if (err.response?.data?.message) {
-        setAuthError(err.response.data.message);
-      } else {
-        setAuthError("Something went wrong. Please try again later.");
-      }
-    } finally {
-      setAuthSubmitting(false);
-    }
-  };
-
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError("");
-
-    if (!regFirstName.trim() || !regLastName.trim() || !regEmail.trim() || !regPhone.trim() || !regPassword) {
-      setAuthError("All fields are required.");
-      return;
-    }
-
-    if (regPassword.length < 8) {
-      setAuthError("Password must be at least 8 characters.");
-      return;
-    }
-
-    setAuthSubmitting(true);
-    try {
-      const res = await api.post("/auth/register", {
-        firstName: regFirstName.trim(),
-        lastName: regLastName.trim(),
-        email: regEmail.trim(),
-        password: regPassword,
-        phoneNumber: regPhone.trim(),
-      });
-
-      const { accessToken, user: loggedUser } = res.data;
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(loggedUser));
-
-      // Redirect to client dashboard (registered users default to CLIENT)
-      window.location.href = "/dashboard/client";
-    } catch (err: any) {
-      if (err.response?.data?.message) {
-        const msg = err.response.data.message;
-        setAuthError(Array.isArray(msg) ? msg[0] : msg);
-      } else {
-        setAuthError("Registration failed. Please try again.");
-      }
-    } finally {
-      setAuthSubmitting(false);
-    }
   };
 
   const filteredTemplates = templates.filter((template) => {
@@ -333,291 +222,7 @@ export default function Home() {
   });
 
   return (
-    <div className="flex min-h-screen bg-[#FAF9F6] text-[#2D3142] font-sans antialiased">
-      {/* ── LEFT SIDEBAR ────────────────────────────────────────────────── */}
-      <aside className={`bg-[#0B1528] border-r border-[#1E2E4A] flex flex-col py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen hidden sm:flex transition-all duration-300 ${isSidebarExpanded ? "w-56 px-4" : "w-[72px] px-0"}`}>
-        <div className="flex flex-col gap-8 w-full items-stretch">
-          {/* Logo / Brand Icon & Toggle Button */}
-          <div className={`flex items-center gap-3 w-full ${isSidebarExpanded ? "px-2 justify-between" : "flex-col gap-4 items-center"}`}>
-            <div className="w-10 h-10 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden">
-              <img src="/favicon.ico" alt="Logo" className="w-6 h-6 object-contain" />
-            </div>
-
-            {/* Toggle Button */}
-            <button
-              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-              className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm hover:bg-[#1A2D4C] transition-all cursor-pointer"
-              title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
-            >
-              <svg className="w-3.5 h-3.5 text-neutral-300 hover:text-[#E5C38B]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                {isSidebarExpanded ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                )}
-              </svg>
-            </button>
-          </div>
-
-          {/* Sidebar Nav Icons */}
-          <nav className="flex flex-col gap-4 w-full">
-            <button
-              className={`flex items-center transition-all duration-300 group ${isSidebarExpanded
-                  ? "w-full h-11 px-4 rounded-xl gap-3 text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]"
-                  : "w-10 h-10 mx-auto justify-center rounded-full text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]"
-                }`}
-            >
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-              </svg>
-              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
-                Marketplace
-              </span>
-              {!isSidebarExpanded && (
-                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">Marketplace</span>
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                if (isLoggedIn) {
-                  window.location.href = "/profile";
-                } else {
-                  setAuthMode("login");
-                  setIsAuthOpen(true);
-                }
-              }}
-              className={`flex items-center transition-all duration-300 group cursor-pointer ${isSidebarExpanded
-                  ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-                  : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-                }`}
-            >
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
-                My Profile
-              </span>
-              {!isSidebarExpanded && (
-                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">My Profile</span>
-              )}
-            </button>
-
-            <button className={`flex items-center transition-all duration-300 group cursor-pointer ${isSidebarExpanded
-                ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-                : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-              }`}>
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-              </svg>
-              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
-                Tickets
-              </span>
-              {!isSidebarExpanded && (
-                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">Tickets</span>
-              )}
-            </button>
-
-            <button
-              onClick={() => {
-                if (isLoggedIn) {
-                  window.location.href = user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
-                } else {
-                  setAuthMode("login");
-                  setIsAuthOpen(true);
-                }
-              }}
-              className={`flex items-center transition-all duration-300 group cursor-pointer ${isSidebarExpanded
-                  ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-                  : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-                }`}
-            >
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-              <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
-                My Purchases
-              </span>
-              {!isSidebarExpanded && (
-                <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">My Purchases</span>
-              )}
-            </button>
-          </nav>
-        </div>
-
-        {/* Bottom Settings Icon */}
-        <button className={`flex items-center transition-all duration-300 group cursor-pointer ${isSidebarExpanded
-            ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-            : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-          }`}>
-          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"}`}>
-            Settings
-          </span>
-          {!isSidebarExpanded && (
-            <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">Settings</span>
-          )}
-        </button>
-      </aside>
-
-      {/* ── MAIN CONTENT CONTAINER ────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* ── TOP HEADER ──────────────────────────────────────────────── */}
-        <header className="h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => { setSelectedCategory(null); setSearchQuery(""); setSelectedTab("all"); }}>
-              <div className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden">
-                <img src="/favicon.ico" alt="Logo" className="w-5 h-5 object-contain" />
-              </div>
-              <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B] font-sans">Mazoom</span>
-            </div>
-
-            {/* Mobile Navigation Dropdown Toggle Chevron */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="sm:hidden w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] hover:bg-[#1A2D4C] shadow-sm transition-all focus:outline-none ml-1 cursor-pointer"
-              title="Toggle Menu"
-            >
-              <svg
-                className={`w-4 h-4 text-neutral-300 transition-transform duration-300 ${isMobileMenuOpen ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Mobile Navigation Dropdown Menu */}
-          {isMobileMenuOpen && (
-            <div className="absolute top-20 left-6 right-6 bg-[#0F1C36] border border-[#1E2E4A] rounded-2xl shadow-xl p-4 flex flex-col gap-2 z-50 sm:hidden animate-fadeIn text-neutral-200">
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A] text-left cursor-pointer"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-                </svg>
-                <span className="text-xs font-semibold">Marketplace</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (isLoggedIn) {
-                    window.location.href = "/profile";
-                  } else {
-                    setAuthMode("login");
-                    setIsAuthOpen(true);
-                  }
-                }}
-                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-xs font-semibold">My Profile</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                </svg>
-                <span className="text-xs font-semibold">Tickets</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  if (isLoggedIn) {
-                    window.location.href = user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
-                  } else {
-                    setAuthMode("login");
-                    setIsAuthOpen(true);
-                  }
-                }}
-                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span className="text-xs font-semibold">My Purchases</span>
-              </button>
-
-              <hr className="border-[#1E2E4A] my-1" />
-
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-3 w-full h-11 px-4 rounded-xl text-neutral-300 hover:text-white hover:bg-[#1A2D4C] text-left cursor-pointer"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="text-xs font-semibold">Settings</span>
-              </button>
-            </div>
-          )}
-
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wide uppercase text-neutral-400">
-            <a href="#templates" className="text-white hover:text-[#E5C38B] transition-colors">Templates</a>
-            <a href="#features" className="hover:text-[#E5C38B] transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-[#E5C38B] transition-colors">Pricing</a>
-          </nav>
-
-          <div className="flex items-center gap-4">
-            {isLoggedIn ? (
-              <div className="flex items-center gap-3">
-                <span className="hidden md:inline text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] rounded-full px-3 py-1">
-                  {user?.name}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 h-9 text-xs font-semibold text-neutral-300 hover:text-[#E5C38B] rounded-lg transition-all cursor-pointer"
-                >
-                  Log Out
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    setAuthMode("login");
-                    setAuthError("");
-                    setIsAuthOpen(true);
-                  }}
-                  className="text-xs font-semibold tracking-wide uppercase text-neutral-300 hover:text-white transition-all cursor-pointer"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={() => {
-                    setAuthMode("register");
-                    setAuthError("");
-                    setIsAuthOpen(true);
-                  }}
-                  className="px-5 h-9 text-xs font-semibold text-black bg-[#E5C38B] hover:bg-[#D4B27A] rounded-lg transition-all shadow-sm flex items-center justify-center font-sans cursor-pointer"
-                >
-                  Register
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
+    <PageLayout>
 
         {/* ── HERO BANNER ─────────────────────────────────────────────── */}
         <section className="px-6 sm:px-10 pt-8 pb-4">
@@ -656,7 +261,6 @@ export default function Home() {
                 <button
                   onClick={() => {
                     setAuthMode("register");
-                    setAuthError("");
                     setIsAuthOpen(true);
                   }}
                   className="px-6 py-2.5 bg-[#E5C38B] hover:bg-[#D4B27A] text-black rounded-full text-[11px] font-semibold transition-all cursor-pointer shadow-md"
@@ -975,7 +579,7 @@ export default function Home() {
                 {/* Review 1 */}
                 <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
                   <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                    "The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free."
+                    &ldquo;The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free.&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
@@ -991,7 +595,7 @@ export default function Home() {
                 {/* Review 2 */}
                 <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
                   <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                    "So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!"
+                    &ldquo;So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
@@ -1007,7 +611,7 @@ export default function Home() {
                 {/* Review 3 */}
                 <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
                   <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                    "The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!"
+                    &ldquo;The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!&rdquo;
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
@@ -1109,350 +713,13 @@ export default function Home() {
             </div>
           </div>
         </footer>
-      </div>
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        initialMode={authMode}
+      />
 
-      {/* ── AUTH MODAL (Login / Register Popup) ────────────────────── */}
-      {isAuthOpen && (
-        <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-sm w-full p-8 shadow-2xl relative flex flex-col items-center">
-
-            {/* Close Button */}
-            <button
-              onClick={() => {
-                setIsAuthOpen(false);
-                setAuthError("");
-              }}
-              className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors cursor-pointer"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Left Decorative Floating Card (Cake) */}
-            <div className="hidden sm:flex absolute left-[-28px] top-[30%] -rotate-12 w-14 h-14 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 items-center justify-center z-10">
-              <span className="text-2xl select-none">🎂</span>
-            </div>
-
-            {/* Right Decorative Floating Card (Balloons & People) */}
-            <div className="hidden sm:flex absolute right-[-24px] bottom-[15%] rotate-6 w-16 h-20 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 flex-col justify-between z-10">
-              <div className="w-full h-[65%] rounded bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl">
-                🎈
-              </div>
-              <div className="flex items-center justify-center select-none text-sm leading-none -mt-1 font-serif text-black">
-                🧑‍🤝‍🧑
-              </div>
-            </div>
-
-            {/* Tabs (Capsule style) */}
-            <div className="bg-neutral-100 border border-neutral-200/60 rounded-xl p-1 flex w-full mb-6 mt-2">
-              <button
-                onClick={() => {
-                  setAuthMode("login");
-                  setAuthError("");
-                }}
-                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${authMode === "login"
-                    ? "bg-[#F5EDE1] text-black shadow-sm"
-                    : "text-neutral-500 hover:text-black"
-                  }`}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => {
-                  setAuthMode("register");
-                  setAuthError("");
-                }}
-                className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${authMode === "register"
-                    ? "bg-[#F5EDE1] text-black shadow-sm"
-                    : "text-neutral-500 hover:text-black"
-                  }`}
-              >
-                Register
-              </button>
-            </div>
-
-            {/* Error Banner */}
-            {authError && (
-              <div className="w-full mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600 flex items-start gap-2">
-                <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
-                </svg>
-                <span className="leading-tight">{authError}</span>
-              </div>
-            )}
-
-            {/* Mode: Login */}
-            {authMode === "login" ? (
-              <form onSubmit={handleLoginSubmit} className="w-full flex flex-col">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">Welcome Back!</h2>
-                  <p className="text-[11px] text-neutral-400">Access your account and continue designing</p>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {/* Email Input */}
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    disabled={authSubmitting}
-                    className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                  />
-
-                  {/* Forgot Password Link Above Password */}
-                  <div className="flex justify-end -mb-1 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleAction("Forgot Password", "Login Modal")}
-                      className="text-[10px] text-neutral-500 hover:text-black transition-colors"
-                    >
-                      Forgot Password?
-                    </button>
-                  </div>
-
-                  {/* Password Input */}
-                  <div className="relative w-full">
-                    <input
-                      type={showLoginPassword ? "text" : "password"}
-                      placeholder="Password"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      disabled={authSubmitting}
-                      className="w-full bg-white border border-[#E6E2DA] rounded-xl pl-4 pr-10 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
-                    >
-                      {showLoginPassword ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Login Button */}
-                <button
-                  type="submit"
-                  disabled={authSubmitting}
-                  className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-4 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {authSubmitting ? (
-                    <>
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-                      Logging in...
-                    </>
-                  ) : (
-                    "Login"
-                  )}
-                </button>
-              </form>
-            ) : (
-              // Mode: Register
-              <form onSubmit={handleRegisterSubmit} className="w-full flex flex-col">
-                <div className="text-center mb-5">
-                  <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">Create Account</h2>
-                  <p className="text-[11px] text-neutral-400">Join us to save and coordinate your event invitations</p>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {/* First Name & Last Name Grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="First Name"
-                      value={regFirstName}
-                      onChange={(e) => setRegFirstName(e.target.value)}
-                      disabled={authSubmitting}
-                      className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Last Name"
-                      value={regLastName}
-                      onChange={(e) => setRegLastName(e.target.value)}
-                      disabled={authSubmitting}
-                      className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    />
-                  </div>
-
-                  {/* Email Input */}
-                  <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    disabled={authSubmitting}
-                    className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                  />
-
-                  {/* Phone Input */}
-                  <input
-                    type="tel"
-                    placeholder="Phone Number (e.g. +966501234567)"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    disabled={authSubmitting}
-                    className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                  />
-
-                  {/* Password Input */}
-                  <div className="relative w-full">
-                    <input
-                      type={showRegPassword ? "text" : "password"}
-                      placeholder="Password (Min. 8 characters)"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      disabled={authSubmitting}
-                      className="w-full bg-white border border-[#E6E2DA] rounded-xl pl-4 pr-10 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowRegPassword(!showRegPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
-                    >
-                      {showRegPassword ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Register Button */}
-                <button
-                  type="submit"
-                  disabled={authSubmitting}
-                  className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-4 flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {authSubmitting ? (
-                    <>
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-                      Registering...
-                    </>
-                  ) : (
-                    "Register"
-                  )}
-                </button>
-              </form>
-            )}
-
-            {/* Divider: Or continue with */}
-            <div className="w-full flex items-center gap-3 my-4 text-[10px] text-neutral-400 font-medium uppercase tracking-wider select-none">
-              <div className="h-px bg-[#E6E2DA] flex-1"></div>
-              <span>Or continue with</span>
-              <div className="h-px bg-[#E6E2DA] flex-1"></div>
-            </div>
-
-            {/* Social Buttons Row 1: Google & Apple */}
-            <div className="w-full flex gap-3 mb-3">
-              {/* Google */}
-              <button
-                type="button"
-                onClick={() => handleAction("Continue with Google", "Auth Modal")}
-                className="flex-1 flex items-center justify-center gap-2 border border-neutral-300 hover:bg-neutral-50 rounded-xl py-2.5 text-xs font-semibold text-neutral-700 bg-white transition-colors cursor-pointer"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M5.266 9.765A7.077 7.077 0 0112 4.909c1.69 0 3.218.6 4.418 1.582l3.51-3.51C17.642 1.09 14.973 0 12 0 7.354 0 3.373 2.766 1.554 6.777l3.712 2.988z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M16.04 15.345c-1.077.732-2.432 1.164-4.04 1.164-2.927 0-5.414-1.977-6.302-4.632l-3.737 2.877c1.868 3.714 5.714 6.246 10.04 6.246 2.923 0 5.613-.977 7.623-2.659l-3.586-2.996z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M23.49 12.273c0-.818-.073-1.609-.205-2.373H12v4.582h6.486c-.282 1.477-1.118 2.727-2.377 3.568l3.586 2.996c2.095-1.932 3.3-4.773 3.3-8.773z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.698 11.877c-.227-.677-.359-1.4-.359-2.155s.132-1.477.359-2.154L1.986 4.58C1.223 6.136.786 7.886.786 9.722c0 1.837.437 3.587 1.2 5.141l3.712-2.986z"
-                  />
-                </svg>
-                <span>Google</span>
-              </button>
-
-              {/* Apple */}
-              <button
-                type="button"
-                onClick={() => handleAction("Continue with Apple", "Auth Modal")}
-                className="flex-1 flex items-center justify-center gap-2 border border-neutral-300 hover:bg-neutral-50 rounded-xl py-2.5 text-xs font-semibold text-neutral-700 bg-white transition-colors cursor-pointer"
-              >
-                <svg className="w-3.5 h-3.5 fill-current text-black" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.7-1.13 1.84-.99 2.94.97.08 2.15-.52 2.82-1.33" />
-                </svg>
-                <span>Apple</span>
-              </button>
-            </div>
-
-            {/* Social Buttons Row 2: Facebook */}
-            <button
-              type="button"
-              onClick={() => handleAction("Continue with Facebook", "Auth Modal")}
-              className="w-full flex items-center justify-center gap-2 border border-neutral-300 hover:bg-neutral-50 rounded-xl py-2.5 text-xs font-semibold text-neutral-700 bg-white transition-colors cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5 fill-[#1877F2]" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
-              <span>Facebook</span>
-            </button>
-
-            {/* Footer switcher text */}
-            <div className="text-center text-[11px] text-neutral-500 mt-6">
-              {authMode === "login" ? (
-                <span>
-                  Don't have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode("register");
-                      setAuthError("");
-                    }}
-                    className="font-bold text-black hover:underline cursor-pointer"
-                  >
-                    Sign up
-                  </button>
-                </span>
-              ) : (
-                <span>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAuthMode("login");
-                      setAuthError("");
-                    }}
-                    className="font-bold text-black hover:underline cursor-pointer"
-                  >
-                    Log in
-                  </button>
-                </span>
-              )}
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL INTERACTION WARNING ────────────────────────────────── */}
+            {/* ── MODAL INTERACTION WARNING ────────────────────────────────── */}
       {modalMessage && (
         <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-[#E6E2DA] rounded-2xl max-w-sm w-full p-6 shadow-xl flex flex-col gap-4 text-center">
@@ -1467,6 +734,6 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

@@ -21,7 +21,7 @@ export default function AdminLayout({
     const storedUser = localStorage.getItem("user");
 
     if (!token) {
-      router.replace("/login");
+      router.replace("/?auth=login");
       return;
     }
 
@@ -33,24 +33,25 @@ export default function AdminLayout({
           router.replace("/dashboard/client");
           return;
         }
-        setUser(parsed);
+        setTimeout(() => {
+          setUser(parsed);
+          setAuthChecked(true);
+        }, 0);
       } catch {
         localStorage.removeItem("user");
-        router.replace("/login");
+        router.replace("/?auth=login");
         return;
       }
     } else {
-      router.replace("/login");
+      router.replace("/?auth=login");
       return;
     }
-
-    setAuthChecked(true);
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
-    router.replace("/login");
+    router.replace("/?auth=login");
   };
 
   // Don't render anything until auth is verified

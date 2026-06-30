@@ -74,7 +74,7 @@ export interface Template {
   description: string;
   previewImage: string;
   price: string | number;
-  editableFields: any;
+  editableFields: Record<string, unknown>;
   demoLink?: string | null;
   isPremium: boolean;
   category?: string;
