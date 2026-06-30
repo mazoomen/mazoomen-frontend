@@ -72,3 +72,15 @@ export interface RsvpListResponse {
   rsvps: RsvpResponse[];
 }
 
+export interface Template {
+  id: string;
+  title: string;
+  description: string;
+  previewImage: string;
+  price: string | number;
+  editableFields: any;
+  demoLink?: string | null;
+  isPremium: boolean;
+  createdAt: string;
+}
+

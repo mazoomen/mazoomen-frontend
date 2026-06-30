@@ -2,25 +2,49 @@
 
 import { useState } from "react";
 import api from "@/lib/api";
-import type { InvitationData } from "@/types/invitation";
 
 interface InvitationEditorProps {
-  invitation: InvitationData | null;
-  onSaved: (invitation: InvitationData) => void;
+  purchaseId: string;
+  invitation: any | null; // InvitationData shape from purchase
+  templateTitle: string;
+  onSaved: () => void;
 }
 
 type SaveStatus = "idle" | "saving" | "success" | "error";
 
 export default function InvitationEditor({
+  purchaseId,
   invitation,
+  templateTitle,
   onSaved,
 }: InvitationEditorProps) {
   const isEditing = !!invitation;
 
-  // ── Form state ───────────────────────────────────────────────────────
-  const [templateId, setTemplateId] = useState(
-    invitation?.templateId || "",
-  );
+  // ── Parse initial Groom & Bride names from eventTitle ───────────────
+  const getInitialNames = () => {
+    if (!invitation?.eventTitle) return { groom: "", bride: "" };
+    const title = invitation.eventTitle;
+
+    // Try splitting by " & "
+    if (title.includes(" & ")) {
+      const parts = title.split(" & ");
+      return { groom: parts[0]?.trim() || "", bride: parts[1]?.trim() || "" };
+    }
+    // Try splitting by " و " (Arabic)
+    if (title.includes(" و ")) {
+      const parts = title.split(" و ");
+      // Strip typical prefix "حفل زفاف" if exists
+      const groomPart = parts[0]?.replace("حفل زفاف", "")?.trim() || "";
+      return { groom: groomPart, bride: parts[1]?.trim() || "" };
+    }
+    return { groom: title, bride: "" };
+  };
+
+  const initialNames = getInitialNames();
+
+  // ── Form State ──────────────────────────────────────────────────────
+  const [groomName, setGroomName] = useState(initialNames.groom);
+  const [brideName, setBrideName] = useState(initialNames.bride);
   const [slug, setSlug] = useState(invitation?.slug || "");
   const [eventDate, setEventDate] = useState(() => {
     if (invitation?.eventDate) {
@@ -29,21 +53,18 @@ export default function InvitationEditor({
     }
     return "";
   });
-  const [locationUrl, setLocationUrl] = useState(
-    invitation?.locationUrl || "",
-  );
-  const [welcomeText, setWelcomeText] = useState(
-    invitation?.welcomeText || "",
-  );
+  const [eventLocation, setEventLocation] = useState(invitation?.eventLocation || "");
+  const [locationUrl, setLocationUrl] = useState(invitation?.locationUrl || "");
+  const [welcomeText, setWelcomeText] = useState(invitation?.welcomeText || "");
   const [images, setImages] = useState<string[]>(
-    invitation?.images?.length ? invitation.images : [""],
+    invitation?.images?.length ? invitation.images : [""]
   );
   const [musicUrl, setMusicUrl] = useState(invitation?.musicUrl || "");
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ── Image URL management ─────────────────────────────────────────────
+  // ── Manage Dynamic Image URLs ────────────────────────────────────────
   const addImageField = () => setImages([...images, ""]);
   const removeImageField = (index: number) => {
     if (images.length <= 1) return;
@@ -55,109 +76,111 @@ export default function InvitationEditor({
     setImages(updated);
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────
+  // ── Submit handlers ─────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("saving");
     setErrorMsg("");
 
     const filteredImages = images.filter((url) => url.trim() !== "");
+    const generatedTitle = `${groomName.trim()} & ${brideName.trim()}`;
 
     try {
-      let response;
-
       if (isEditing) {
         // PUT /invitations/:id
-        response = await api.put(`/invitations/${invitation.id}`, {
-          slug,
+        await api.put(`/invitations/${invitation.id}`, {
+          slug: slug.trim(),
+          eventTitle: generatedTitle,
           eventDate: new Date(eventDate).toISOString(),
-          locationUrl,
-          welcomeText,
+          eventLocation: eventLocation.trim(),
+          locationUrl: locationUrl.trim() || undefined,
+          welcomeText: welcomeText.trim() || undefined,
           images: filteredImages,
-          musicUrl: musicUrl || undefined,
+          musicUrl: musicUrl.trim() || undefined,
         });
       } else {
         // POST /invitations
-        response = await api.post("/invitations", {
-          templateId,
-          slug,
+        await api.post("/invitations", {
+          purchaseId,
+          slug: slug.trim(),
+          eventTitle: generatedTitle,
           eventDate: new Date(eventDate).toISOString(),
-          locationUrl,
-          welcomeText,
+          eventLocation: eventLocation.trim(),
+          locationUrl: locationUrl.trim() || undefined,
+          welcomeText: welcomeText.trim() || undefined,
           images: filteredImages,
-          musicUrl: musicUrl || undefined,
+          musicUrl: musicUrl.trim() || undefined,
         });
       }
 
       setStatus("success");
-      onSaved(response.data);
-
-      // Reset success status after 3s
-      setTimeout(() => setStatus("idle"), 3000);
-    } catch (err: unknown) {
+      setTimeout(() => {
+        setStatus("idle");
+        onSaved();
+      }, 1000);
+    } catch (err: any) {
       setStatus("error");
-      if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { data?: { message?: string } } };
-        setErrorMsg(
-          axiosErr.response?.data?.message || "Failed to save invitation.",
-        );
+      if (err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setErrorMsg(Array.isArray(msg) ? msg[0] : msg);
       } else {
-        setErrorMsg("Failed to save invitation. Please try again.");
+        setErrorMsg("Failed to save invitation. Please check your fields and try again.");
       }
     }
   };
 
-  // ── Shared input classes ─────────────────────────────────────────────
+  // Input styles
   const inputClass =
-    "w-full rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-sm text-gray-100 placeholder-gray-500 outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30";
+    "w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-neutral-800 placeholder-neutral-400";
   const labelClass =
-    "mb-1.5 block text-xs font-medium uppercase tracking-wider text-gray-400";
+    "mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500 font-sans";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white">
-          {isEditing ? "Edit Invitation" : "Create New Invitation"}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Title */}
+      <div className="border-b border-[#F4F1EA] pb-3">
+        <h2 className="text-xl font-serif font-medium text-neutral-800">
+          {isEditing ? "Edit Invitation Details" : "Create New Invitation"}
         </h2>
-        {status === "success" && (
-          <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-            ✓ Saved
-          </span>
-        )}
+        <p className="text-[11px] text-neutral-400 mt-1">Template: {templateTitle}</p>
       </div>
 
-      {/* Template ID — only for creation */}
-      {!isEditing && (
+      {/* Groom & Bride Names Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="editor-template" className={labelClass}>
-            Template ID
-          </label>
+          <label className={labelClass}>Husband's Name (Groom)</label>
           <input
-            id="editor-template"
             type="text"
-            value={templateId}
-            onChange={(e) => setTemplateId(e.target.value)}
-            placeholder="Paste the template UUID"
+            value={groomName}
+            onChange={(e) => setGroomName(e.target.value)}
+            placeholder="e.g. Ahmed"
             required
+            disabled={status === "saving"}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-gray-500">
-            You must have an approved order for this template.
-          </p>
         </div>
-      )}
+        <div>
+          <label className={labelClass}>Wife's Name (Bride)</label>
+          <input
+            type="text"
+            value={brideName}
+            onChange={(e) => setBrideName(e.target.value)}
+            placeholder="e.g. Sarah"
+            required
+            disabled={status === "saving"}
+            className={inputClass}
+          />
+        </div>
+      </div>
 
-      {/* Slug */}
+      {/* URL Link Slug */}
       <div>
-        <label htmlFor="editor-slug" className={labelClass}>
-          Invitation URL Slug
-        </label>
-        <div className="flex items-stretch">
-          <span className="flex items-center rounded-l-lg border border-r-0 border-gray-700 bg-gray-800 px-3 text-xs text-gray-500">
+        <label className={labelClass}>Custom Invite Link Slug</label>
+        <div className="flex items-stretch shadow-sm rounded-xl overflow-hidden border border-[#E6E2DA]">
+          <span className="flex items-center bg-[#FAF8F5] border-r border-[#E6E2DA] px-3 text-[11px] text-neutral-400 font-semibold select-none">
             /invite/
           </span>
           <input
-            id="editor-slug"
             type="text"
             value={slug}
             onChange={(e) =>
@@ -167,81 +190,104 @@ export default function InvitationEditor({
                   .replace(/[^a-z0-9-]/g, "")
               )
             }
-            placeholder="ahmed-wedding"
+            placeholder="ahmed-and-sarah"
             required
-            className={`${inputClass} rounded-l-none`}
+            disabled={status === "saving"}
+            className="w-full bg-white px-4 py-2.5 text-xs outline-none focus:border-black transition-all text-neutral-800 placeholder-neutral-400"
           />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Lowercase letters, numbers, and hyphens only.
+        <p className="mt-1.5 text-[9px] text-neutral-400 leading-normal">
+          This forms your public shareable link. Lowercase letters, numbers, and hyphens only.
         </p>
       </div>
 
-      {/* Event Date */}
+      {/* Event Date & Time */}
       <div>
-        <label htmlFor="editor-date" className={labelClass}>
-          Event Date & Time
-        </label>
+        <label className={labelClass}>Event Date & Time</label>
         <input
-          id="editor-date"
           type="datetime-local"
           value={eventDate}
           onChange={(e) => setEventDate(e.target.value)}
           required
+          disabled={status === "saving"}
           className={inputClass}
         />
       </div>
 
-      {/* Location URL */}
+      {/* Event Location Venue */}
       <div>
-        <label htmlFor="editor-location" className={labelClass}>
-          Google Maps / Venue URL
-        </label>
+        <label className={labelClass}>Event Location (Hall Name)</label>
         <input
-          id="editor-location"
+          type="text"
+          value={eventLocation}
+          onChange={(e) => setEventLocation(e.target.value)}
+          placeholder="e.g. Royal Hall, Riyadh"
+          required
+          disabled={status === "saving"}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Google Maps Venue Link */}
+      <div>
+        <label className={labelClass}>Google Maps URL (Location Link)</label>
+        <input
           type="url"
           value={locationUrl}
           onChange={(e) => setLocationUrl(e.target.value)}
           placeholder="https://maps.google.com/?q=..."
           required
+          disabled={status === "saving"}
           className={inputClass}
         />
       </div>
 
-      {/* Welcome Text */}
+      {/* Welcome / Invitation Message */}
       <div>
-        <label htmlFor="editor-welcome" className={labelClass}>
-          Welcome / Invitation Text
-        </label>
+        <label className={labelClass}>Welcome Invitation Message</label>
         <textarea
-          id="editor-welcome"
           value={welcomeText}
           onChange={(e) => setWelcomeText(e.target.value)}
-          placeholder="Write your beautiful invitation message here…"
+          placeholder="Write your welcome message to family and friends..."
           required
-          rows={4}
-          className={`${inputClass} resize-y`}
+          rows={3}
+          disabled={status === "saving"}
+          className={`${inputClass} resize-none`}
         />
       </div>
 
-      {/* Images */}
+      {/* Background Sound Music URL */}
       <div>
-        <label className={labelClass}>Gallery Image URLs</label>
-        <div className="space-y-2">
+        <label className={labelClass}>Background Music URL (Optional)</label>
+        <input
+          type="url"
+          value={musicUrl}
+          onChange={(e) => setMusicUrl(e.target.value)}
+          placeholder="https://cdn.example.com/audio/wedding-nasheed.mp3"
+          disabled={status === "saving"}
+          className={inputClass}
+        />
+      </div>
+
+      {/* Gallery Images */}
+      <div>
+        <label className={labelClass}>Gallery Photo URLs (Optional)</label>
+        <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
           {images.map((url, i) => (
             <div key={i} className="flex items-center gap-2">
               <input
                 type="url"
                 value={url}
                 onChange={(e) => updateImage(i, e.target.value)}
-                placeholder={`Image URL #${i + 1}`}
-                className={`${inputClass} flex-1`}
+                placeholder={`Photo URL #${i + 1}`}
+                disabled={status === "saving"}
+                className={inputClass}
               />
               {images.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeImageField(i)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-gray-700 text-gray-500 transition-colors hover:border-red-500 hover:text-red-400"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-neutral-200 hover:border-red-500 hover:text-red-500 hover:bg-red-50 transition-colors text-neutral-400"
                   aria-label="Remove image"
                 >
                   ✕
@@ -253,73 +299,45 @@ export default function InvitationEditor({
         <button
           type="button"
           onClick={addImageField}
-          className="mt-2 text-xs font-medium text-indigo-400 transition-colors hover:text-indigo-300"
+          disabled={status === "saving"}
+          className="mt-2 text-[10px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors uppercase tracking-wider"
         >
-          + Add another image
+          + Add another photo
         </button>
       </div>
 
-      {/* Music URL */}
-      <div>
-        <label htmlFor="editor-music" className={labelClass}>
-          Background Music URL{" "}
-          <span className="font-normal normal-case text-gray-600">
-            (optional)
-          </span>
-        </label>
-        <input
-          id="editor-music"
-          type="url"
-          value={musicUrl}
-          onChange={(e) => setMusicUrl(e.target.value)}
-          placeholder="https://cdn.example.com/music.mp3"
-          className={inputClass}
-        />
-      </div>
-
-      {/* Error */}
+      {/* Save Status & Error Messages */}
       {status === "error" && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
           {errorMsg}
         </div>
       )}
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={status === "saving"}
-        className="w-full rounded-lg bg-indigo-600 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-indigo-500 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8"
-      >
-        {status === "saving" ? (
-          <span className="inline-flex items-center gap-2">
-            <svg
-              className="h-4 w-4 animate-spin"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="3"
-                className="opacity-25"
-              />
-              <path
-                d="M4 12a8 8 0 018-8"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            </svg>
-            Saving…
-          </span>
-        ) : isEditing ? (
-          "Update Invitation"
+      {/* Submit Controls */}
+      <div className="flex gap-3 justify-end pt-3 border-t border-[#F4F1EA] mt-4">
+        {status === "success" ? (
+          <div className="px-5 py-2 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-xl flex items-center gap-1.5 shadow-sm">
+            <span>✓ Saved successfully!</span>
+          </div>
         ) : (
-          "Create Invitation"
+          <button
+            type="submit"
+            disabled={status === "saving"}
+            className="px-6 py-2.5 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+          >
+            {status === "saving" ? (
+              <>
+                <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+                Saving...
+              </>
+            ) : isEditing ? (
+              "Save Changes"
+            ) : (
+              "Publish Invitation"
+            )}
+          </button>
         )}
-      </button>
+      </div>
     </form>
   );
 }

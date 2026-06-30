@@ -19,7 +19,7 @@ export default function LiveLinkBanner({ slug }: LiveLinkBannerProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
+      // Fallback
       const textarea = document.createElement("textarea");
       textarea.value = liveUrl;
       document.body.appendChild(textarea);
@@ -32,57 +32,39 @@ export default function LiveLinkBanner({ slug }: LiveLinkBannerProps) {
   };
 
   return (
-    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-emerald-400">
+          <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider font-sans">
             🎉 Your invitation is live!
           </p>
           <a
             href={liveUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 inline-block text-sm text-emerald-300/80 underline underline-offset-2 transition-colors hover:text-emerald-300"
+            className="mt-1 inline-block text-xs text-emerald-600 underline underline-offset-2 transition-colors hover:text-emerald-800 font-medium"
           >
             {liveUrl}
           </a>
         </div>
         <button
           onClick={copyToClipboard}
-          className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-400 transition-all hover:bg-emerald-500/20 sm:shrink-0"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-4 py-2 text-xs font-semibold text-emerald-700 transition-all hover:bg-emerald-50 sm:shrink-0 cursor-pointer shadow-sm"
         >
           {copied ? (
             <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 13l4 4L19 7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              Copied!
+              <span>Copied!</span>
             </>
           ) : (
             <>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <rect
-                  x="9"
-                  y="9"
-                  width="13"
-                  height="13"
-                  rx="2"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
-                <path
-                  d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                />
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
               </svg>
-              Copy Link
+              <span>Copy Link</span>
             </>
           )}
         </button>

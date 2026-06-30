@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { AuthUser } from "@/types/invitation";
 
@@ -11,16 +11,14 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const storedUser = localStorage.getItem("user");
 
     if (!token) {
-      router.replace("/login");
+      router.replace("/");
       return;
     }
 
@@ -28,7 +26,6 @@ export default function ClientLayout({
       try {
         setUser(JSON.parse(storedUser));
       } catch {
-        // invalid JSON — clear
         localStorage.removeItem("user");
       }
     }
@@ -37,137 +34,74 @@ export default function ClientLayout({
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user");
-    router.replace("/login");
+    router.replace("/");
   };
 
-  const navItems = [
-    {
-      label: "My Invitation",
-      href: "/dashboard/client",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <rect
-            x="3"
-            y="3"
-            width="18"
-            height="18"
-            rx="3"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M3 9h18"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M9 21V9"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-        </svg>
-      ),
-    },
-  ];
-
   return (
-    <div className="flex min-h-screen bg-gray-950">
-      {/* ── Mobile overlay ────────────────────────────────────── */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* ── Sidebar ───────────────────────────────────────────── */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-800 bg-gray-900 transition-transform lg:static lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Logo */}
-        <div className="flex h-16 items-center border-b border-gray-800 px-6">
-          <Link href="/" className="text-lg font-bold text-white">
-            💌 <span className="text-indigo-400">Mazoom</span>
+    <div className="flex min-h-screen bg-[#FAF9F6] text-[#2D3142] font-sans antialiased">
+      {/* ── LEFT SIDEBAR (Matches Home Page) ─────────────────────────── */}
+      <aside className="w-[72px] bg-white border-r border-[#E6E2DA] flex flex-col items-center py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen hidden sm:flex">
+        <div className="flex flex-col items-center gap-8 w-full">
+          {/* Logo / Brand Icon */}
+          <Link href="/" className="w-10 h-10 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm hover:bg-neutral-50 transition-colors">
+            <span className="font-serif font-semibold text-lg text-black">I</span>
           </Link>
+
+          {/* Sidebar Nav Icons */}
+          <nav className="flex flex-col items-center gap-6 w-full">
+            {/* Active dashboard icon */}
+            <button className="w-10 h-10 rounded-full flex items-center justify-center text-black bg-[#F5F2EB] transition-all group relative">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+              </svg>
+              <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">Dashboard</span>
+            </button>
+          </nav>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-indigo-500/10 text-indigo-400"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
-                }`}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* User footer */}
-        <div className="border-t border-gray-800 p-4">
-          {user && (
-            <div className="mb-3">
-              <p className="text-sm font-medium text-gray-200">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-xs text-gray-500">{user.email}</p>
-            </div>
-          )}
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-red-400"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Sign Out
-          </button>
-        </div>
+        {/* Bottom Log Out Icon */}
+        <button
+          onClick={handleLogout}
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[#7F8487] hover:text-red-500 hover:bg-red-50 transition-all group relative cursor-pointer"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className="absolute left-14 bg-[#2D3142] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow z-50">Log Out</span>
+        </button>
       </aside>
 
-      {/* ── Main content area ─────────────────────────────────── */}
-      <div className="flex flex-1 flex-col">
-        {/* Top bar (mobile) */}
-        <header className="flex h-16 items-center border-b border-gray-800 bg-gray-900/50 px-4 backdrop-blur-md lg:hidden">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-800 hover:text-white"
-            aria-label="Open sidebar"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M3 12h18M3 6h18M3 18h18"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-          <span className="ml-3 text-sm font-semibold text-white">
-            Mazoom Dashboard
-          </span>
+      {/* ── MAIN CONTENT CONTAINER ────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* ── TOP HEADER ──────────────────────────────────────────────── */}
+        <header className="h-20 bg-white border-b border-[#E6E2DA] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-2.5">
+            <Link href="/" className="w-8 h-8 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm shrink-0">
+              <span className="font-serif font-semibold text-sm text-black">I</span>
+            </Link>
+            <span className="text-lg font-bold tracking-tight text-[#2D3142] font-sans">MarketPlace</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-[#F4F1EA] text-[#B89C72] font-semibold border border-[#E6E2DA] ml-2 hidden md:inline">Dashboard</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {user && (
+                <span className="text-xs text-[#7F8487] font-semibold bg-[#FAF9F6] border border-[#E6E2DA] rounded-full px-3 py-1">
+                  👤 CLIENT: {user.firstName} {user.lastName}
+                </span>
+              )}
+              <button
+                onClick={handleLogout}
+                className="px-4 h-9 text-xs font-semibold text-neutral-600 hover:text-black transition-all border border-neutral-200 hover:bg-neutral-50 rounded-lg"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        {/* ── Page Content ─────────────────────────────────────────────── */}
+        <main className="flex-1 overflow-y-auto p-6 sm:p-10">
           {children}
         </main>
       </div>

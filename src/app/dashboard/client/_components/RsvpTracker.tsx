@@ -17,8 +17,9 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
   useEffect(() => {
     const fetchRsvps = async () => {
       try {
+        setStatus("loading");
         const res = await api.get<RsvpListResponse>(
-          `/invitations/${invitationId}/rsvps`,
+          `/invitations/${invitationId}/rsvps`
         );
         setData(res.data);
         setStatus("loaded");
@@ -32,26 +33,25 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
 
   if (status === "loading") {
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">RSVP Responses</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-24 animate-pulse rounded-xl bg-gray-800/50"
+              className="h-20 animate-pulse rounded-2xl bg-neutral-100 border border-[#E9E4DC]"
             />
           ))}
         </div>
-        <div className="h-48 animate-pulse rounded-xl bg-gray-800/50" />
+        <div className="h-48 animate-pulse rounded-2xl bg-neutral-50 border border-[#E9E4DC]" />
       </div>
     );
   }
 
   if (status === "error" || !data) {
     return (
-      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-center">
-        <p className="text-sm text-red-400">
-          Failed to load RSVP data. Please try refreshing.
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
+        <p className="text-xs font-semibold text-red-600">
+          Failed to load live RSVP guest responses. Please refresh the page.
         </p>
       </div>
     );
@@ -61,14 +61,12 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-white">RSVP Responses</h2>
-
-      {/* ── Stats Cards ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* ── Stats Metrics Cards ────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
-          label="Total Responses"
+          label="Total RSVPs"
           value={statistics.totalResponses}
-          color="indigo"
+          color="neutral"
         />
         <StatCard
           label="Attending"
@@ -87,70 +85,68 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
         />
       </div>
 
-      {/* ── Guest Table ────────────────────────────────────────── */}
+      {/* ── Guest Attendance Table ─────────────────────────────────── */}
       {rsvps.length === 0 ? (
-        <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-10 text-center">
-          <p className="text-3xl">📋</p>
-          <p className="mt-3 text-sm text-gray-400">
-            No responses yet. Share your invitation link to start receiving
-            RSVPs!
+        <div className="rounded-2xl border border-[#EBE7DF] bg-[#FAF8F5] p-10 text-center shadow-inner">
+          <p className="text-4xl block mb-2 select-none">📋</p>
+          <h4 className="font-bold text-sm text-neutral-800">No responses yet</h4>
+          <p className="mt-1 text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
+            Share your invitation URL with guests to start collecting RSVPs.
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-800">
+        <div className="overflow-hidden rounded-2xl border border-[#EBE7DF] bg-white shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-900/80">
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">
-                    Guest Name
-                  </th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400">
-                    Companions
-                  </th>
-                  <th className="hidden px-4 py-3 text-xs font-medium uppercase tracking-wider text-gray-400 sm:table-cell">
-                    Date
-                  </th>
+                <tr className="border-b border-[#EBE7DF] bg-[#FAF8F5] select-none text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">
+                  <th className="px-5 py-3">Guest Name</th>
+                  <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Companions</th>
+                  <th className="px-5 py-3 hidden sm:table-cell">Date Responded</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800/50">
-                {rsvps.map((rsvp: RsvpResponse) => (
-                  <tr
-                    key={rsvp.id}
-                    className="transition-colors hover:bg-gray-800/30"
-                  >
-                    <td className="px-4 py-3 font-medium text-gray-200">
-                      {rsvp.guestName}
-                    </td>
-                    <td className="px-4 py-3">
-                      {rsvp.willAttend ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                          Attending
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gray-500/10 px-2.5 py-0.5 text-xs font-medium text-gray-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
-                          Declined
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-400">
-                      {rsvp.companionsCount > 0
-                        ? `+${rsvp.companionsCount}`
-                        : "—"}
-                    </td>
-                    <td className="hidden px-4 py-3 text-gray-500 sm:table-cell">
-                      {new Date(rsvp.createdAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-[#FAF1EA]">
+                {rsvps.map((rsvp: any) => {
+                  // Adjust backend rsvp willAttend property
+                  const willAttend = rsvp.willAttend ?? (rsvp.attendance === "YES");
+                  const count = rsvp.companionsCount ?? rsvp.guestsCount ?? 0;
+
+                  return (
+                    <tr
+                      key={rsvp.id}
+                      className="transition-colors hover:bg-[#FAF8F5] text-neutral-700"
+                    >
+                      <td className="px-5 py-3.5 font-semibold text-neutral-800">
+                        {rsvp.guestName}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {willAttend ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-700">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Attending
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-neutral-100 border border-neutral-300 text-neutral-500">
+                            <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />
+                            Declined
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 font-medium text-neutral-500">
+                        {count > 0 ? `+${count} companions` : "None"}
+                      </td>
+                      <td className="px-5 py-3.5 text-neutral-400 hidden sm:table-cell">
+                        {new Date(rsvp.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -160,8 +156,7 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
   );
 }
 
-// ── Stat Card Sub-Component ──────────────────────────────────────────────
-
+// ── Stat Card Helper Sub-Component ─────────────────────────────────────
 function StatCard({
   label,
   value,
@@ -169,23 +164,19 @@ function StatCard({
 }: {
   label: string;
   value: number;
-  color: "indigo" | "emerald" | "rose" | "amber";
+  color: "neutral" | "emerald" | "rose" | "amber";
 }) {
   const colorMap = {
-    indigo: "border-indigo-500/20 bg-indigo-500/5 text-indigo-400",
-    emerald: "border-emerald-500/20 bg-emerald-500/5 text-emerald-400",
-    rose: "border-rose-500/20 bg-rose-500/5 text-rose-400",
-    amber: "border-amber-500/20 bg-amber-500/5 text-amber-400",
+    neutral: "border-neutral-200 bg-[#FAF8F5] text-neutral-800",
+    emerald: "border-emerald-100 bg-emerald-50/50 text-emerald-700",
+    rose: "border-red-100 bg-red-50/50 text-red-600",
+    amber: "border-amber-100 bg-amber-50/50 text-amber-600",
   };
 
   return (
-    <div
-      className={`rounded-xl border p-4 text-center ${colorMap[color]}`}
-    >
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="mt-1 text-xs uppercase tracking-wider opacity-70">
-        {label}
-      </p>
+    <div className={`rounded-2xl border p-4 text-center shadow-sm ${colorMap[color]}`}>
+      <p className="text-2xl font-bold tracking-tight font-sans leading-none">{value}</p>
+      <p className="mt-1.5 text-[9px] font-bold uppercase tracking-wider opacity-85">{label}</p>
     </div>
   );
 }
