@@ -1,6 +1,7 @@
-export { default as HeroSection } from "./HeroSection";
-export { default as MusicPlayer } from "./MusicPlayer";
-export { default as CountdownTimer } from "./CountdownTimer";
-export { default as ImageGallery } from "./ImageGallery";
-export { default as EventDetailsSection } from "./EventDetailsSection";
-export { default as RsvpForm } from "./RsvpForm";
+export { EnvelopeOverlay } from "./EnvelopeOverlay";
+export { InvitationHero } from "./InvitationHero";
+export { InvitationBody } from "./InvitationBody";
+export { EventTimeline } from "./EventTimeline";
+export { EventDetails } from "./EventDetails";
+export { WishesSection } from "./WishesSection";
+export { BottomNavbar } from "./BottomNavbar";
