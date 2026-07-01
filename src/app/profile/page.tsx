@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import PageLayout from "@/components/PageLayout";
+import { useLanguage } from "@/components/LanguageContext";
 import type { AxiosError } from "axios";
 
 interface UserProfile {
@@ -18,6 +19,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,14 +64,14 @@ export default function ProfilePage() {
         setError(null);
       } catch (err) {
         console.error("Error fetching user profile:", err);
-        setError("Failed to load user profile. Make sure the backend server is running.");
+        setError(t("Failed to load user profile. Make sure the backend server is running."));
       } finally {
         setLoading(false);
       }
     }
 
     fetchProfile();
-  }, [router]);
+  }, [router, t]);
 
 
 
@@ -80,12 +82,12 @@ export default function ProfilePage() {
 
     // Validation
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !phoneNumber.trim()) {
-      setErrorMessage("All fields except new password are required.");
+      setErrorMessage(t("All fields except new password are required."));
       return;
     }
 
     if (password && password.length < 8) {
-      setErrorMessage("Password must be at least 8 characters long.");
+      setErrorMessage(t("Password must be at least 8 characters long."));
       return;
     }
 
@@ -124,7 +126,7 @@ export default function ProfilePage() {
       };
       localStorage.setItem("user", JSON.stringify(userMeta));
 
-      setSuccessMessage("Your profile has been updated successfully.");
+      setSuccessMessage(t("Your profile has been updated successfully."));
       
       // Auto-clear success message after 4s
       setTimeout(() => {
@@ -137,7 +139,7 @@ export default function ProfilePage() {
         const msg = error.response.data.message;
         setErrorMessage(Array.isArray(msg) ? msg[0] : msg);
       } else {
-        setErrorMessage("An unexpected error occurred while updating profile.");
+        setErrorMessage(t("An unexpected error occurred while updating profile."));
       }
     } finally {
       setSaving(false);
@@ -147,14 +149,14 @@ export default function ProfilePage() {
   return (
     <PageLayout>
       {/* ── PROFILE SECTION WORKSPACE ───────────────────────────────── */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-6 sm:px-10 py-12">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 sm:px-10 py-12">
         {/* Header */}
         <div className="mb-10 text-center sm:text-left">
           <h1 className="text-3xl sm:text-4xl font-serif font-medium text-[#2D3142] tracking-tight">
-            My Profile Settings
+            {t("My Profile Settings")}
           </h1>
           <p className="mt-2 text-xs text-[#7F8487] leading-relaxed max-w-xl">
-            View your account details and update your credentials or contact info. Changes will apply immediately to your active session.
+            {t("View your account details and update your credentials or contact info. Changes will apply immediately to your active session.")}
           </p>
         </div>
 
@@ -162,7 +164,7 @@ export default function ProfilePage() {
           /* Loading State */
           <div className="bg-white border border-[#E6E2DA] rounded-[24px] p-20 flex flex-col items-center justify-center gap-4 shadow-sm">
             <div className="w-10 h-10 rounded-full border-4 border-[#FAF9F6] border-t-black animate-spin"></div>
-            <p className="text-xs text-[#7F8487] font-medium">Fetching profile details...</p>
+            <p className="text-xs text-[#7F8487] font-medium">{t("Fetching profile details...")}</p>
           </div>
         ) : error ? (
           /* Error State */
@@ -172,13 +174,13 @@ export default function ProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="font-bold text-sm text-[#2D3142] mb-1">Could Not Load Profile</h3>
+            <h3 className="font-bold text-sm text-[#2D3142] mb-1">{t("Could Not Load Profile")}</h3>
             <p className="text-xs text-neutral-400 max-w-sm mx-auto leading-relaxed mb-4">{error}</p>
             <button
               onClick={() => router.refresh()}
               className="px-6 h-10 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm cursor-pointer"
             >
-              Reload Page
+              {t("Reload Page")}
             </button>
           </div>
         ) : (
@@ -201,22 +203,22 @@ export default function ProfilePage() {
                     {profile?.firstName} {profile?.lastName}
                   </h3>
                   <span className="text-[10px] uppercase tracking-wider text-[#B89C72] font-bold mt-1.5 px-3 py-1 bg-[#FAF8F5] border border-[#EBE7DF] rounded-full">
-                    {profile?.role} Account
+                    {t(`${profile?.role} Account`)}
                   </span>
 
                   <hr className="w-full my-5 border-[#FAF8F5]" />
 
                   <div className="w-full text-left space-y-3.5 text-xs text-[#7F8487]">
                     <div>
-                      <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">Email Address</span>
+                      <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">{t("Email Address")}</span>
                       <span className="font-medium text-[#2D3142] break-all">{profile?.email}</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">Phone Number</span>
+                      <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">{t("Phone Number")}</span>
                       <span className="font-medium text-[#2D3142]">{profile?.phoneNumber}</span>
                     </div>
                     <div>
-                      <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">Member Since</span>
+                      <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">{t("Member Since")}</span>
                       <span className="font-medium text-[#2D3142]">
                         {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" }) : "N/A"}
                       </span>
@@ -229,7 +231,7 @@ export default function ProfilePage() {
               <div className="lg:col-span-2">
                 <div className="bg-white border border-[#E6E2DA] rounded-[24px] p-8 shadow-sm">
                   <h2 className="text-[16px] font-sans font-bold text-[#2D3142] mb-6">
-                    Edit Profile Details
+                    {t("Edit Profile Details")}
                   </h2>
 
                   {/* Status Alerts */}
@@ -255,10 +257,10 @@ export default function ProfilePage() {
                     {/* First & Last Name Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">First Name</label>
+                        <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("First Name")}</label>
                         <input
                           type="text"
-                          placeholder="First Name"
+                          placeholder={t("First Name")}
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
                           disabled={saving}
@@ -266,10 +268,10 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">Last Name</label>
+                        <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("Last Name")}</label>
                         <input
                           type="text"
-                          placeholder="Last Name"
+                          placeholder={t("Last Name")}
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
                           disabled={saving}
@@ -280,10 +282,10 @@ export default function ProfilePage() {
 
                     {/* Email Input */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">Email Address</label>
+                      <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("Email Address")}</label>
                       <input
                         type="email"
-                        placeholder="Email Address"
+                        placeholder={t("Email Address")}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={saving}
@@ -293,10 +295,10 @@ export default function ProfilePage() {
 
                     {/* Phone Input */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">Phone Number</label>
+                      <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("Phone Number")}</label>
                       <input
                         type="tel"
-                        placeholder="Phone Number (e.g. +966501234567)"
+                        placeholder={t("Phone Number (e.g. +966501234567)")}
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         disabled={saving}
@@ -306,11 +308,11 @@ export default function ProfilePage() {
 
                     {/* Password Input */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">New Password (leave blank to keep current)</label>
+                      <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("New Password (leave blank to keep current)")}</label>
                       <div className="relative w-full">
                         <input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Enter at least 8 characters"
+                          placeholder={t("Enter at least 8 characters")}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           disabled={saving}
@@ -345,10 +347,10 @@ export default function ProfilePage() {
                         {saving ? (
                           <>
                             <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-                            Saving Changes...
+                            {t("Saving Changes...")}
                           </>
                         ) : (
-                          "Save Profile Settings"
+                          t("Save Profile Settings")
                         )}
                       </button>
                     </div>

@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { Template } from "@/types/invitation";
 import PageLayout from "@/components/PageLayout";
 import AuthModal from "@/components/AuthModal";
+import { useLanguage } from "@/components/LanguageContext";
 
 // ── MOCK TEMPLATES CATALOG (Matches the user design exactly) ─────────
 const MOCK_TEMPLATES: Template[] = [
@@ -143,6 +144,7 @@ const MOCK_TEMPLATES: Template[] = [
 ];
 
 export default function Home() {
+  const { lang, t } = useLanguage();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -200,9 +202,17 @@ export default function Home() {
   }, []);
 
   const handleAction = (actionName: string, templateTitle: string) => {
-    setModalMessage(
-      `You selected "${actionName}" for "${templateTitle}". This page will connect to customize/purchase pages shortly.`
-    );
+    const actionTranslated = actionName === "Download" || actionName === "تنزيل" ? t("تنزيل") : t("تعديل");
+    const titleTranslated = t(templateTitle);
+    if (lang === "ar") {
+      setModalMessage(
+        `لقد اخترت "${actionTranslated}" للقالب "${titleTranslated}". ستتصل هذه الصفحة بصفحة التخصيص والشراء قريباً.`
+      );
+    } else {
+      setModalMessage(
+        `You selected "${actionTranslated}" for "${titleTranslated}". This page will connect to customize/purchase pages shortly.`
+      );
+    }
   };
 
   const filteredTemplates = templates.filter((template) => {
@@ -227,7 +237,7 @@ export default function Home() {
         {/* ── HERO BANNER ─────────────────────────────────────────────── */}
         <section className="px-6 sm:px-10 pt-8 pb-4">
           <div 
-            className="max-w-7xl mx-auto rounded-[32px] border border-[#1E2E4A] p-12 sm:p-16 relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[460px] bg-cover bg-center shadow-lg"
+            className="max-w-[1700px] mx-auto rounded-[32px] border border-[#1E2E4A] p-12 sm:p-16 relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[460px] bg-cover bg-center shadow-lg"
             style={{ backgroundImage: "url('/images/hero-couple.jpg')" }}
           >
             {/* Dark Navy overlay to make text pop */}
@@ -237,13 +247,13 @@ export default function Home() {
             <div className="max-w-2xl flex flex-col items-center gap-5 z-20">
               <div className="flex flex-col items-center gap-1.5">
                 <span className="text-[10px] sm:text-[11px] tracking-[0.3em] text-[#E5C38B] font-bold uppercase font-sans">
-                  DIGITAL WEDDING PLANNER
+                  {t("DIGITAL WEDDING PLANNER")}
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl font-medium tracking-wide text-[#E5C38B] drop-shadow-md select-none mt-2">
-                  DIGITAL WEDDING PLANNER
+                  {t("DIGITAL WEDDING PLANNER")}
                 </h1>
                 <p className="text-[11px] sm:text-xs text-neutral-300 font-sans tracking-wide max-w-md mx-auto leading-relaxed mt-3">
-                  A romantic design performs and wedded wedding template with elegant anniversaries.
+                  {t("A romantic design performs and wedded wedding template with elegant anniversaries.")}
                 </p>
               </div>
 
@@ -256,7 +266,7 @@ export default function Home() {
                   }}
                   className="px-6 py-2.5 border border-[#E5C38B] text-[#E5C38B] hover:bg-[#E5C38B]/10 rounded-full text-[11px] font-semibold transition-all cursor-pointer"
                 >
-                  Explore Now
+                  {t("Explore Now")}
                 </button>
                 <button
                   onClick={() => {
@@ -265,7 +275,7 @@ export default function Home() {
                   }}
                   className="px-6 py-2.5 bg-[#E5C38B] hover:bg-[#D4B27A] text-black rounded-full text-[11px] font-semibold transition-all cursor-pointer shadow-md"
                 >
-                  Register Now
+                  {t("Register Now")}
                 </button>
               </div>
             </div>
@@ -278,12 +288,12 @@ export default function Home() {
             <div className="relative flex items-center">
               <input
                 type="text"
-                placeholder="البحث في المشتريات"
+                placeholder={t("Search templates...")}
                 value={searchQuery}
                 onFocus={() => setShowEventTypesOverlay(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-10 py-2.5 bg-white border border-[#E6E2DA] rounded-full text-xs shadow-sm focus:outline-none focus:border-[#B89C72] focus:ring-1 focus:ring-[#B89C72] text-right transition-all"
-                dir="rtl"
+                className={`w-full pl-12 pr-10 py-2.5 bg-white border border-[#E6E2DA] rounded-full text-xs shadow-sm focus:outline-none focus:border-[#B89C72] focus:ring-1 focus:ring-[#B89C72] transition-all ${lang === "ar" ? "text-right" : "text-left"}`}
+                dir={lang === "ar" ? "rtl" : "ltr"}
               />
               <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                 <svg className="h-4 w-4 text-[#7F8487]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -307,7 +317,7 @@ export default function Home() {
             {showEventTypesOverlay && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowEventTypesOverlay(false)}></div>
-                <div className="absolute top-14 left-1/2 -translate-x-1/2 w-[340px] sm:w-[420px] bg-white border border-[#E6E2DA] rounded-2xl shadow-xl p-5 z-50 animate-fadeIn text-right font-sans" dir="rtl">
+                <div className="absolute top-14 left-1/2 -translate-x-1/2 w-[340px] sm:w-[420px] bg-white border border-[#E6E2DA] rounded-2xl shadow-xl p-5 z-50 animate-fadeIn text-right font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-xs font-bold text-neutral-800">Event Types</span>
                     <button
@@ -375,7 +385,7 @@ export default function Home() {
                           }`}
                       >
                         {cat.icon}
-                        <span className="text-[10px] whitespace-nowrap">{cat.arName}</span>
+                        <span className="text-[10px] whitespace-nowrap">{t(cat.name)}</span>
                       </button>
                     ))}
                   </div>
@@ -386,11 +396,11 @@ export default function Home() {
         </section>
 
         {/* ── TEMPLATES GRID SECTION ──────────────────────────────────── */}
-        <section id="templates" className="px-6 sm:px-10 py-6 max-w-7xl mx-auto w-full flex-1">
+        <section id="templates" className="px-6 sm:px-10 py-6 max-w-[1700px] mx-auto w-full flex-1">
           <div className="w-full flex flex-col gap-6">
 
             {/* Tab Selector & Header */}
-            <div className="flex items-center justify-between border-b border-[#EBE7DF] pb-3" dir="rtl">
+            <div className="flex items-center justify-between border-b border-[#EBE7DF] pb-3" dir={lang === "ar" ? "rtl" : "ltr"}>
               <div className="flex gap-2">
                 <button
                   onClick={() => setSelectedTab("all")}
@@ -399,7 +409,7 @@ export default function Home() {
                       : "bg-[#FAF8F5] text-[#7F8487] border border-[#EBE7DF] hover:bg-neutral-50"
                     }`}
                 >
-                  الكل
+                  {t("الكل")}
                 </button>
                 <button
                   onClick={() => setSelectedTab("ready")}
@@ -408,12 +418,12 @@ export default function Home() {
                       : "bg-[#FAF8F5] text-[#7F8487] border border-[#EBE7DF] hover:bg-neutral-50"
                     }`}
                 >
-                  جاهزة للتعديل
+                  {t("جاهزة للتعديل")}
                 </button>
               </div>
               {selectedCategory && (
                 <span className="text-[11px] text-[#B89C72] bg-[#FAF8F5] px-2.5 py-1 rounded-md border border-[#EBE7DF] font-semibold">
-                  Category: {selectedCategory}
+                  {t("Category")}: {t(selectedCategory)}
                 </span>
               )}
             </div>
@@ -421,11 +431,11 @@ export default function Home() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-10 h-10 rounded-full border-4 border-[#F4F1EA] border-t-black animate-spin"></div>
-                <p className="text-xs text-[#7F8487] font-medium">Loading templates...</p>
+                <p className="text-xs text-[#7F8487] font-medium">{t("Loading templates...")}</p>
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="text-center py-20 bg-white border border-[#EBE7DF] rounded-2xl">
-                <p className="text-[#7F8487] font-medium text-xs">لا توجد قوالب تطابق خيارات البحث.</p>
+                <p className="text-[#7F8487] font-medium text-xs">{t("لا توجد قوالب تطابق خيارات البحث.")}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -446,7 +456,7 @@ export default function Home() {
                       <div className="w-full h-full rounded-lg overflow-hidden shadow-sm relative">
                         <img
                           src={template.previewImage}
-                          alt={template.title}
+                          alt={t(template.title)}
                           className="w-full h-full object-cover group-hover:scale-[1.04] transition-all duration-500"
                           onError={(e) => {
                             (e.target as HTMLElement).style.display = "none";
@@ -456,7 +466,7 @@ export default function Home() {
                     </div>
 
                     {/* Template Details */}
-                    <div className="p-4 flex-1 flex flex-col justify-between gap-3 text-right font-sans" dir="rtl">
+                    <div className={`p-4 flex-1 flex flex-col justify-between gap-3 font-sans ${lang === "ar" ? "text-right" : "text-left"}`} dir={lang === "ar" ? "rtl" : "ltr"}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="font-semibold text-neutral-800 text-[13px] leading-tight group-hover:text-black transition-colors line-clamp-1">
@@ -467,7 +477,7 @@ export default function Home() {
                           </span>
                         </div>
                         <p className="text-[10px] text-neutral-400 line-clamp-2 leading-relaxed">
-                          {template.description}
+                          {t(template.description)}
                         </p>
                       </div>
 
@@ -484,13 +494,13 @@ export default function Home() {
                             }}
                             className="flex-1 py-2 text-[11px] font-semibold text-black bg-[#E5C38B] hover:bg-[#D4B27A] rounded-xl transition-all shadow-sm cursor-pointer"
                           >
-                            تنزيل
+                            {t("تنزيل")}
                           </button>
                           <button
                             onClick={() => handleAction("View Details", template.title)}
                             className="flex-1 py-2 text-[11px] font-semibold border border-[#E5C38B] text-[#B89C72] bg-white/40 hover:bg-[#E5C38B]/10 rounded-xl transition-all cursor-pointer"
                           >
-                            تعديل
+                            {t("تعديل")}
                           </button>
                         </div>
                       </div>
@@ -504,9 +514,9 @@ export default function Home() {
 
         {/* ── HOW IT WORKS SECTION ───────────────────────────────────── */}
         <section id="features" className="px-6 sm:px-10 py-16 bg-white border-t border-b border-[#E6E2DA]">
-          <div className="max-w-5xl mx-auto flex flex-col gap-10">
+          <div className="max-w-[1700px] mx-auto flex flex-col gap-10">
             <div className="text-center flex flex-col gap-1.5">
-              <h2 className="text-2xl font-serif font-medium text-neutral-800">How It Works</h2>
+              <h2 className="text-2xl font-serif font-medium text-neutral-800">{t("How It Works")}</h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
@@ -531,9 +541,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                   </svg>
                 </div>
-                <h3 className="font-sans font-bold text-sm text-neutral-800">Select a Design</h3>
+                <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Select a Design")}</h3>
                 <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
-                  Curate your design layout by browsing and selecting from our premium template gallery.
+                  {t("Curate your design layout by browsing and selecting from our premium template gallery.")}
                 </p>
               </div>
 
@@ -544,9 +554,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                   </svg>
                 </div>
-                <h3 className="font-sans font-bold text-sm text-neutral-800">Customize Online</h3>
+                <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Customize Online")}</h3>
                 <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
-                  Customize details like date, coordinates, texts, and music instantly on your dashboard.
+                  {t("Customize details like date, coordinates, texts, and music instantly on your dashboard.")}
                 </p>
               </div>
 
@@ -557,9 +567,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                   </svg>
                 </div>
-                <h3 className="font-sans font-bold text-sm text-neutral-800">Download & Share</h3>
+                <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Download & Share")}</h3>
                 <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
-                  Download your invitation image or share the interactive guest link for online RSVP tracking.
+                  {t("Download your invitation image or share the interactive guest link for online RSVP tracking.")}
                 </p>
               </div>
             </div>
@@ -568,9 +578,9 @@ export default function Home() {
 
         {/* ── TESTIMONIALS SECTION ───────────────────────────────────── */}
         <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
-          <div className="max-w-7xl mx-auto flex flex-col gap-10 relative">
+          <div className="max-w-[1700px] mx-auto flex flex-col gap-10 relative">
             <div className="text-center flex flex-col gap-1">
-              <h2 className="text-[26px] font-serif font-medium text-neutral-800">Testimonials</h2>
+              <h2 className="text-[26px] font-serif font-medium text-neutral-800">{t("Testimonials")}</h2>
             </div>
 
             <div className="relative w-full">
@@ -579,15 +589,15 @@ export default function Home() {
                 {/* Review 1 */}
                 <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
                   <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                    &ldquo;The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free.&rdquo;
+                    {t("The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free.")}
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
                       <span className="text-[10px] font-bold text-neutral-600">AR</span>
                     </div>
                     <div>
-                      <h4 className="text-[12px] font-bold text-[#2D3142]">Ahmed Al-Rashid</h4>
-                      <span className="text-[10px] text-[#7F8487] block -mt-0.5">Wedding Host</span>
+                      <h4 className="text-[12px] font-bold text-[#2D3142]">{t("Ahmed Al-Rashid")}</h4>
+                      <span className="text-[10px] text-[#7F8487] block -mt-0.5">{t("Wedding Host")}</span>
                     </div>
                   </div>
                 </div>
@@ -595,15 +605,15 @@ export default function Home() {
                 {/* Review 2 */}
                 <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
                   <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                    &ldquo;So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!&rdquo;
+                    {t("So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!")}
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
                       <span className="text-[10px] font-bold text-neutral-600">SA</span>
                     </div>
                     <div>
-                      <h4 className="text-[12px] font-bold text-[#2D3142]">Sarah Al-Mansoori</h4>
-                      <span className="text-[10px] text-[#7F8487] block -mt-0.5">Bridal Shower Host</span>
+                      <h4 className="text-[12px] font-bold text-[#2D3142]">{t("Sarah Al-Mansoori")}</h4>
+                      <span className="text-[10px] text-[#7F8487] block -mt-0.5">{t("Bridal Shower Host")}</span>
                     </div>
                   </div>
                 </div>
@@ -611,15 +621,15 @@ export default function Home() {
                 {/* Review 3 */}
                 <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
                   <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                    &ldquo;The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!&rdquo;
+                    {t("The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!")}
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
                       <span className="text-[10px] font-bold text-neutral-600">KB</span>
                     </div>
                     <div>
-                      <h4 className="text-[12px] font-bold text-[#2D3142]">Khalid Bashir</h4>
-                      <span className="text-[10px] text-[#7F8487] block -mt-0.5">Anniversary Host</span>
+                      <h4 className="text-[12px] font-bold text-[#2D3142]">{t("Khalid Bashir")}</h4>
+                      <span className="text-[10px] text-[#7F8487] block -mt-0.5">{t("Anniversary Host")}</span>
                     </div>
                   </div>
                 </div>
@@ -645,7 +655,7 @@ export default function Home() {
 
         {/* ── FOOTER ──────────────────────────────────────────────────── */}
         <footer className="bg-[#FAF8F5] border-t border-[#E6E2DA] px-6 sm:px-10 py-16 mt-auto">
-          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-xs mb-12">
+          <div className="max-w-[1700px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-xs mb-12">
             <div className="flex flex-col gap-4">
               <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">Explore</h4>
               <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
@@ -705,7 +715,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium">
+          <div className="max-w-[1700px] mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium">
             <p>&copy; Copyright - 2023 MarketPlace. All rights reserved.</p>
             <div className="flex gap-6">
               <a href="#" className="hover:text-black transition-colors">Privacy Policy</a>

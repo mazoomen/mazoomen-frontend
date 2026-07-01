@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import api from "@/lib/api";
+import { useLanguage } from "@/components/LanguageContext";
 import { InvitationEditor, RsvpTracker } from "./_components";
 
 interface PurchaseInvitation {
@@ -29,6 +31,7 @@ interface PurchaseData {
 }
 
 export default function ClientDashboardPage() {
+  const { lang, t } = useLanguage();
   const [purchases, setPurchases] = useState<PurchaseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,14 +63,16 @@ export default function ClientDashboardPage() {
       }
     } catch (err) {
       console.error("Error fetching purchases:", err);
-      setError("Failed to load your purchased invitations. Make sure the backend server is running.");
+      setError(t("Failed to load your purchased invitations. Make sure the backend server is running."));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
-    fetchPurchases();
+    setTimeout(() => {
+      fetchPurchases();
+    }, 0);
   }, [fetchPurchases]);
 
   // ── Copy Shareable link to clipboard ───────────────────────────────
@@ -109,7 +114,7 @@ export default function ClientDashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <div className="w-10 h-10 rounded-full border-4 border-neutral-200 border-t-black animate-spin"></div>
-        <p className="text-xs text-neutral-500 font-medium">Loading your dashboard...</p>
+        <p className="text-xs text-neutral-500 font-medium">{t("Loading your dashboard...")}</p>
       </div>
     );
   }
@@ -123,25 +128,25 @@ export default function ClientDashboardPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h3 className="text-base font-bold text-[#2D3142] mb-2">Connection Issue</h3>
+        <h3 className="text-base font-bold text-[#2D3142] mb-2">{t("Connection Issue")}</h3>
         <p className="text-xs text-[#7F8487] leading-relaxed mb-4">{error}</p>
         <button
           onClick={fetchPurchases}
           className="px-4 py-2 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-full transition-all"
         >
-          Retry Loading
+          {t("Retry Loading")}
         </button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10">
+    <div className="max-w-[1700px] mx-auto space-y-10">
       {/* ── Page Header ────────────────────────────────────────────── */}
       <div>
-        <h1 className="text-3xl font-serif font-medium text-neutral-800">My Purchases</h1>
-        <p className="mt-1.5 text-xs text-[#7F8487] leading-relaxed">
-          Manage your purchased templates, edit Groom & Bride details, copy shareable links, and monitor live RSVP statistics.
+        <h1 className="text-3xl font-serif font-medium text-neutral-800" dir={lang === "ar" ? "rtl" : "ltr"}>{t("My Purchases")}</h1>
+        <p className="mt-1.5 text-xs text-[#7F8487] leading-relaxed" dir={lang === "ar" ? "rtl" : "ltr"}>
+          {t("Manage your purchased templates, edit Groom & Bride details, copy shareable links, and monitor live RSVP statistics.")}
         </p>
       </div>
 
@@ -149,16 +154,16 @@ export default function ClientDashboardPage() {
       {purchases.length === 0 ? (
         <div className="bg-white border border-[#EBE7DF] rounded-[24px] p-12 text-center shadow-sm">
           <span className="text-4xl block mb-3">🛍️</span>
-          <h3 className="font-bold text-sm text-[#2D3142] mb-1">No Purchases Found</h3>
+          <h3 className="font-bold text-sm text-[#2D3142] mb-1">{t("No Purchases Found")}</h3>
           <p className="text-xs text-neutral-400 max-w-sm mx-auto leading-relaxed mb-4">
-            You haven't purchased any templates yet, or your orders are still pending admin approval.
+            {t("You haven't purchased any templates yet, or your orders are still pending admin approval.")}
           </p>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center justify-center px-6 h-10 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm"
           >
-            Browse Marketplace
-          </a>
+            {t("Browse Marketplace")}
+          </Link>
         </div>
       ) : (
         /* ── Purchases List Grid ──────────────────────────────────── */
@@ -175,11 +180,11 @@ export default function ClientDashboardPage() {
                 className="bg-white border border-[#EBE7DF] rounded-[24px] overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
               >
                 {/* Image & Main Info Layout */}
-                <div className="p-5 flex gap-4 border-b border-[#F4F1EA]">
+                <div className={`p-5 flex gap-4 border-b border-[#F4F1EA] ${lang === "ar" ? "flex-row-reverse text-right" : "flex-row text-left"}`} dir={lang === "ar" ? "rtl" : "ltr"}>
                   <div className="w-24 h-24 rounded-xl bg-[#FAF8F5] border border-[#F0ECE3] overflow-hidden shrink-0 shadow-sm relative">
                     <img
                       src={purchase.template.previewImage}
-                      alt={purchase.template.title}
+                      alt={t(purchase.template.title)}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -189,14 +194,14 @@ export default function ClientDashboardPage() {
                         {purchase.template.title}
                       </h3>
                       <p className="text-[10px] text-[#7F8487] mt-1 font-medium">
-                        Purchased: {new Date(purchase.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                        {t("Purchased")}: {new Date(purchase.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                     </div>
 
                     {hasInvite ? (
                       <div className="flex flex-col gap-0.5">
                         <span className="text-[9px] uppercase tracking-wider text-emerald-500 font-bold">
-                          ● Invitation Live
+                          ● {t("Active Invitation")}
                         </span>
                         <a
                           href={inviteUrl}
@@ -209,7 +214,7 @@ export default function ClientDashboardPage() {
                       </div>
                     ) : (
                       <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold">
-                        ○ Not setup yet
+                        ○ {t("Pending Setup")}
                       </span>
                     )}
                   </div>
@@ -222,7 +227,7 @@ export default function ClientDashboardPage() {
                       onClick={() => handleOpenEditor(purchase)}
                       className="w-full py-2 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      <span>Create Invitation</span>
+                      <span>{t("Create Invitation")}</span>
                     </button>
                   ) : (
                     <div className="w-full flex gap-2">
@@ -230,13 +235,13 @@ export default function ClientDashboardPage() {
                         onClick={() => handleOpenEditor(purchase)}
                         className="flex-1 py-2 text-[11px] font-semibold bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-xl transition-all cursor-pointer text-center"
                       >
-                        Edit Details
+                        {t("Edit Details")}
                       </button>
                       <button
                         onClick={() => handleCopyLink(purchase.id, purchase.invitation!.slug)}
                         className="flex-1 py-2 text-[11px] font-semibold bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-xl transition-all cursor-pointer text-center"
                       >
-                        {copiedId === purchase.id ? "Copied!" : "Copy Link"}
+                        {copiedId === purchase.id ? t("Copied!") : t("Copy Link")}
                       </button>
                       <button
                         onClick={() => {
@@ -251,7 +256,7 @@ export default function ClientDashboardPage() {
                             : "bg-[#E8DCC4] text-[#5C4D37] hover:bg-[#DECFA7]"
                         }`}
                       >
-                        Track RSVPs
+                        {t("Track RSVPs")}
                       </button>
                     </div>
                   )}
@@ -267,9 +272,9 @@ export default function ClientDashboardPage() {
         <section id="rsvp-tracker-section" className="bg-white border border-[#EBE7DF] rounded-[32px] p-6 sm:p-8 shadow-sm transition-all duration-300">
           <div className="border-b border-[#F4F1EA] pb-4 mb-6">
             <h2 className="text-xl font-serif font-medium text-neutral-800">
-              Audience RSVPs — <span className="text-[#B89C72]">{trackingTemplateTitle}</span>
+              {t("Audience RSVPs")} — <span className="text-[#B89C72]">{t(trackingTemplateTitle)}</span>
             </h2>
-            <p className="text-xs text-[#7F8487] mt-1">Live guest feedback and attendance metrics.</p>
+            <p className="text-xs text-[#7F8487] mt-1">{t("Live guest feedback and attendance metrics.")}</p>
           </div>
           <RsvpTracker invitationId={trackingInvitationId} />
         </section>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import type { LoginResponse } from "@/types/invitation";
 import type { AxiosError } from "axios";
+import { useLanguage } from "@/components/LanguageContext";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
+  const { t } = useLanguage();
 
   // Login inputs
   const [loginEmail, setLoginEmail] = useState("");
@@ -45,7 +47,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
     setAuthError("");
 
     if (!loginEmail.trim() || !loginPassword.trim()) {
-      setAuthError("Please fill in all fields.");
+      setAuthError(t("Please fill in all fields."));
       return;
     }
 
@@ -66,12 +68,12 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
       if (error.response?.status === 401) {
-        setAuthError("Invalid email or password. Please try again.");
+        setAuthError(t("Invalid email or password. Please try again."));
       } else if (error.response?.data?.message) {
         const msg = error.response.data.message;
         setAuthError(Array.isArray(msg) ? msg[0] : msg);
       } else {
-        setAuthError("Something went wrong. Please try again later.");
+        setAuthError(t("Something went wrong. Please try again later."));
       }
     } finally {
       setAuthSubmitting(false);
@@ -89,12 +91,12 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       !regPhone.trim() ||
       !regPassword
     ) {
-      setAuthError("All fields are required.");
+      setAuthError(t("All fields are required."));
       return;
     }
 
     if (regPassword.length < 8) {
-      setAuthError("Password must be at least 8 characters.");
+      setAuthError(t("Password must be at least 8 characters."));
       return;
     }
 
@@ -120,7 +122,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
         const msg = error.response.data.message;
         setAuthError(Array.isArray(msg) ? msg[0] : msg);
       } else {
-        setAuthError("Registration failed. Please try again.");
+        setAuthError(t("Registration failed. Please try again."));
       }
     } finally {
       setAuthSubmitting(false);
@@ -177,7 +179,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                 : "text-neutral-500 hover:text-black"
             }`}
           >
-            Login
+            {t("Login")}
           </button>
           <button
             onClick={() => {
@@ -190,7 +192,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                 : "text-neutral-500 hover:text-black"
             }`}
           >
-            Register
+            {t("Register")}
           </button>
         </div>
 
@@ -216,17 +218,17 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
           <form onSubmit={handleLoginSubmit} className="w-full flex flex-col">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
-                Welcome Back!
+                {t("Welcome Back!")}
               </h2>
               <p className="text-[11px] text-neutral-400">
-                Access your account and continue designing
+                {t("Access your account and continue designing")}
               </p>
             </div>
 
             <div className="flex flex-col gap-3">
               <input
                 type="email"
-                placeholder="Email Address"
+                placeholder={t("Email Address")}
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 disabled={authSubmitting}
@@ -239,14 +241,14 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                   onClick={() => alert('Forgot password service is temporarily unavailable. Please contact support.')}
                   className="text-[10px] text-neutral-500 hover:text-black transition-colors"
                 >
-                  Forgot Password?
+                  {t("Forgot Password?")}
                 </button>
               </div>
 
               <div className="relative w-full">
                 <input
                   type={showLoginPassword ? "text" : "password"}
-                  placeholder="Password"
+                  placeholder={t("Password")}
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   disabled={authSubmitting}
@@ -303,10 +305,10 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               {authSubmitting ? (
                 <>
                   <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-                  Logging in...
+                  {t("Logging in...")}
                 </>
               ) : (
-                "Login"
+                t("Login")
               )}
             </button>
           </form>
@@ -314,10 +316,10 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
           <form onSubmit={handleRegisterSubmit} className="w-full flex flex-col">
             <div className="text-center mb-5">
               <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
-                Create Account
+                {t("Create Account")}
               </h2>
               <p className="text-[11px] text-neutral-400">
-                Join us to save and coordinate your event invitations
+                {t("Join us to save and coordinate your event invitations")}
               </p>
             </div>
 
@@ -325,7 +327,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="text"
-                  placeholder="First Name"
+                  placeholder={t("First Name")}
                   value={regFirstName}
                   onChange={(e) => setRegFirstName(e.target.value)}
                   disabled={authSubmitting}
@@ -333,7 +335,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                 />
                 <input
                   type="text"
-                  placeholder="Last Name"
+                  placeholder={t("Last Name")}
                   value={regLastName}
                   onChange={(e) => setRegLastName(e.target.value)}
                   disabled={authSubmitting}
@@ -352,7 +354,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
 
               <input
                 type="tel"
-                placeholder="Phone Number (e.g. +966501234567)"
+                placeholder={t("Phone Number (e.g. +966501234567)")}
                 value={regPhone}
                 onChange={(e) => setRegPhone(e.target.value)}
                 disabled={authSubmitting}
@@ -362,7 +364,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               <div className="relative w-full">
                 <input
                   type={showRegPassword ? "text" : "password"}
-                  placeholder="Password (Min. 8 characters)"
+                  placeholder={t("Password (Min. 8 characters)")}
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                   disabled={authSubmitting}
@@ -419,10 +421,10 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               {authSubmitting ? (
                 <>
                   <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-                  Registering...
+                  {t("Registering...")}
                 </>
               ) : (
-                "Register"
+                t("Register")
               )}
             </button>
           </form>

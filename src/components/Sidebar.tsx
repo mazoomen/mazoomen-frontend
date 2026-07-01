@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { AuthUser } from "@/types/invitation";
+import { useLanguage } from "@/components/LanguageContext";
 
 interface SidebarProps {
   isSidebarExpanded: boolean;
@@ -23,6 +24,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { lang, t } = useLanguage();
 
   const handleNav = (path: string, requiresAuth = false) => {
     if (requiresAuth && !isLoggedIn) {
@@ -38,7 +40,7 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`bg-[#0B1528] border-r border-[#1E2E4A] flex flex-col py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen hidden sm:flex transition-all duration-300 ${
+      className={`bg-[#0B1528] border-r border-[#1E2E4A] flex flex-col py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen flex transition-all duration-300 ${
         isSidebarExpanded ? "w-56 px-4" : "w-[72px] px-0"
       }`}
     >
@@ -109,11 +111,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              Marketplace
+              {t("Marketplace")}
             </span>
             {!isSidebarExpanded && (
-              <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                Marketplace
+              <span className={`absolute ${lang === "ar" ? "right-16" : "left-16"} bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none`}>
+                {t("Marketplace")}
               </span>
             )}
           </button>
@@ -146,48 +148,16 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              My Profile
+              {t("My Profile")}
             </span>
             {!isSidebarExpanded && (
-              <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                My Profile
+              <span className={`absolute ${lang === "ar" ? "right-16" : "left-16"} bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none`}>
+                {t("My Profile")}
               </span>
             )}
           </button>
 
-          <button
-            className={`flex items-center transition-all duration-300 group cursor-pointer ${
-              isSidebarExpanded
-                ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-                : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-            }`}
-          >
-            <svg
-              className="w-5 h-5 shrink-0"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-              />
-            </svg>
-            <span
-              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
-                isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
-              }`}
-            >
-              Tickets
-            </span>
-            {!isSidebarExpanded && (
-              <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                Tickets
-              </span>
-            )}
-          </button>
+          
 
           <button
             onClick={() => {
@@ -223,11 +193,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              My Purchases
+              {t("My Purchases")}
             </span>
             {!isSidebarExpanded && (
-              <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                My Purchases
+              <span className={`absolute ${lang === "ar" ? "right-16" : "left-16"} bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none`}>
+                {t("My Purchases")}
               </span>
             )}
           </button>
@@ -236,40 +206,7 @@ export default function Sidebar({
 
       {/* Bottom Section */}
       <div className="flex flex-col gap-4 w-full">
-        <button
-          className={`flex items-center transition-all duration-300 group cursor-pointer ${
-            isSidebarExpanded
-              ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-              : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-          }`}
-        >
-          <svg
-            className="w-5 h-5 shrink-0"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-            />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span
-            className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
-              isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
-            }`}
-          >
-            Settings
-          </span>
-          {!isSidebarExpanded && (
-            <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-              Settings
-            </span>
-          )}
-        </button>
+        
 
         {isLoggedIn && (
           <button
@@ -298,11 +235,11 @@ export default function Sidebar({
                 isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
               }`}
             >
-              Log Out
+              {t("Log Out")}
             </span>
             {!isSidebarExpanded && (
-              <span className="absolute left-16 bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none">
-                Log Out
+              <span className={`absolute ${lang === "ar" ? "right-16" : "left-16"} bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none`}>
+                {t("Log Out")}
               </span>
             )}
           </button>
