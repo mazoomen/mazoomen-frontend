@@ -27,9 +27,11 @@ export interface InvitationData {
   id: string;
   templateId: string;
   slug: string;
+  eventTitle: string;
   eventDate: string; // ISO 8601
-  locationUrl: string;
-  welcomeText: string;
+  eventLocation: string;
+  locationUrl?: string | null;
+  welcomeText?: string | null;
   images: string[];
   musicUrl: string | null;
   createdAt: string;
@@ -41,9 +43,10 @@ export interface InvitationData {
 
 export interface CreateRsvpPayload {
   invitationId: string;
-  guestName: string;
-  willAttend: boolean;
-  companionsCount: number;
+  name: string;
+  attendance: "YES" | "NO";
+  guestsCount: number;
+  message?: string;
 }
 
 export interface RsvpResponse {

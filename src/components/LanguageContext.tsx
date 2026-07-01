@@ -225,6 +225,21 @@ const translations: Record<string, Record<Language, string>> = {
     en: "Failed to load your purchased invitations. Make sure the backend server is running.",
     ar: "فشل تحميل الدعوات المشتراة. تأكد من تشغيل خادم الخلفية.",
   },
+  "Total RSVPs": { en: "Total RSVPs", ar: "إجمالي الردود" },
+  "Declined": { en: "Declined", ar: "المعتذرين" },
+  "Date Responded": { en: "Date Responded", ar: "تاريخ الرد" },
+  "No responses yet": { en: "No responses yet", ar: "لا توجد ردود بعد" },
+  "Share your invitation URL with guests to start collecting RSVPs.": {
+    en: "Share your invitation URL with guests to start collecting RSVPs.",
+    ar: "شارك رابط دعوتك مع الضيوف لبدء جمع ردود الحضور."
+  },
+  "Failed to load live RSVP guest responses. Please refresh the page.": {
+    en: "Failed to load live RSVP guest responses. Please refresh the page.",
+    ar: "فشل تحميل ردود حضور الضيوف المباشرة. يرجى إعادة تحميل الصفحة."
+  },
+  "Close": { en: "Close", ar: "إغلاق" },
+  "Back": { en: "Back", ar: "عودة" },
+  "None": { en: "None", ar: "لا يوجد" },
 
   // Alerts
   "Your profile has been updated successfully.": { en: "Your profile has been updated successfully.", ar: "تم تحديث ملفك الشخصي بنجاح." },

@@ -270,11 +270,22 @@ export default function ClientDashboardPage() {
       {/* ── RSVP Tracker Panel (Only if selected) ───────────────────── */}
       {trackingInvitationId && (
         <section id="rsvp-tracker-section" className="bg-white border border-[#EBE7DF] rounded-[32px] p-6 sm:p-8 shadow-sm transition-all duration-300">
-          <div className="border-b border-[#F4F1EA] pb-4 mb-6">
-            <h2 className="text-xl font-serif font-medium text-neutral-800">
-              {t("Audience RSVPs")} — <span className="text-[#B89C72]">{t(trackingTemplateTitle)}</span>
-            </h2>
-            <p className="text-xs text-[#7F8487] mt-1">{t("Live guest feedback and attendance metrics.")}</p>
+          <div className={`border-b border-[#F4F1EA] pb-4 mb-6 flex justify-between items-start gap-4 ${lang === "ar" ? "flex-row-reverse" : "flex-row"}`}>
+            <div className={lang === "ar" ? "text-right" : "text-left"}>
+              <h2 className="text-xl font-serif font-medium text-neutral-800">
+                {t("Audience RSVPs")} — <span className="text-[#B89C72]">{trackingTemplateTitle}</span>
+              </h2>
+              <p className="text-xs text-[#7F8487] mt-1">{t("Live guest feedback and attendance metrics.")}</p>
+            </div>
+            <button
+              onClick={() => {
+                setTrackingInvitationId(null);
+                setTrackingTemplateTitle("");
+              }}
+              className="px-4 py-2 border border-neutral-300 hover:bg-neutral-50 rounded-xl transition-all text-xs font-semibold cursor-pointer shrink-0"
+            >
+              {t("Close")}
+            </button>
           </div>
           <RsvpTracker invitationId={trackingInvitationId} />
         </section>
