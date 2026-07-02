@@ -67,11 +67,15 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       window.location.href = user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
-      if (error.response?.status === 401) {
+      const msg = error.response?.data?.message;
+      const errKey = Array.isArray(msg) ? msg[0] : msg;
+
+      if (errKey === "errors.user_deactivated") {
+        setAuthError(t("errors.user_deactivated"));
+      } else if (error.response?.status === 401) {
         setAuthError(t("Invalid email or password. Please try again."));
-      } else if (error.response?.data?.message) {
-        const msg = error.response.data.message;
-        setAuthError(Array.isArray(msg) ? msg[0] : msg);
+      } else if (errKey) {
+        setAuthError(t(errKey));
       } else {
         setAuthError(t("Something went wrong. Please try again later."));
       }

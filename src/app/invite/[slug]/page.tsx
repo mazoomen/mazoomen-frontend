@@ -20,7 +20,13 @@ async function getInvitation(slug: string): Promise<InvitationData | null> {
       next: { revalidate: 60 }, // ISR — revalidate every 60s
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 403) {
+        // Return dummy invitation with deactivated flag
+        return { id: "deactivated", slug } as any;
+      }
+      return null;
+    }
     return res.json();
   } catch {
     return null;
@@ -35,8 +41,8 @@ export async function generateMetadata({
   const { slug } = await params;
   const invitation = await getInvitation(slug);
 
-  if (!invitation) {
-    return { title: "Invitation Not Found" };
+  if (!invitation || invitation.id === "deactivated") {
+    return { title: "Invitation Not Available" };
   }
 
   const desc = invitation.welcomeText 
@@ -61,6 +67,10 @@ export default async function InvitePage({ params }: InvitePageProps) {
   const invitation = await getInvitation(slug);
 
   if (!invitation) notFound();
+
+  if (invitation.id === "deactivated") {
+    return <InvitationClientPage slug={slug} isDeactivatedInitial={true} />;
+  }
 
   return <InvitationClientPage invitation={invitation} />;
 }

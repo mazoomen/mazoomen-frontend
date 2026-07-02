@@ -14,7 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const translations: Record<string, Record<Language, string>> = {
   // Navigation & General UI
-  "Marketplace": { en: "Marketplace", ar: "سوق القوالب" },
+  "Mazoom": { en: "Mazoom", ar: "سوق القوالب" },
   "My Profile": { en: "My Profile", ar: "الملف الشخصي" },
   "Tickets": { en: "Tickets", ar: "التذاكر" },
   "My Purchases": { en: "My Purchases", ar: "مشترياتي" },
@@ -89,6 +89,11 @@ const translations: Record<string, Record<Language, string>> = {
   "Phone Number (e.g. +966501234567)": { en: "Phone Number (e.g. +966501234567)", ar: "رقم الهاتف (مثال: +966501234567)" },
   "Password (Min. 8 characters)": { en: "Password (Min. 8 characters)", ar: "كلمة المرور (8 أحرف على الأقل)" },
   "Registering...": { en: "Registering...", ar: "جاري التسجيل..." },
+  "errors.user_deactivated": { en: "Your account is deactivated. Please contact the administrator.", ar: "تم تعطيل حسابك. يرجى التواصل مع المشرف." },
+  "Active": { en: "Active", ar: "نشط" },
+  "Deactive": { en: "Deactive", ar: "معطل" },
+  "Account Status": { en: "Account Status", ar: "حالة الحساب" },
+  "Activate or deactivate the user account": { en: "Activate or deactivate the user account", ar: "تفعيل أو تعطيل حساب المستخدم" },
   "Logging in...": { en: "Logging in...", ar: "جاري تسجيل الدخول..." },
   "Please fill in all fields.": { en: "Please fill in all fields.", ar: "يرجى ملء جميع الحقول." },
   "Invalid email or password. Please try again.": { en: "Invalid email or password. Please try again.", ar: "البريد الإلكتروني أو كلمة المرور غير صالحة. يرجى المحاولة مرة أخرى." },
@@ -211,7 +216,7 @@ const translations: Record<string, Record<Language, string>> = {
     en: "You haven't purchased any templates yet, or your orders are still pending admin approval.",
     ar: "لم تقم بشراء أي قوالب بعد، أو أن طلباتك لا تزال قيد الانتظار لموافقة المشرف.",
   },
-  "Browse Marketplace": { en: "Browse Marketplace", ar: "تصفح سوق القوالب" },
+  "Browse Mazoom": { en: "Browse Mazoom", ar: "تصفح سوق القوالب" },
   "Purchased": { en: "Purchased", ar: "تم الشراء في" },
   "Active Invitation": { en: "Active Invitation", ar: "دعوة نشطة" },
   "Pending Setup": { en: "Pending Setup", ar: "إعداد معلق" },

@@ -15,11 +15,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "MarketPlace — Digital Wedding Invitations",
-    template: "%s | MarketPlace",
+    default: "Mazoom — Digital Wedding Invitations",
+    template: "%s | Mazoom",
   },
   description:
-    "Create and share beautiful digital wedding invitations with MarketPlace.",
+    "Create and share beautiful digital wedding invitations with Mazoom.",
 };
 
 export default function RootLayout({
