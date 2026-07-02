@@ -14,7 +14,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 const translations: Record<string, Record<Language, string>> = {
   // Navigation & General UI
-  "Marketplace": { en: "Marketplace", ar: "سوق القوالب" },
+  "Mazoom": { en: "Mazoom", ar: "سوق القوالب" },
   "My Profile": { en: "My Profile", ar: "الملف الشخصي" },
   "Tickets": { en: "Tickets", ar: "التذاكر" },
   "My Purchases": { en: "My Purchases", ar: "مشترياتي" },
@@ -211,7 +211,7 @@ const translations: Record<string, Record<Language, string>> = {
     en: "You haven't purchased any templates yet, or your orders are still pending admin approval.",
     ar: "لم تقم بشراء أي قوالب بعد، أو أن طلباتك لا تزال قيد الانتظار لموافقة المشرف.",
   },
-  "Browse Marketplace": { en: "Browse Marketplace", ar: "تصفح سوق القوالب" },
+  "Browse Mazoom": { en: "Browse Mazoom", ar: "تصفح سوق القوالب" },
   "Purchased": { en: "Purchased", ar: "تم الشراء في" },
   "Active Invitation": { en: "Active Invitation", ar: "دعوة نشطة" },
   "Pending Setup": { en: "Pending Setup", ar: "إعداد معلق" },

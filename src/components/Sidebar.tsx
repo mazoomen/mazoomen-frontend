@@ -34,22 +34,20 @@ export default function Sidebar({
     }
   };
 
-  const isMarketplace = pathname === "/";
+  const isMazoom = pathname === "/";
   const isProfile = pathname.startsWith("/profile");
   const isPurchases = pathname.startsWith("/dashboard/client");
 
   return (
     <aside
-      className={`bg-[#0B1528] border-r border-[#1E2E4A] flex flex-col py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen flex transition-all duration-300 ${
-        isSidebarExpanded ? "w-56 px-4" : "w-[72px] px-0"
-      }`}
+      className={`hidden sm:flex bg-[#0B1528] border-r border-[#1E2E4A] flex-col py-6 gap-8 justify-between shrink-0 sticky top-0 h-screen transition-all duration-300 ${isSidebarExpanded ? "w-56 px-4" : "w-[72px] px-0"
+        }`}
     >
       <div className="flex flex-col gap-8 w-full items-stretch">
         {/* Logo / Brand Icon & Toggle Button */}
         <div
-          className={`flex items-center gap-3 w-full ${
-            isSidebarExpanded ? "px-2 justify-between" : "flex-col gap-4 items-center"
-          }`}
+          className={`flex items-center gap-3 w-full ${isSidebarExpanded ? "px-2 justify-between" : "flex-col gap-4 items-center"
+            }`}
         >
           <Link
             href="/"
@@ -85,13 +83,12 @@ export default function Sidebar({
         <nav className="flex flex-col gap-4 w-full">
           <button
             onClick={() => handleNav("/")}
-            className={`flex items-center transition-all duration-300 group cursor-pointer ${
-              isMarketplace
+            className={`flex items-center transition-all duration-300 group cursor-pointer ${isMazoom
                 ? "w-full h-11 px-4 rounded-xl gap-3 text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]"
                 : isSidebarExpanded
                   ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
                   : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-            }`}
+              }`}
           >
             <svg
               className="w-5 h-5 shrink-0"
@@ -107,28 +104,26 @@ export default function Sidebar({
               />
             </svg>
             <span
-              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
-                isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
-              }`}
+              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
+                }`}
             >
-              {t("Marketplace")}
+              {t("Mazoom")}
             </span>
             {!isSidebarExpanded && (
               <span className={`absolute ${lang === "ar" ? "right-16" : "left-16"} bg-[#0B1528] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md border border-[#1E2E4A] z-50 pointer-events-none`}>
-                {t("Marketplace")}
+                {t("Mazoom")}
               </span>
             )}
           </button>
 
           <button
             onClick={() => handleNav("/profile", true)}
-            className={`flex items-center transition-all duration-300 group cursor-pointer ${
-              isProfile
+            className={`flex items-center transition-all duration-300 group cursor-pointer ${isProfile
                 ? "w-full h-11 px-4 rounded-xl gap-3 text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]"
                 : isSidebarExpanded
                   ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
                   : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-            }`}
+              }`}
           >
             <svg
               className="w-5 h-5 shrink-0"
@@ -144,9 +139,8 @@ export default function Sidebar({
               />
             </svg>
             <span
-              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
-                isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
-              }`}
+              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
+                }`}
             >
               {t("My Profile")}
             </span>
@@ -157,7 +151,7 @@ export default function Sidebar({
             )}
           </button>
 
-          
+
 
           <button
             onClick={() => {
@@ -167,13 +161,12 @@ export default function Sidebar({
                 openAuthModal("login");
               }
             }}
-            className={`flex items-center transition-all duration-300 group cursor-pointer ${
-              isPurchases
+            className={`flex items-center transition-all duration-300 group cursor-pointer ${isPurchases
                 ? "w-full h-11 px-4 rounded-xl gap-3 text-[#E5C38B] bg-[#101F35] border border-[#1E2E4A]"
                 : isSidebarExpanded
                   ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
                   : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-white hover:bg-[#1A2D4C]"
-            }`}
+              }`}
           >
             <svg
               className="w-5 h-5 shrink-0"
@@ -189,9 +182,8 @@ export default function Sidebar({
               />
             </svg>
             <span
-              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
-                isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
-              }`}
+              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
+                }`}
             >
               {t("My Purchases")}
             </span>
@@ -206,16 +198,15 @@ export default function Sidebar({
 
       {/* Bottom Section */}
       <div className="flex flex-col gap-4 w-full">
-        
+
 
         {isLoggedIn && (
           <button
             onClick={handleLogout}
-            className={`flex items-center transition-all duration-300 group cursor-pointer ${
-              isSidebarExpanded
+            className={`flex items-center transition-all duration-300 group cursor-pointer ${isSidebarExpanded
                 ? "w-full h-11 px-4 rounded-xl gap-3 text-neutral-300 hover:text-red-500 hover:bg-red-500/10"
                 : "w-10 h-10 mx-auto justify-center rounded-full text-neutral-300 hover:text-red-500 hover:bg-red-500/10"
-            }`}
+              }`}
           >
             <svg
               className="w-5 h-5 shrink-0"
@@ -231,9 +222,8 @@ export default function Sidebar({
               />
             </svg>
             <span
-              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${
-                isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
-              }`}
+              className={`text-xs font-semibold whitespace-nowrap transition-all duration-300 ease-in-out ${isSidebarExpanded ? "opacity-100 max-w-[150px]" : "opacity-0 max-w-0 overflow-hidden"
+                }`}
             >
               {t("Log Out")}
             </span>

@@ -162,7 +162,7 @@ export default function ClientDashboardPage() {
             href="/"
             className="inline-flex items-center justify-center px-6 h-10 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm"
           >
-            {t("Browse Marketplace")}
+            {t("Browse Mazoom")}
           </Link>
         </div>
       ) : (
@@ -250,11 +250,10 @@ export default function ClientDashboardPage() {
                           // Scroll to tracker
                           document.getElementById("rsvp-tracker-section")?.scrollIntoView({ behavior: "smooth" });
                         }}
-                        className={`flex-1 py-2 text-[11px] font-semibold rounded-xl transition-all cursor-pointer text-center ${
-                          trackingInvitationId === purchase.invitation!.id
+                        className={`flex-1 py-2 text-[11px] font-semibold rounded-xl transition-all cursor-pointer text-center ${trackingInvitationId === purchase.invitation!.id
                             ? "bg-black text-white"
                             : "bg-[#E8DCC4] text-[#5C4D37] hover:bg-[#DECFA7]"
-                        }`}
+                          }`}
                       >
                         {t("Track RSVPs")}
                       </button>
