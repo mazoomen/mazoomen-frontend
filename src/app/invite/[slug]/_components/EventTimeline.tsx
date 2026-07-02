@@ -23,6 +23,9 @@ export const EventTimeline: React.FC = () => {
     const handleScroll = () => {
       if (!containerRef.current || !indicatorRef.current) return;
 
+      const activeItems = itemRefs.current.filter((item): item is HTMLDivElement => item !== null);
+      if (activeItems.length === 0) return;
+
       const rect = containerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       
@@ -33,12 +36,17 @@ export const EventTimeline: React.FC = () => {
       let progress = -relativeTop / containerHeight;
       progress = Math.max(0, Math.min(1, progress));
 
-      const indicatorTop = progress * containerHeight;
+      const firstItem = activeItems[0];
+      const lastItem = activeItems[activeItems.length - 1];
+      
+      const startTop = firstItem.offsetTop + (firstItem.offsetHeight / 2);
+      const endTop = lastItem.offsetTop + (lastItem.offsetHeight / 2);
+      const range = endTop - startTop;
+
+      const indicatorTop = startTop + (progress * range);
       indicatorRef.current.style.top = `${indicatorTop}px`;
 
-      itemRefs.current.forEach((item, index) => {
-        if (!item) return;
-
+      activeItems.forEach((item) => {
         const itemOffsetTop = item.offsetTop + (item.offsetHeight / 2);
         const timeSpan = item.querySelector('.timeline-time');
         const titleSpan = item.querySelector('.timeline-title');

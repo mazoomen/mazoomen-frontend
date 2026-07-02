@@ -12,6 +12,7 @@ import {
   WishesSection,
   BottomNavbar
 } from './index';
+import InvitationClientPageGarden from './InvitationClientPageGarden';
 import "../index-vcqbJqsY.css";
 
 interface InvitationClientPageProps {
@@ -128,6 +129,17 @@ export default function InvitationClientPage({
     );
   }
 
+  // Delegate rendering to Garden Template if matched
+  if (localInvitation.template?.title === 'Watercolor Garden Wedding') {
+    return (
+      <InvitationClientPageGarden
+        invitation={localInvitation}
+        slug={slug}
+        isDeactivatedInitial={isDeactivatedInitial}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#F5F2EB] relative flex flex-col justify-center">
       {/* Background audio controller & Navigation bar */}
@@ -136,6 +148,7 @@ export default function InvitationClientPage({
           musicUrl={localInvitation.musicUrl} 
           musicPlaying={musicPlaying} 
           setMusicPlaying={setMusicPlaying} 
+          theme="gold"
         />
       )}
 
@@ -260,12 +273,11 @@ export default function InvitationClientPage({
               <p className="text-xs uppercase tracking-[0.2em] text-[#C8C8C8]">
                 صنع بكل حب عبر منصة مازوم
               </p>
+              {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
+              <div className="h-24" />
             </div>
           </div>
         </section>
-        
-        {/* Bottom padding spacer to clear the floating tabs nav */}
-        <div className="h-24" />
       </div>
 
       <style jsx global>{`

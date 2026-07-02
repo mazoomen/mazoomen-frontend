@@ -7,12 +7,14 @@ interface BottomNavbarProps {
   musicUrl: string | null;
   musicPlaying: boolean;
   setMusicPlaying: (playing: boolean) => void;
+  theme?: 'gold' | 'green';
 }
 
 export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   musicUrl,
   musicPlaying,
-  setMusicPlaying
+  setMusicPlaying,
+  theme = 'gold'
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -59,18 +61,40 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
     }
   };
 
+  const isGreen = theme === 'green';
+  
+  // Custom theme colors configuration
+  const colors = {
+    bg: isGreen ? 'rgba(253, 251, 246, 0.75)' : 'rgba(253, 251, 246, 0.75)',
+    border: isGreen ? '1px solid rgba(46, 90, 54, 0.22)' : '1px solid rgba(172, 140, 96, 0.28)',
+    shadow: isGreen ? '0 10px 30px -10px rgba(27, 50, 34, 0.12), 0 1px 3px rgba(27, 50, 34, 0.05)' : '0 10px 30px -10px rgba(172, 140, 96, 0.15), 0 1px 3px rgba(172, 140, 96, 0.05)',
+    
+    textInactive: isGreen ? '#4A5D4E' : '#7D6A53',
+    textActive: isGreen ? '#1B3222' : '#ac8c60',
+    
+    btnActiveBg: isGreen ? 'rgba(46, 90, 54, 0.12)' : 'rgba(172, 140, 96, 0.15)',
+    btnInactiveBg: isGreen ? 'rgba(46, 90, 54, 0.04)' : 'rgba(172, 140, 96, 0.04)',
+    
+    centerBtnBg: isGreen 
+      ? 'linear-gradient(135deg, #1B3222 0%, #3D7348 50%, #1B3222 100%)'
+      : 'linear-gradient(135deg, rgb(172, 140, 96) 0%, rgb(210, 180, 140) 50%, rgb(172, 140, 96) 100%)',
+    centerBtnShadow: isGreen
+      ? '0 6px 20px rgba(27, 50, 34, 0.35)'
+      : '0 6px 20px rgba(172, 140, 96, 0.35)'
+  };
+
   return (
     <nav 
-      className="fixed bottom-4 w-[383px] md:w-[500px] lg:w-[600px] max-w-[calc(100%-32px)] h-16 z-[999] flex items-center justify-around px-2"
+      className="fixed bottom-6 w-[383px] md:w-[500px] lg:w-[600px] max-w-[calc(100%-32px)] h-16.5 z-[999] flex items-center justify-around px-2"
       style={{
         left: '50%',
         transform: 'translateX(-50%)',
-        background: 'rgba(217, 217, 217, 0.19)',
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        borderRadius: '12px',
-        border: '1px solid rgba(244, 244, 244, 0.28)',
-        boxShadow: 'rgba(0, 0, 0, 0.25) 0px 0px 2px',
+        background: colors.bg,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderRadius: '20px',
+        border: colors.border,
+        boxShadow: colors.shadow,
       }}
     >
       {/* Contact */}
@@ -78,10 +102,13 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         onClick={() => window.open('https://wa.me/966500000000', '_blank')} 
         className="flex flex-col items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
       >
-        <span className="w-8 h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 transition-all">
-          <Phone className="w-4 h-4 text-black" />
+        <span 
+          className="w-8.5 h-8.5 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300"
+          style={{ backgroundColor: colors.btnInactiveBg }}
+        >
+          <Phone className="w-4 h-4" style={{ color: colors.textInactive }} />
         </span>
-        <span className="text-[10px] text-gray-500 font-semibold font-normal">تواصل</span>
+        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>تواصل</span>
       </button>
 
       {/* Music */}
@@ -89,25 +116,30 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         onClick={toggleMusic}
         className="flex flex-col items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
       >
-        <span className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-          musicPlaying ? 'bg-[#ac8c60]/20 shadow-[0_0_10px_rgba(200,162,74,0.3)]' : 'bg-black/5'
-        }`}>
-          <Music className={`w-4 h-4 transition-colors ${musicPlaying ? 'text-[#ac8c60]' : 'text-black'}`} />
+        <span 
+          className="w-8.5 h-8.5 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300"
+          style={{ 
+            backgroundColor: musicPlaying ? colors.btnActiveBg : colors.btnInactiveBg,
+            boxShadow: musicPlaying ? `0 0 12px ${isGreen ? 'rgba(46, 90, 54, 0.15)' : 'rgba(172, 140, 96, 0.15)'}` : 'none'
+          }}
+        >
+          <Music className="w-4 h-4" style={{ color: musicPlaying ? colors.textActive : colors.textInactive }} />
         </span>
-        <span className="text-[10px] text-gray-500 font-semibold font-normal">موسيقى</span>
+        <span className="text-[9px] font-bold" style={{ color: musicPlaying ? colors.textActive : colors.textInactive }}>موسيقى</span>
       </button>
 
       {/* Moments/Gallery */}
       <button 
         onClick={() => scrollToSection('moments-section')}
-        className="flex flex-col items-center gap-1 relative cursor-pointer bg-transparent border-none outline-none"
+        className="flex flex-col items-center gap-1 relative cursor-pointer bg-transparent border-none outline-none -translate-y-3 hover:scale-105 active:scale-95 transition-all duration-300"
       >
-        <span className="relative w-[52px] h-[52px] rounded-full flex items-center justify-center shadow-lg"
+        <span className="relative w-13 h-13 rounded-full flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, rgb(200, 162, 74) 0%, rgb(240, 217, 138) 50%, rgb(200, 162, 74) 100%)',
+            background: colors.centerBtnBg,
+            boxShadow: colors.centerBtnShadow,
           }}
         >
-          <Camera className="w-6 h-6 text-white" />
+          <Camera className="w-5.5 h-5.5 text-white" />
         </span>
       </button>
 
@@ -116,10 +148,13 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         onClick={() => scrollToSection('location-section')}
         className="flex flex-col items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
       >
-        <span className="w-8 h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 transition-all">
-          <MapPin className="w-4 h-4 text-black" />
+        <span 
+          className="w-8.5 h-8.5 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300"
+          style={{ backgroundColor: colors.btnInactiveBg }}
+        >
+          <MapPin className="w-4 h-4" style={{ color: colors.textInactive }} />
         </span>
-        <span className="text-[10px] text-gray-500 font-semibold font-normal">الموقع</span>
+        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>الموقع</span>
       </button>
 
       {/* RSVP */}
@@ -127,10 +162,13 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         onClick={() => scrollToSection('rsvp-section')}
         className="flex flex-col items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
       >
-        <span className="w-8 h-8 rounded-full flex items-center justify-center bg-black/5 hover:bg-black/10 transition-all">
-          <Heart className="w-4 h-4 text-black" />
+        <span 
+          className="w-8.5 h-8.5 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300"
+          style={{ backgroundColor: colors.btnInactiveBg }}
+        >
+          <Heart className="w-4 h-4" style={{ color: colors.textInactive }} />
         </span>
-        <span className="text-[10px] text-gray-500 font-semibold font-normal">تأكيد الحضور</span>
+        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>تأكيد الحضور</span>
       </button>
     </nav>
   );
