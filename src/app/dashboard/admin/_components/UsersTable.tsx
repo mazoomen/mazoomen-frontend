@@ -10,6 +10,7 @@ export interface User {
   lastName: string;
   phoneNumber: string;
   role: "ADMIN" | "CLIENT";
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -139,6 +140,9 @@ export default function UsersTable({ users, onEditUser, onAddUser }: UsersTableP
                     {lang === "ar" ? "الصلاحية" : "Role"}
                   </th>
                   <th className="px-4 py-3 font-semibold uppercase tracking-wider text-neutral-500">
+                    {lang === "ar" ? "الحالة" : "Status"}
+                  </th>
+                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-neutral-500">
                     {lang === "ar" ? "تاريخ الانضمام" : "Date Joined"}
                   </th>
                   <th className="px-4 py-3 font-semibold uppercase tracking-wider text-neutral-500">
@@ -201,6 +205,21 @@ export default function UsersTable({ users, onEditUser, onAddUser }: UsersTableP
                         }`}
                       >
                         {user.role}
+                      </span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-3.5">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                          user.isActive
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-100"
+                        }`}
+                      >
+                        {user.isActive
+                          ? (lang === "ar" ? "نشط" : "Active")
+                          : (lang === "ar" ? "معطل" : "Deactive")}
                       </span>
                     </td>
 

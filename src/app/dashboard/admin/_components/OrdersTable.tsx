@@ -29,18 +29,32 @@ export interface Order {
   createdAt: string;
   user: OrderUser;
   template: OrderTemplate;
+  purchase?: {
+    id: string;
+    invitation?: {
+      id: string;
+      slug: string;
+      isActive: boolean;
+    } | null;
+  } | null;
 }
 
 interface OrdersTableProps {
   orders: Order[];
   onStatusUpdated: (orderId: string, newStatus: "APPROVED" | "REJECTED") => void;
+  onLinkStatusUpdated?: (invitationId: string, isActive: boolean) => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
 
-export default function OrdersTable({ orders, onStatusUpdated }: OrdersTableProps) {
+export default function OrdersTable({
+  orders,
+  onStatusUpdated,
+  onLinkStatusUpdated,
+}: OrdersTableProps) {
   const { lang } = useLanguage();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -57,6 +71,21 @@ export default function OrdersTable({ orders, onStatusUpdated }: OrdersTableProp
       console.error("Failed to update order status:", err);
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleToggleInvitation = async (invitationId: string, currentActive: boolean) => {
+    setTogglingId(invitationId);
+    try {
+      const newActive = !currentActive;
+      await api.patch(`/invitations/${invitationId}/status`, { isActive: newActive });
+      if (onLinkStatusUpdated) {
+        onLinkStatusUpdated(invitationId, newActive);
+      }
+    } catch (err) {
+      console.error("Failed to toggle invitation status:", err);
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -171,6 +200,9 @@ export default function OrdersTable({ orders, onStatusUpdated }: OrdersTableProp
                     {lang === "ar" ? "الحالة" : "Status"}
                   </th>
                   <th className="px-4 py-3 font-semibold uppercase tracking-wider text-neutral-500">
+                    {lang === "ar" ? "حالة الرابط" : "Link Status"}
+                  </th>
+                  <th className="px-4 py-3 font-semibold uppercase tracking-wider text-neutral-500">
                     {lang === "ar" ? "تاريخ الطلب" : "Date Requested"}
                   </th>
                   <th className="px-4 py-3 font-semibold uppercase tracking-wider text-neutral-500">
@@ -241,6 +273,59 @@ export default function OrdersTable({ orders, onStatusUpdated }: OrdersTableProp
                     {/* Status Badge */}
                     <td className="px-4 py-3.5">
                       <StatusBadge status={order.status} lang={lang} />
+                    </td>
+
+                    {/* Link Status & Control */}
+                    <td className="px-4 py-3.5">
+                      {order.status === "APPROVED" ? (
+                        order.purchase?.invitation ? (
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold border ${
+                                order.purchase.invitation.isActive
+                                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                  : "bg-rose-50 text-rose-600 border-rose-100"
+                              }`}
+                            >
+                              {order.purchase.invitation.isActive
+                                ? lang === "ar"
+                                  ? "نشط"
+                                  : "Active"
+                                : lang === "ar"
+                                ? "معطل"
+                                : "Deactivated"}
+                            </span>
+                            <button
+                              onClick={() =>
+                                handleToggleInvitation(
+                                  order.purchase!.invitation!.id,
+                                  order.purchase!.invitation!.isActive
+                                )
+                              }
+                              disabled={togglingId === order.purchase.invitation.id}
+                              className={`text-[9px] px-2 py-0.5 rounded-full border bg-white font-medium hover:bg-neutral-50 cursor-pointer transition-all ${
+                                order.purchase.invitation.isActive
+                                  ? "text-rose-600 border-rose-100 hover:bg-rose-50"
+                                  : "text-emerald-600 border-emerald-100 hover:bg-emerald-50"
+                              } disabled:opacity-50`}
+                            >
+                              {togglingId === order.purchase.invitation.id ? (
+                                <span className="inline-block h-2 w-2 animate-spin rounded-full border border-neutral-300 border-t-neutral-600" />
+                              ) : order.purchase.invitation.isActive ? (
+                                lang === "ar" ? "تعطيل" : "Deactivate"
+                              ) : (
+                                lang === "ar" ? "تفعيل" : "Activate"
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-neutral-400 italic">
+                            {lang === "ar" ? "لم ينشأ بعد" : "Not created yet"}
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-neutral-400">—</span>
+                      )}
                     </td>
 
                     {/* Date Requested */}

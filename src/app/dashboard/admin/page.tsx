@@ -34,6 +34,10 @@ export default function AdminDashboardPage() {
   // Authenticated Admin details
   const [adminUser, setAdminUser] = useState<AuthUser | null>(null);
 
+  // ── Template Add/Edit States ─────────────────────────────────────────
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
+  const [isAddingTemplate, setIsAddingTemplate] = useState(false);
+
   // ── User Add/Edit Modal States ───────────────────────────────────────
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null); // Null = Add Mode, User = Edit Mode
@@ -44,6 +48,7 @@ export default function AdminDashboardPage() {
     phoneNumber: "",
     password: "",
     role: "CLIENT" as "ADMIN" | "CLIENT",
+    isActive: true,
   });
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -108,6 +113,7 @@ export default function AdminDashboardPage() {
       phoneNumber: "",
       password: "",
       role: "CLIENT",
+      isActive: true,
     });
     setModalError("");
     setUserModalOpen(true);
@@ -122,6 +128,7 @@ export default function AdminDashboardPage() {
       phoneNumber: user.phoneNumber,
       password: "", // Leave blank unless updating password
       role: user.role,
+      isActive: user.isActive,
     });
     setModalError("");
     setUserModalOpen(true);
@@ -135,12 +142,13 @@ export default function AdminDashboardPage() {
     try {
       if (editingUser) {
         // Edit Mode: PUT /users/:id
-        const payload: Record<string, string | undefined> = {
+        const payload: Record<string, any> = {
           firstName: modalForm.firstName.trim(),
           lastName: modalForm.lastName.trim(),
           email: modalForm.email.trim(),
           phoneNumber: modalForm.phoneNumber.trim(),
           role: modalForm.role,
+          isActive: modalForm.isActive,
         };
         if (modalForm.password) {
           payload.password = modalForm.password;
@@ -160,6 +168,7 @@ export default function AdminDashboardPage() {
           phoneNumber: modalForm.phoneNumber.trim(),
           password: modalForm.password,
           role: modalForm.role,
+          isActive: modalForm.isActive,
         });
       }
 
@@ -180,6 +189,48 @@ export default function AdminDashboardPage() {
     } finally {
       setModalSubmitting(false);
     }
+  };
+
+  // ── Template & Invitation Activation Control ─────────────────────────
+  const handleToggleTemplateActivation = async (templateId: string, currentActive: boolean) => {
+    try {
+      const newActive = !currentActive;
+      await api.put(`/templates/${templateId}`, { isActive: newActive });
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === templateId ? { ...t, isActive: newActive } : t))
+      );
+    } catch (err) {
+      console.error("Failed to toggle template activation:", err);
+    }
+  };
+
+  const handleLinkStatusUpdated = (invitationId: string, isActive: boolean) => {
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.purchase?.invitation?.id === invitationId
+          ? {
+              ...o,
+              purchase: {
+                ...o.purchase,
+                invitation: {
+                  ...o.purchase.invitation,
+                  isActive,
+                },
+              },
+            }
+          : o
+      )
+    );
+  };
+
+  const handleAddSuccess = async () => {
+    setIsAddingTemplate(false);
+    await fetchDashboardData();
+  };
+
+  const handleEditSuccess = async () => {
+    setEditingTemplate(null);
+    await fetchDashboardData();
   };
 
   // Stats
@@ -239,7 +290,7 @@ export default function AdminDashboardPage() {
     { id: "overview" as const, labelAr: "لوحة التحكم", labelEn: "Overview" },
     { id: "users" as const, labelAr: "إدارة المستخدمين", labelEn: "Users Directory" },
     { id: "requests" as const, labelAr: "طلبات النماذج", labelEn: "Form Requests" },
-    { id: "templates" as const, labelAr: "إضافة قالب زفاف", labelEn: "Add New Form" },
+    { id: "templates" as const, labelAr: "إدارة النماذج والقوالب", labelEn: "Forms & Templates" },
   ];
 
   return (
@@ -397,8 +448,8 @@ export default function AdminDashboardPage() {
                 ? "طلبات النماذج"
                 : "Form Requests"
               : lang === "ar"
-              ? "إضافة قالب"
-              : "Add Template"}
+              ? "إدارة القوالب"
+              : "Forms & Templates"}
           </span>
           <button
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
@@ -428,8 +479,8 @@ export default function AdminDashboardPage() {
                       ? "طلبات تفعيل النماذج"
                       : "Form Unlock Requests"
                     : lang === "ar"
-                    ? "إنشاء نموذج دعوة جديد"
-                    : "Create Template Form"}
+                    ? "إدارة القوالب والنماذج"
+                    : "Forms & Templates"}
                 </h1>
                 <p className="text-[11px] text-neutral-400 mt-1 font-sans">
                   {activeTab === "overview"
@@ -445,8 +496,8 @@ export default function AdminDashboardPage() {
                       ? "التحكم بطلبات فتح القوالب من قبل العملاء وتغيير حالتها."
                       : "Review, approve, or reject client purchase requests."
                     : lang === "ar"
-                    ? "إضافة تصاميم بطاقات جديدة وتحديد الأسعار والخصائص المسموحة."
-                    : "Configure and release new premium or standard card styles."}
+                    ? "استعراض وتعديل قوالب وتصاميم بطاقات الدعوة المتاحة."
+                    : "Browse, edit, and configure available invitation designs and templates."}
                 </p>
               </div>
 
@@ -640,14 +691,170 @@ export default function AdminDashboardPage() {
               {/* Requests Management tab */}
               {activeTab === "requests" && (
                 <div className="space-y-4 animate-fadeIn bg-white border border-[#EBE7DF] p-6 rounded-2xl shadow-xs">
-                  <OrdersTable orders={orders} onStatusUpdated={handleStatusUpdated} />
+                  <OrdersTable
+                    orders={orders}
+                    onStatusUpdated={handleStatusUpdated}
+                    onLinkStatusUpdated={handleLinkStatusUpdated}
+                  />
                 </div>
               )}
 
-              {/* Configure new template tab */}
+              {/* Templates Management tab */}
               {activeTab === "templates" && (
-                <div className="animate-fadeIn rounded-2xl border border-[#EBE7DF] bg-white p-6 sm:p-8 shadow-xs">
-                  <AddTemplateForm />
+                <div className="space-y-6 animate-fadeIn">
+                  {editingTemplate ? (
+                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 sm:p-8 shadow-xs space-y-4">
+                      <div className="border-b border-[#FAF1EA] pb-3 flex justify-between items-center">
+                        <h3 className="font-serif font-bold text-neutral-800 text-sm">
+                          {lang === "ar" ? "تعديل القالب" : "Edit Template"}: {editingTemplate.title}
+                        </h3>
+                        <button
+                          onClick={() => setEditingTemplate(null)}
+                          className="text-xs text-neutral-400 hover:text-neutral-650 cursor-pointer font-bold font-sans"
+                        >
+                          {lang === "ar" ? "← رجوع للقائمة" : "← Back to List"}
+                        </button>
+                      </div>
+                      <AddTemplateForm
+                        initialTemplateData={editingTemplate}
+                        onSuccess={handleEditSuccess}
+                        onCancel={() => setEditingTemplate(null)}
+                      />
+                    </div>
+                  ) : isAddingTemplate ? (
+                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 sm:p-8 shadow-xs space-y-4">
+                      <div className="border-b border-[#FAF1EA] pb-3 flex justify-between items-center">
+                        <h3 className="font-serif font-bold text-neutral-800 text-sm">
+                          {lang === "ar" ? "إنشاء قالب زفاف جديد" : "Create New Wedding Template"}
+                        </h3>
+                        <button
+                          onClick={() => setIsAddingTemplate(false)}
+                          className="text-xs text-neutral-400 hover:text-neutral-650 cursor-pointer font-bold font-sans"
+                        >
+                          {lang === "ar" ? "← رجوع للقائمة" : "← Back to List"}
+                        </button>
+                      </div>
+                      <AddTemplateForm
+                        onSuccess={handleAddSuccess}
+                        onCancel={() => setIsAddingTemplate(false)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-4 bg-white border border-[#EBE7DF] p-6 rounded-2xl shadow-xs">
+                      {/* Section Header */}
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#FAF1EA] pb-4">
+                        <div>
+                          <h3 className="font-serif font-bold text-neutral-800 text-sm">
+                            {lang === "ar" ? "القوالب والنماذج المتاحة" : "Existing Invitation Templates"}
+                          </h3>
+                          <p className="text-[10px] text-neutral-450 mt-0.5">
+                            {lang === "ar"
+                              ? "عرض وتعديل وتفعيل أو إيقاف قوالب دعوات الزفاف المسجلة في المنصة."
+                              : "View, edit, activate, or deactivate invitation templates registered on the platform."}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setIsAddingTemplate(true)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0B1528] px-4 py-2.5 text-xs font-bold text-[#E5C38B] hover:bg-[#1E2E4A] transition-all cursor-pointer shadow-sm"
+                        >
+                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                          </svg>
+                          <span>{lang === "ar" ? "إضافة قالب جديد" : "Add New Template"}</span>
+                        </button>
+                      </div>
+
+                      {/* Template Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                        {templates.map((tpl) => (
+                          <div
+                            key={tpl.id}
+                            className="rounded-xl border border-[#EBE7DF] bg-[#FAF8F5]/30 overflow-hidden flex flex-col justify-between group hover:shadow-md transition-all duration-300"
+                          >
+                            {/* Image Preview & Badges */}
+                            <div className="relative aspect-video bg-neutral-100 overflow-hidden border-b border-[#EBE7DF]">
+                              <img
+                                src={tpl.previewImage}
+                                alt={tpl.title}
+                                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                              />
+                              <div className="absolute top-2.5 inset-x-2.5 flex justify-between items-center">
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-[8px] font-bold text-white shadow-xs ${
+                                    tpl.isActive ? "bg-emerald-500" : "bg-rose-500"
+                                  }`}
+                                >
+                                  {tpl.isActive
+                                    ? lang === "ar"
+                                      ? "نشط"
+                                      : "Active"
+                                    : lang === "ar"
+                                    ? "معطل"
+                                    : "Inactive"}
+                                </span>
+                                {tpl.isPremium && (
+                                  <span className="bg-amber-500 text-white rounded-full px-2 py-0.5 text-[8px] font-bold shadow-xs">
+                                    ★ Premium
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Details */}
+                            <div className="p-4 flex-1 flex flex-col justify-between gap-4 font-sans text-xs">
+                              <div>
+                                <h4 className="font-bold text-neutral-850 truncate">{tpl.title}</h4>
+                                <p className="text-[10px] text-neutral-450 mt-1 line-clamp-2 leading-relaxed">
+                                  {tpl.description}
+                                </p>
+                              </div>
+
+                              <div className="flex justify-between items-center border-t border-[#FAF1EA] pt-3 mt-auto">
+                                <span className="font-bold text-neutral-800">{tpl.price} SAR</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setEditingTemplate(tpl)}
+                                    className="px-2.5 py-1.5 rounded-lg border border-[#EBE7DF] bg-white text-neutral-600 font-bold hover:bg-neutral-50 cursor-pointer"
+                                  >
+                                    {lang === "ar" ? "تعديل" : "Edit"}
+                                  </button>
+                                  <button
+                                    onClick={() => handleToggleTemplateActivation(tpl.id, tpl.isActive)}
+                                    className={`px-2.5 py-1.5 rounded-lg border font-bold cursor-pointer transition-all ${
+                                      tpl.isActive
+                                        ? "border-rose-200 text-rose-600 bg-rose-50/20 hover:bg-rose-50"
+                                        : "border-emerald-200 text-emerald-600 bg-emerald-50/20 hover:bg-emerald-50"
+                                    }`}
+                                  >
+                                    {tpl.isActive
+                                      ? lang === "ar"
+                                        ? "تعطيل"
+                                        : "Deactivate"
+                                      : lang === "ar"
+                                      ? "تفعيل"
+                                      : "Activate"}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {templates.length === 0 && (
+                          <div className="col-span-full p-12 text-center bg-[#FAF9F6]/50 flex flex-col items-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-400 mb-3">
+                              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <p className="mt-1 text-xs text-neutral-400">
+                              {lang === "ar" ? "لا توجد قوالب زفاف مضافة بعد." : "No templates added yet."}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -771,6 +978,29 @@ export default function AdminDashboardPage() {
                   <option value="CLIENT">{lang === "ar" ? "CLIENT (عميل)" : "CLIENT"}</option>
                   <option value="ADMIN">{lang === "ar" ? "ADMIN (مشرف)" : "ADMIN"}</option>
                 </select>
+              </div>
+
+              {/* Active Status Switch */}
+              <div className="flex items-center justify-between p-3 bg-[#FAF9F6] border border-[#EBE7DF] rounded-xl">
+                <div>
+                  <span className="block text-xs font-bold text-neutral-700">
+                    {lang === "ar" ? "حالة الحساب" : "Account Status"}
+                  </span>
+                  <span className="block text-[10px] text-neutral-400 mt-0.5">
+                    {lang === "ar"
+                      ? "تفعيل أو تعطيل حساب المستخدم"
+                      : "Activate or deactivate the user account"}
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={modalForm.isActive}
+                    onChange={(e) => setModalForm({ ...modalForm, isActive: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
               </div>
 
               {/* Modal Footer Controls */}

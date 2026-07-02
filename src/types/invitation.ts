@@ -80,6 +80,7 @@ export interface Template {
   editableFields: Record<string, unknown>;
   demoLink?: string | null;
   isPremium: boolean;
+  isActive: boolean;
   category?: string;
   createdAt: string;
 }

@@ -11,6 +11,7 @@ interface PurchaseInvitation {
   slug: string;
   eventTitle: string;
   eventDate: string;
+  isActive: boolean;
 }
 
 interface PurchaseTemplate {
@@ -93,6 +94,22 @@ export default function ClientDashboardPage() {
       document.body.removeChild(textarea);
       setCopiedId(purchaseId);
       setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
+  // ── Toggle Link Activation ──────────────────────────────────────────
+  const handleToggleLinkActivation = async (invitationId: string, newState: boolean) => {
+    try {
+      await api.put(`/invitations/${invitationId}`, { isActive: newState });
+      setPurchases((prev) =>
+        prev.map((p) =>
+          p.invitation?.id === invitationId
+            ? { ...p, invitation: { ...p.invitation, isActive: newState } }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error("Failed to toggle link activation:", err);
     }
   };
 
@@ -199,15 +216,27 @@ export default function ClientDashboardPage() {
                     </div>
 
                     {hasInvite ? (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-[9px] uppercase tracking-wider text-emerald-500 font-bold">
-                          ● {t("Active Invitation")}
-                        </span>
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`text-[9px] uppercase tracking-wider font-bold ${purchase.invitation!.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            ● {purchase.invitation!.isActive ? t("Active Invitation") : t("Deactivated Link")}
+                          </span>
+                          <button
+                            onClick={() => handleToggleLinkActivation(purchase.invitation!.id, !purchase.invitation!.isActive)}
+                            className={`text-[9px] px-2 py-0.5 rounded-full border bg-white font-medium hover:bg-neutral-50 cursor-pointer transition-all ${
+                              purchase.invitation!.isActive
+                                ? 'text-rose-600 border-rose-100 hover:bg-rose-50'
+                                : 'text-emerald-600 border-emerald-100 hover:bg-emerald-50'
+                            }`}
+                          >
+                            {purchase.invitation!.isActive ? t("Cancel Link") : t("Activate Link")}
+                          </button>
+                        </div>
                         <a
                           href={inviteUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] text-neutral-500 underline hover:text-black transition-all line-clamp-1"
+                          className={`text-[11px] text-neutral-500 underline hover:text-black transition-all line-clamp-1 ${!purchase.invitation!.isActive ? 'line-through opacity-60' : ''}`}
                         >
                           {inviteUrl}
                         </a>

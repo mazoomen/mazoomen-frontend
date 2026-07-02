@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -23,6 +23,12 @@ interface FieldConfig {
   type: string;
 }
 
+interface AddTemplateFormProps {
+  initialTemplateData?: any;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
 const INITIAL_FORM: TemplateFormData = {
   title: "",
   description: "",
@@ -32,7 +38,11 @@ const INITIAL_FORM: TemplateFormData = {
   isPremium: false,
 };
 
-export default function AddTemplateForm() {
+export default function AddTemplateForm({
+  initialTemplateData,
+  onSuccess,
+  onCancel,
+}: AddTemplateFormProps) {
   const { lang } = useLanguage();
   const [form, setForm] = useState<TemplateFormData>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -40,6 +50,8 @@ export default function AddTemplateForm() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  const isEditing = !!initialTemplateData;
 
   // ── Visual Fields Builder State ──────────────────────────────────────
   const [fields, setFields] = useState<FieldConfig[]>([
@@ -117,6 +129,45 @@ export default function AddTemplateForm() {
     },
   ]);
 
+  // Load editing template data
+  useEffect(() => {
+    if (!initialTemplateData) {
+      setForm(INITIAL_FORM);
+      return;
+    }
+
+    setForm({
+      title: initialTemplateData.title || "",
+      description: initialTemplateData.description || "",
+      previewImage: initialTemplateData.previewImage || "",
+      demoLink: initialTemplateData.demoLink || "",
+      price: String(initialTemplateData.price || ""),
+      isPremium: !!initialTemplateData.isPremium,
+    });
+
+    const editableFields = initialTemplateData.editableFields || {};
+    setFields((prev) =>
+      prev.map((f) => {
+        const customField = editableFields[f.key];
+        if (customField) {
+          return {
+            ...f,
+            enabled: true,
+            labelEn: customField.label || f.labelEn,
+            labelAr: customField.label || f.labelAr,
+            defaultEn: customField.default || f.defaultEn,
+            defaultAr: customField.default || f.defaultAr,
+          };
+        } else {
+          return {
+            ...f,
+            enabled: false,
+          };
+        }
+      })
+    );
+  }, [initialTemplateData]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -188,7 +239,7 @@ export default function AddTemplateForm() {
         );
       }
 
-      await api.post("/templates", {
+      const body = {
         title: form.title.trim(),
         description: form.description.trim(),
         previewImage: form.previewImage.trim(),
@@ -196,19 +247,37 @@ export default function AddTemplateForm() {
         price: parseFloat(form.price),
         isPremium: form.isPremium,
         editableFields: parsedFields,
-      });
+      };
 
-      setFeedback({
-        type: "success",
-        message:
-          lang === "ar"
-            ? `تم إنشاء القالب "${form.title}" بنجاح!`
-            : `Template "${form.title}" created successfully!`,
-      });
-      setForm(INITIAL_FORM);
+      if (isEditing) {
+        await api.put(`/templates/${initialTemplateData.id}`, body);
+        setFeedback({
+          type: "success",
+          message:
+            lang === "ar"
+              ? `تم تحديث القالب "${form.title}" بنجاح!`
+              : `Template "${form.title}" updated successfully!`,
+        });
+      } else {
+        await api.post("/templates", body);
+        setFeedback({
+          type: "success",
+          message:
+            lang === "ar"
+              ? `تم إنشاء القالب "${form.title}" بنجاح!`
+              : `Template "${form.title}" created successfully!`,
+        });
+        setForm(INITIAL_FORM);
+      }
+
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+        }, 1200);
+      }
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Failed to create template.";
+        err instanceof Error ? err.message : "Failed to save template.";
       setFeedback({ type: "error", message });
     } finally {
       setSubmitting(false);
@@ -363,7 +432,7 @@ export default function AddTemplateForm() {
         </label>
       </div>
 
-      {/* ── Visual Fields Builder (Checklist interface replacing JSON textarea) ── */}
+      {/* ── Visual Fields Builder ── */}
       <div className="space-y-3 font-sans">
         <div>
           <label className="block text-xs font-semibold text-gray-700">
@@ -452,31 +521,49 @@ export default function AddTemplateForm() {
         </div>
       </div>
 
-      {/* ── Submit Button ────────────────────────────────────── */}
-      <button
-        type="submit"
-        disabled={submitting || !isValid}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0B1528] py-3 text-xs font-bold text-[#E5C38B] hover:bg-[#1E2E4A] transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 cursor-pointer font-sans"
-      >
-        {submitting ? (
-          <>
-            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#E5C38B]/30 border-t-[#E5C38B]" />
-            {lang === "ar" ? "جاري الحفظ..." : "Creating…"}
-          </>
-        ) : (
-          <>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 5v14M5 12h14"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            {lang === "ar" ? "إضافة القالب" : "Add Template"}
-          </>
+      {/* ── Submit Controls ──────────────────────────────────── */}
+      <div className="flex gap-3 justify-end pt-3 border-t border-[#FAF1EA] mt-4">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={submitting}
+            className="rounded-lg border border-[#EBE7DF] bg-white px-5 py-2.5 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-all cursor-pointer font-sans"
+          >
+            {lang === "ar" ? "إلغاء" : "Cancel"}
+          </button>
         )}
-      </button>
+        <button
+          type="submit"
+          disabled={submitting || !isValid}
+          className="flex items-center justify-center gap-2 rounded-lg bg-[#0B1528] py-2.5 px-6 text-xs font-bold text-[#E5C38B] hover:bg-[#1E2E4A] transition-all disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer font-sans"
+        >
+          {submitting ? (
+            <>
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#E5C38B]/30 border-t-[#E5C38B]" />
+              {lang === "ar" ? "جاري الحفظ..." : "Saving…"}
+            </>
+          ) : (
+            <>
+              {isEditing ? (
+                lang === "ar" ? "حفظ التعديلات" : "Save Changes"
+              ) : (
+                <>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 5v14M5 12h14"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {lang === "ar" ? "إضافة القالب" : "Add Template"}
+                </>
+              )}
+            </>
+          )}
+        </button>
+      </div>
     </form>
   );
 }
