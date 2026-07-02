@@ -11,18 +11,17 @@ interface TemplateFormData {
   demoLink: string;
   price: string;
   isPremium: boolean;
-  editableFields: string;
 }
 
-const DEFAULT_EDITABLE_FIELDS = JSON.stringify(
-  {
-    eventTitle: { type: "string", label: "Event Title", default: "العريس & العروس" },
-    eventDate: { type: "date", label: "Event Date" },
-    eventLocation: { type: "string", label: "Event Location", default: "قاعة السمو، الرياض" },
-  },
-  null,
-  2
-);
+interface FieldConfig {
+  key: string;
+  enabled: boolean;
+  labelEn: string;
+  labelAr: string;
+  defaultEn: string;
+  defaultAr: string;
+  type: string;
+}
 
 const INITIAL_FORM: TemplateFormData = {
   title: "",
@@ -31,7 +30,6 @@ const INITIAL_FORM: TemplateFormData = {
   demoLink: "",
   price: "",
   isPremium: false,
-  editableFields: DEFAULT_EDITABLE_FIELDS,
 };
 
 export default function AddTemplateForm() {
@@ -42,6 +40,82 @@ export default function AddTemplateForm() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  // ── Visual Fields Builder State ──────────────────────────────────────
+  const [fields, setFields] = useState<FieldConfig[]>([
+    {
+      key: "groomName",
+      enabled: true,
+      labelEn: "Groom's Name",
+      labelAr: "اسم العريس",
+      defaultEn: "Groom",
+      defaultAr: "العريس",
+      type: "string",
+    },
+    {
+      key: "brideName",
+      enabled: true,
+      labelEn: "Bride's Name",
+      labelAr: "اسم العروس",
+      defaultEn: "Bride",
+      defaultAr: "العروس",
+      type: "string",
+    },
+    {
+      key: "eventDate",
+      enabled: true,
+      labelEn: "Event Date & Time",
+      labelAr: "تاريخ ووقت الحفل",
+      defaultEn: "",
+      defaultAr: "",
+      type: "date",
+    },
+    {
+      key: "eventLocation",
+      enabled: true,
+      labelEn: "Event Venue (Hall Name)",
+      labelAr: "مكان الحفل (القاعة)",
+      defaultEn: "Riyadh Hall",
+      defaultAr: "قاعة السمو، الرياض",
+      type: "string",
+    },
+    {
+      key: "locationUrl",
+      enabled: true,
+      labelEn: "Location Map URL",
+      labelAr: "رابط موقع الحفل",
+      defaultEn: "",
+      defaultAr: "",
+      type: "string",
+    },
+    {
+      key: "welcomeText",
+      enabled: true,
+      labelEn: "Welcome Message",
+      labelAr: "رسالة الترحيب والبطاقة",
+      defaultEn: "Welcome to our wedding",
+      defaultAr: "مرحباً بكم في حفل زفافنا",
+      type: "string",
+    },
+    {
+      key: "musicUrl",
+      enabled: true,
+      labelEn: "Background Music URL",
+      labelAr: "رابط الصوت الخلفي",
+      defaultEn: "",
+      defaultAr: "",
+      type: "string",
+    },
+    {
+      key: "images",
+      enabled: true,
+      labelEn: "Album Image URLs",
+      labelAr: "صور ألبوم العروسين",
+      defaultEn: "",
+      defaultAr: "",
+      type: "array",
+    },
+  ]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -55,20 +129,62 @@ export default function AddTemplateForm() {
     }));
   };
 
+  const handleFieldToggle = (index: number) => {
+    setFields((prev) =>
+      prev.map((f, i) => (i === index ? { ...f, enabled: !f.enabled } : f))
+    );
+  };
+
+  const handleFieldLabelChange = (index: number, value: string) => {
+    setFields((prev) =>
+      prev.map((f, i) =>
+        i === index
+          ? lang === "ar"
+            ? { ...f, labelAr: value }
+            : { ...f, labelEn: value }
+          : f
+      )
+    );
+  };
+
+  const handleFieldDefaultChange = (index: number, value: string) => {
+    setFields((prev) =>
+      prev.map((f, i) =>
+        i === index
+          ? lang === "ar"
+            ? { ...f, defaultAr: value }
+            : { ...f, defaultEn: value }
+          : f
+      )
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
     setSubmitting(true);
 
     try {
-      let parsedFields = {};
-      try {
-        parsedFields = JSON.parse(form.editableFields);
-      } catch {
+      // Build the JSON schema automatically based on user choices
+      const parsedFields: Record<
+        string,
+        { type: string; label: string; default: string }
+      > = {};
+      fields.forEach((f) => {
+        if (f.enabled) {
+          parsedFields[f.key] = {
+            type: f.type,
+            label: lang === "ar" ? f.labelAr.trim() : f.labelEn.trim(),
+            default: lang === "ar" ? f.defaultAr.trim() : f.defaultEn.trim(),
+          };
+        }
+      });
+
+      if (Object.keys(parsedFields).length === 0) {
         throw new Error(
           lang === "ar"
-            ? "يجب أن تكون الحقول القابلة للتعديل كائن JSON صالحاً."
-            : "Editable Fields must be a valid JSON object."
+            ? "يجب تفعيل حقل واحد على الأقل للمستخدم لتعديله."
+            : "You must enable at least one customizable field."
         );
       }
 
@@ -99,12 +215,6 @@ export default function AddTemplateForm() {
     }
   };
 
-  let isJsonValid = false;
-  try {
-    const parsed = JSON.parse(form.editableFields);
-    isJsonValid = parsed && typeof parsed === "object" && !Array.isArray(parsed);
-  } catch {}
-
   const isValid =
     form.title.trim() !== "" &&
     form.description.trim() !== "" &&
@@ -112,14 +222,14 @@ export default function AddTemplateForm() {
     form.price.trim() !== "" &&
     !isNaN(parseFloat(form.price)) &&
     parseFloat(form.price) >= 0 &&
-    isJsonValid;
+    fields.some((f) => f.enabled);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 text-neutral-800">
       {/* ── Feedback Banner ──────────────────────────────────── */}
       {feedback && (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
+          className={`rounded-lg border px-4 py-3 text-sm font-sans ${
             feedback.type === "success"
               ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
               : "border-red-500/20 bg-red-500/5 text-red-400"
@@ -133,7 +243,7 @@ export default function AddTemplateForm() {
       <div>
         <label
           htmlFor="template-title"
-          className="mb-1.5 block text-xs font-semibold text-gray-700"
+          className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
           {lang === "ar" ? "اسم القالب" : "Template Title"} <span className="text-red-400">*</span>
         </label>
@@ -153,7 +263,7 @@ export default function AddTemplateForm() {
       <div>
         <label
           htmlFor="template-description"
-          className="mb-1.5 block text-xs font-semibold text-gray-700"
+          className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
           {lang === "ar" ? "وصف القالب" : "Description"} <span className="text-red-400">*</span>
         </label>
@@ -165,7 +275,7 @@ export default function AddTemplateForm() {
           placeholder={lang === "ar" ? "أدخل تفاصيل وصف القالب..." : "Detailed description of the invitation template..."}
           disabled={submitting}
           rows={3}
-          className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50 resize-none"
+          className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50 resize-none font-sans"
         />
       </div>
 
@@ -173,7 +283,7 @@ export default function AddTemplateForm() {
       <div>
         <label
           htmlFor="template-preview"
-          className="mb-1.5 block text-xs font-semibold text-gray-700"
+          className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
           {lang === "ar" ? "رابط صورة المعاينة" : "Preview Image URL"} <span className="text-red-400">*</span>
         </label>
@@ -193,7 +303,7 @@ export default function AddTemplateForm() {
       <div>
         <label
           htmlFor="template-demo"
-          className="mb-1.5 block text-xs font-semibold text-gray-700"
+          className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
           {lang === "ar" ? "رابط العرض التجريبي (Demo)" : "Demo Link"}
         </label>
@@ -210,7 +320,7 @@ export default function AddTemplateForm() {
       </div>
 
       {/* ── Price + Premium Row ───────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end font-sans">
         <div className="flex-1">
           <label
             htmlFor="template-price"
@@ -253,50 +363,100 @@ export default function AddTemplateForm() {
         </label>
       </div>
 
-      {/* ── Editable Fields (JSON) ───────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5 font-sans">
-          <label
-            htmlFor="template-fields"
-            className="block text-xs font-semibold text-gray-700"
-          >
-            {lang === "ar" ? "حقول التخصيص (JSON Schema)" : "Editable Fields (JSON Schema)"} <span className="text-red-400">*</span>
+      {/* ── Visual Fields Builder (Checklist interface replacing JSON textarea) ── */}
+      <div className="space-y-3 font-sans">
+        <div>
+          <label className="block text-xs font-semibold text-gray-700">
+            {lang === "ar" ? "الحقول القابلة للتخصيص من العميل" : "Customizable Invitation Fields"} <span className="text-red-400">*</span>
           </label>
-          <span
-            className={`text-[10px] font-bold transition-colors ${
-              isJsonValid ? "text-emerald-600" : "text-red-600"
-            }`}
-          >
-            {isJsonValid
-              ? lang === "ar"
-                ? "✓ JSON صالح"
-                : "✓ Valid JSON"
-              : lang === "ar"
-              ? "✕ JSON غير صالح"
-              : "✕ Invalid JSON"}
-          </span>
+          <p className="text-[10px] text-gray-400 mt-1 leading-normal">
+            {lang === "ar"
+              ? "اختر الحقول التي ترغب في السماح للعميل بتعديلها لتخصيص دعوته، وحدد المسميات والقيم الافتراضية."
+              : "Enable the dynamic inputs that clients can modify to personalize their invitations."}
+          </p>
         </div>
-        <textarea
-          id="template-fields"
-          name="editableFields"
-          value={form.editableFields}
-          onChange={handleChange}
-          disabled={submitting}
-          rows={5}
-          className="w-full rounded-lg border border-[#EBE7DF] bg-neutral-900 px-4 py-2.5 font-mono text-xs text-emerald-400 placeholder-gray-600 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50"
-        />
-        <p className="mt-1 text-[10px] text-gray-400 leading-normal">
-          {lang === "ar"
-            ? "حدد الحقول التي يمكن للمستخدم تعديلها مثل (اسم العريس، اسم العروس، تاريخ المناسبة، الموقع...)"
-            : "Define the customizable fields key-map structure that clients will fill out when customizing this invitation."}
-        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#FAF8F5] border border-[#EBE7DF] rounded-xl p-4">
+          {fields.map((f, i) => {
+            const label = lang === "ar" ? f.labelAr : f.labelEn;
+            const defaultValue = lang === "ar" ? f.defaultAr : f.defaultEn;
+
+            return (
+              <div
+                key={f.key}
+                className={`rounded-xl border p-3.5 transition-all duration-300 ${
+                  f.enabled
+                    ? "bg-white border-[#B89C72]/30 shadow-xs"
+                    : "bg-[#FAF9F6] border-[#EBE7DF]/70 opacity-60"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={f.enabled}
+                    onChange={() => handleFieldToggle(i)}
+                    disabled={submitting}
+                    className="h-4 w-4 rounded border-[#EBE7DF] text-[#B89C72] focus:ring-[#B89C72] focus:ring-offset-0 cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-neutral-800">
+                      {f.key === "groomName"
+                        ? lang === "ar"
+                          ? "اسم العريس (Husband)"
+                          : "Husband's Name (Groom)"
+                        : f.key === "brideName"
+                        ? lang === "ar"
+                          ? "اسم العروس (Wife)"
+                          : "Wife's Name (Bride)"
+                        : label}
+                    </span>
+                    <p className="text-[9px] text-neutral-400 uppercase tracking-widest mt-0.5">
+                      {f.key} • {f.type}
+                    </p>
+                  </div>
+                </div>
+
+                {f.enabled && (
+                  <div className="mt-3.5 pt-3 border-t border-[#FAF1EA] grid grid-cols-2 gap-2.5 animate-fadeIn">
+                    <div>
+                      <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                        {lang === "ar" ? "التسمية (Label)" : "Label"}
+                      </label>
+                      <input
+                        type="text"
+                        value={label}
+                        onChange={(e) => handleFieldLabelChange(i, e.target.value)}
+                        placeholder="Label"
+                        disabled={submitting}
+                        className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                        {lang === "ar" ? "الافتراضي (Default)" : "Default Value"}
+                      </label>
+                      <input
+                        type="text"
+                        value={defaultValue}
+                        onChange={(e) => handleFieldDefaultChange(i, e.target.value)}
+                        placeholder="Default"
+                        disabled={submitting}
+                        className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Submit Button ────────────────────────────────────── */}
       <button
         type="submit"
         disabled={submitting || !isValid}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0B1528] py-3 text-xs font-bold text-[#E5C38B] hover:bg-[#1E2E4A] transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 cursor-pointer"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0B1528] py-3 text-xs font-bold text-[#E5C38B] hover:bg-[#1E2E4A] transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 cursor-pointer font-sans"
       >
         {submitting ? (
           <>
