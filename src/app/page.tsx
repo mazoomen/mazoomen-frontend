@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Template } from "@/types/invitation";
 import PageLayout from "@/components/PageLayout";
@@ -11,6 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 const MOCK_TEMPLATES: Template[] = [];
 
 export default function Home() {
+  const router = useRouter();
   const { lang, t } = useLanguage();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,15 +100,25 @@ export default function Home() {
     setCheckoutSubmitting(true);
     setCheckoutError("");
     try {
+      const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      let email = "user@example.com";
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          email = user.email || "user@example.com";
+        } catch {}
+      }
+
       await api.post("/purchase-requests", {
         templateId: buyingTemplate.id,
-        contactEmail: contactEmail.trim(),
+        contactEmail: email,
         contactPhone: contactPhone.trim()
       });
       setCheckoutSuccess(true);
       setTimeout(() => {
         setBuyingTemplate(null);
-      }, 3000);
+        router.push("/dashboard/client/orders");
+      }, 1500);
     } catch (err: any) {
       console.error(err);
       setCheckoutError(
@@ -225,7 +237,7 @@ export default function Home() {
               title="Event Types"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
               </svg>
             </button>
           </div>
@@ -704,18 +716,6 @@ export default function Home() {
                 <div className="h-px bg-[#EBE7DF]" />
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1">{lang === "ar" ? "البريد الإلكتروني للتواصل" : "Contact Email"}</label>
-                    <input
-                      type="email"
-                      required
-                      value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="email@example.com"
-                      className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] text-right"
-                    />
-                  </div>
-
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1">{lang === "ar" ? "رقم الجوال للتواصل" : "Contact Phone"}</label>
                     <input
