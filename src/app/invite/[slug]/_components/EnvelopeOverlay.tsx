@@ -5,11 +5,18 @@ import React, { useState } from 'react';
 interface EnvelopeOverlayProps {
   eventTitle: string;
   onOpen: () => void;
+  sealImage?: string;
 }
 
-export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, onOpen }) => {
+export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ 
+  eventTitle, 
+  onOpen,
+  sealImage = "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png"
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  
+  const isDefaultSeal = sealImage === "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png";
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -19,7 +26,7 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, on
     }, 1200);
   };
 
-  // Helper to split couple names from eventTitle (e.g. "أيمن وراما" or "أحمد & سارة")
+  // Helper to split couple names from eventTitle 
   const getCoupleNames = (title: string) => {
     const delimiters = [' & ', ' and ', ' و ', ' مع '];
     for (const d of delimiters) {
@@ -111,7 +118,7 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, on
           }}
         >
           <img
-            src="/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png"
+            src={sealImage}
             alt="Wax Seal"
             style={{
               position: 'absolute',
@@ -119,8 +126,8 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, on
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: 'center 1%',
-              transform: 'scale(1.12)',
+              objectPosition: isDefaultSeal ? 'center 1%' : 'center',
+              transform: isDefaultSeal ? 'scale(1.12)' : 'scale(1.02)',
               borderRadius: '50%',
               zIndex: 10,
             }}
@@ -137,46 +144,69 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, on
               alignItems: 'center',
               justifyContent: 'center',
               boxSizing: 'border-box',
+              padding: '24px 28px',
             }}
           >
-            <span
+            <div
               style={{
                 fontFamily: 'var(--font-aref-ruqaa), var(--font-amiri), serif',
-                fontSize: bride ? '1.45rem' : '1.35rem',
+                fontSize: bride ? '1.5rem' : '1.35rem',
                 fontWeight: 700,
-                color: '#84693f',
+                color: '#5c4625',
                 textAlign: 'center',
-                lineHeight: 1.25,
-                textShadow: '0px 1px 1px rgba(255, 255, 255, 0.4)',
+                lineHeight: 1.2,
+                textShadow: '0px 1px 2px rgba(255, 255, 255, 0.65)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
               }}
             >
-              {groom}
+              <span style={{ display: 'block', width: '100%', textAlign: 'center' }}>
+                {groom}
+              </span>
               {bride && (
                 <>
-                  <br />
-                  <span style={{
-                    fontSize: '0.9rem',
-                    fontFamily: 'var(--font-cinzel), serif',
-                    fontStyle: 'italic',
-                    opacity: 0.85,
-                    display: 'block',
-                    margin: '1px 0',
-                    color: '#84693f'
-                  }}>&amp;</span>
-                  {bride}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    gap: '10px',
+                    margin: '4px 0'
+                  }}>
+                    <div style={{ height: '1.2px', width: '22px', backgroundColor: 'rgba(92, 70, 37, 0.25)' }} />
+                    <span style={{
+                      fontSize: '0.9rem',
+                      fontFamily: 'var(--font-cinzel), serif',
+                      fontStyle: 'italic',
+                      opacity: 0.85,
+                      color: '#5c4625',
+                      lineHeight: 1,
+                    }}>&amp;</span>
+                    <div style={{ height: '1.2px', width: '22px', backgroundColor: 'rgba(92, 70, 37, 0.25)' }} />
+                  </div>
+                  <span style={{ display: 'block', width: '100%', textAlign: 'center' }}>
+                    {bride}
+                  </span>
                 </>
               )}
-            </span>
+            </div>
             <span
               style={{
                 fontFamily: 'var(--font-cinzel), serif',
-                fontSize: '0.7rem',
+                fontSize: '0.65rem',
                 textTransform: 'uppercase',
                 fontWeight: 700,
-                letterSpacing: '0.3em',
-                color: '#84693f',
-                marginTop: '6px',
-                opacity: 0.9,
+                letterSpacing: '0.35em',
+                color: '#5c4625',
+                marginTop: '10px',
+                opacity: 0.85,
+                borderTop: '1px solid rgba(92, 70, 37, 0.18)',
+                paddingTop: '6px',
+                width: '50%',
+                textAlign: 'center',
               }}
             >
               OPEN
