@@ -235,7 +235,6 @@ const translations: Record<string, Record<Language, string>> = {
   },
   "Browse Mazoom": { en: "Browse Mazoom", ar: "تصفح سوق القوالب" },
   "Purchased": { en: "Purchased", ar: "تم الشراء في" },
-  "Active Invitation": { en: "Active Invitation", ar: "دعوة نشطة" },
   "Pending Setup": { en: "Pending Setup", ar: "إعداد معلق" },
   "Edit Details": { en: "Edit Details", ar: "تعديل التفاصيل" },
   "Copied!": { en: "Copied!", ar: "تم النسخ!" },
