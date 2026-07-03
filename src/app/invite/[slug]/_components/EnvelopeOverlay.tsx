@@ -118,7 +118,9 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, on
               inset: 0,
               width: '100%',
               height: '100%',
-              objectFit: 'contain',
+              objectFit: 'cover',
+              objectPosition: 'center 1%',
+              transform: 'scale(1.12)',
               borderRadius: '50%',
               zIndex: 10,
             }}
@@ -127,46 +129,54 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ eventTitle, on
           {/* Golden Text Overlay */}
           <div
             style={{
-              position: 'relative',
+              position: 'absolute',
+              inset: 0,
               zIndex: 20,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              height: '100%',
-              gap: '4px',
-              paddingLeft: '18px',
               boxSizing: 'border-box',
             }}
           >
             <span
               style={{
-                fontFamily: 'Inter, sans-serif',
-                fontSize: bride ? '1.15rem' : '1.05rem',
-                fontWeight: 500,
-                color: '#ac8c60',
+                fontFamily: 'var(--font-aref-ruqaa), var(--font-amiri), serif',
+                fontSize: bride ? '1.45rem' : '1.35rem',
+                fontWeight: 700,
+                color: '#84693f',
                 textAlign: 'center',
-                lineHeight: 1.3,
+                lineHeight: 1.25,
+                textShadow: '0px 1px 1px rgba(255, 255, 255, 0.4)',
               }}
             >
               {groom}
               {bride && (
                 <>
                   <br />
-                  <span style={{ fontSize: '0.85rem', fontFamily: 'sans-serif', opacity: 0.85, display: 'block', margin: '-3px 0' }}>&amp;</span>
+                  <span style={{
+                    fontSize: '0.9rem',
+                    fontFamily: 'var(--font-cinzel), serif',
+                    fontStyle: 'italic',
+                    opacity: 0.85,
+                    display: 'block',
+                    margin: '1px 0',
+                    color: '#84693f'
+                  }}>&amp;</span>
                   {bride}
                 </>
               )}
             </span>
             <span
               style={{
-                fontFamily: 'Inter, sans-serif',
+                fontFamily: 'var(--font-cinzel), serif',
                 fontSize: '0.7rem',
                 textTransform: 'uppercase',
-                fontWeight: 600,
-                letterSpacing: '0.25em',
-                color: '#ac8c60',
-                marginTop: '3px',
+                fontWeight: 700,
+                letterSpacing: '0.3em',
+                color: '#84693f',
+                marginTop: '6px',
+                opacity: 0.9,
               }}
             >
               OPEN
