@@ -6,10 +6,12 @@ interface InvitationHeroProps {
   eventTitle: string;
   eventDate: string;
   isOpen: boolean;
+  viewingLang?: string;
 }
 
-export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, eventDate, isOpen }) => {
+export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, eventDate, isOpen, viewingLang }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isEn = viewingLang === "en";
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
@@ -25,8 +27,8 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
       if (title.includes(d)) {
         const parts = title.split(d);
         return {
-          groom: parts[0]?.trim() || 'العريس',
-          bride: parts[1]?.trim() || 'العروس'
+          groom: parts[0]?.trim() || (isEn ? 'Groom' : 'العريس'),
+          bride: parts[1]?.trim() || (isEn ? 'Bride' : 'العروس')
         };
       }
     }
@@ -35,10 +37,10 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
 
   const { groom, bride } = getCoupleNames(eventTitle);
 
-  const getArabicFormattedDate = (dateStr: string) => {
+  const getFormattedDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
-      const formatter = new Intl.DateTimeFormat('ar-EG', {
+      const formatter = new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -90,7 +92,7 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
             transform: 'none',
           }}
         >
-          حفل زفاف
+          {isEn ? "Wedding Invitation" : "حفل زفاف"}
         </div>
         <div style={{ marginTop: '-1rem' }}>
           <p
@@ -149,7 +151,7 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
             className="text-sm tracking-wide whitespace-nowrap ml-1 font-semibold"
             style={{ color: 'rgb(0, 0, 0)', opacity: 1, transform: 'none' }}
           >
-            {getArabicFormattedDate(eventDate)}
+            {getFormattedDate(eventDate)}
           </div>
         </div>
       </div>

@@ -16,6 +16,7 @@ interface InvitationBodyProps {
   eventLocation: string;
   locationUrl?: string | null;
   welcomeText?: string | null;
+  viewingLang?: string;
 }
 
 export const InvitationBody: React.FC<InvitationBodyProps> = ({
@@ -23,9 +24,11 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
   eventDate,
   eventLocation,
   locationUrl,
-  welcomeText
+  welcomeText,
+  viewingLang
 }) => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const isEn = viewingLang === "en";
 
   useEffect(() => {
     const targetDate = new Date(eventDate).getTime();
@@ -58,8 +61,8 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
       if (title.includes(d)) {
         const parts = title.split(d);
         return {
-          groom: parts[0]?.trim() || 'العريس',
-          bride: parts[1]?.trim() || 'العروس'
+          groom: parts[0]?.trim() || (isEn ? 'Groom' : 'العريس'),
+          bride: parts[1]?.trim() || (isEn ? 'Bride' : 'العروس')
         };
       }
     }
@@ -68,18 +71,18 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
 
   const { groom, bride } = getCoupleNames(eventTitle);
 
-  // Date Parsing for the calendar card in Arabic
+  // Date Parsing for the calendar card in selected language
   const parsedDate = new Date(eventDate);
-  const getMonthNameAr = () => {
+  const getMonthName = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', { month: 'long' }).format(parsedDate);
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', { month: 'long' }).format(parsedDate);
     } catch {
       return '';
     }
   };
-  const getDayNameAr = () => {
+  const getDayName = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', { weekday: 'long' }).format(parsedDate);
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', { weekday: 'long' }).format(parsedDate);
     } catch {
       return '';
     }
@@ -88,13 +91,15 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
   const getDayNum = () => parsedDate.getDate();
   const getTimeString = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true }).format(parsedDate);
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true }).format(parsedDate);
     } catch {
       return '';
     }
   };
 
-  const defaultWelcomeText = `بقلوبٍ يملؤها الفرح\nوبدعاءٍ صادق أن يتمّ الله لنا ولكم الخير\nنتشرف بدعوتكم لمشاركتنا\nفرحة أبنائنا\n\nفي يومٍ جمع الله فيه القلوب\nوكتب فيه بداية عمرٍ جديد\nوجودكم بيننا شرف\nومشاركتكم لنا تزيد الفرح فرحًا 🤍`;
+  const defaultWelcomeTextAr = `بقلوبٍ يملؤها الفرح\nوبدعاءٍ صادق أن يتمّ الله لنا ولكم الخير\nنتشرف بدعوتكم لمشاركتنا\nفرحة أبنائنا\n\nفي يومٍ جمع الله فيه القلوب\nوكتب فيه بداية عمرٍ جديد\nوجودكم بيننا شرف\nومشاركتكم لنا تزيد الفرح فرحًا 🤍`;
+  const defaultWelcomeTextEn = `With hearts full of joy\nAnd a sincere prayer that Allah completes our blessing\nWe are honored to invite you to join us\nin celebrating our children's wedding\n\nOn a day where hearts are united\nAnd a new lifetime begins\nYour presence is our honor\nAnd your sharing of our joy multiplies it 🤍`;
+  const defaultWelcomeText = isEn ? defaultWelcomeTextEn : defaultWelcomeTextAr;
 
   // Venue location splitter
   const [hallName, cityName] = eventLocation.includes('،')
@@ -111,7 +116,8 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
     const endDate = new Date(parsedDate.getTime() + 3 * 60 * 60 * 1000);
     const end = `${endDate.getUTCFullYear()}${pad(endDate.getUTCMonth() + 1)}${pad(endDate.getUTCDate())}T${pad(endDate.getUTCHours())}${pad(endDate.getUTCMinutes())}${pad(endDate.getUTCSeconds())}Z`;
     
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('حفل زفاف ' + eventTitle)}&dates=${start}/${end}&details=${encodeURIComponent(welcomeText || defaultWelcomeText)}&location=${encodeURIComponent(eventLocation)}`;
+    const calendarTitle = isEn ? `Wedding of ${eventTitle}` : `حفل زفاف ${eventTitle}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(calendarTitle)}&dates=${start}/${end}&details=${encodeURIComponent(welcomeText || defaultWelcomeText)}&location=${encodeURIComponent(eventLocation)}`;
   };
 
   return (
@@ -134,7 +140,7 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
           </div>
         </div>
         <div className="flex justify-center items-center gap-4 text-base mb-4 font-serif text-black font-semibold">
-          <span>دعوة لحضور حفل زفاف</span>
+          <span>{isEn ? "Wedding Invitation" : "دعوة لحضور حفل زفاف"}</span>
         </div>
         <div className="text-center text-base mb-8 px-4 whitespace-pre-line text-black leading-relaxed">
           {welcomeText || defaultWelcomeText}
@@ -146,7 +152,7 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
 
       {/* Location Details */}
       <div className="text-center mb-8 animate-on-scroll fade-up">
-        <div className="text-sm tracking-widest mb-2 text-black">الموقع</div>
+        <div className="text-sm tracking-widest mb-2 text-black">{isEn ? "LOCATION" : "الموقع"}</div>
         <div className="font-semibold text-lg text-black">{hallName?.trim()}</div>
         {cityName && <div className="text-base text-black">{cityName?.trim()}</div>}
       </div>
@@ -158,13 +164,13 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
             <div className="absolute top-0 left-1/3 -translate-x-1/2 w-5 h-6 rounded-b-full bg-white/20 border border-white/40 shadow-inner" />
             <div className="absolute top-0 right-1/3 translate-x-1/2 w-5 h-6 rounded-b-full bg-white/20 border border-white/40 shadow-inner" />
             <span className="text-[10px] tracking-[0.25em] uppercase opacity-60 text-white font-semibold">{getYearNum()}</span>
-            <span className="text-base font-bold tracking-widest uppercase text-white font-serif">{getMonthNameAr()}</span>
-            <span className="text-[10px] tracking-[0.25em] uppercase opacity-60 text-white font-semibold">{getDayNameAr()}</span>
+            <span className="text-base font-bold tracking-widest uppercase text-white font-serif">{getMonthName()}</span>
+            <span className="text-[10px] tracking-[0.25em] uppercase opacity-60 text-white font-semibold">{getDayName()}</span>
           </div>
           <div className="flex flex-col items-center py-6 px-4" style={{ background: 'rgba(255, 255, 255, 0.3)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
             <span className="font-bold leading-none text-[6rem] text-[#ac8c60] font-serif">{getDayNum()}</span>
             <div className="w-12 h-px my-4 bg-black/10" />
-            <span className="text-sm tracking-[0.2em] uppercase mb-1 text-black font-medium">{getDayNameAr()}</span>
+            <span className="text-sm tracking-[0.2em] uppercase mb-1 text-black font-medium">{getDayName()}</span>
             <span className="text-lg font-semibold tracking-widest text-[#ac8c60]">{getTimeString()}</span>
           </div>
         </div>
@@ -178,7 +184,7 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
           style={{ background: 'rgba(255, 255, 255, 0.08)' }}
         >
           <Calendar className="w-4.5 h-4.5 mr-2 text-[#ac8c60]" />
-          احفظ الموعد
+          {isEn ? "Save the Date" : "احفظ الموعد"}
         </button>
       </div>
 
@@ -193,13 +199,13 @@ export const InvitationBody: React.FC<InvitationBodyProps> = ({
           borderRadius: '24px' 
         }}
       >
-        <div className="text-center text-sm tracking-widest mb-4 text-black font-semibold">العد التنازلي</div>
+        <div className="text-center text-sm tracking-widest mb-4 text-black font-semibold">{isEn ? "COUNTDOWN" : "العد التنازلي"}</div>
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'أيام', val: timeLeft.days },
-            { label: 'ساعات', val: timeLeft.hours },
-            { label: 'دقائق', val: timeLeft.minutes },
-            { label: 'ثواني', val: timeLeft.seconds }
+            { label: isEn ? 'Days' : 'أيام', val: timeLeft.days },
+            { label: isEn ? 'Hours' : 'ساعات', val: timeLeft.hours },
+            { label: isEn ? 'Minutes' : 'دقائق', val: timeLeft.minutes },
+            { label: isEn ? 'Seconds' : 'ثواني', val: timeLeft.seconds }
           ].map((item, idx) => (
             <div key={idx} className="text-center p-3 rounded-xl bg-white/10 border border-white/20 shadow-sm">
               <div className="text-2xl font-bold text-[#ac8c60]" style={{ textShadow: 'rgba(172, 140, 96, 0.38) 0px 0px 12px' }}>

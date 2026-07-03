@@ -9,9 +9,10 @@ interface TimelineEvent {
 
 interface EventTimelineProps {
   events?: TimelineEvent[];
+  viewingLang?: string;
 }
 
-export const EventTimeline: React.FC<EventTimelineProps> = ({ events }) => {
+export const EventTimeline: React.FC<EventTimelineProps> = ({ events, viewingLang }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -76,7 +77,7 @@ export const EventTimeline: React.FC<EventTimelineProps> = ({ events }) => {
 
   return (
     <div className="p-4 mb-8" style={{ backdropFilter: 'blur(16px)', background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 'rgba(0, 0, 0, 0.15) 0px 8px 32px', borderRadius: '24px' }}>
-      <h3 className="text-center text-xl mb-8">برنامج المناسبة</h3>
+      <h3 className="text-center text-xl mb-8">{viewingLang === 'en' ? "Event Program" : "برنامج المناسبة"}</h3>
       <div ref={containerRef} className="relative timeline-items-container">
         {/* Vertical center track line */}
         <div className="absolute top-0 bottom-0 w-px" style={{ left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(transparent, rgba(172, 140, 96, 0.376), transparent)' }} />

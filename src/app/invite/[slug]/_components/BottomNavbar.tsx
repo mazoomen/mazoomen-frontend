@@ -8,13 +8,15 @@ interface BottomNavbarProps {
   musicPlaying: boolean;
   setMusicPlaying: (playing: boolean) => void;
   theme?: 'gold' | 'green';
+  viewingLang?: string;
 }
 
 export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   musicUrl,
   musicPlaying,
   setMusicPlaying,
-  theme = 'gold'
+  theme = 'gold',
+  viewingLang
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -62,6 +64,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   };
 
   const isGreen = theme === 'green';
+  const isEn = viewingLang === "en";
   
   // Custom theme colors configuration
   const colors = {
@@ -108,7 +111,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         >
           <Phone className="w-4 h-4" style={{ color: colors.textInactive }} />
         </span>
-        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>تواصل</span>
+        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>{isEn ? "WhatsApp" : "تواصل"}</span>
       </button>
 
       {/* Music */}
@@ -125,7 +128,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         >
           <Music className="w-4 h-4" style={{ color: musicPlaying ? colors.textActive : colors.textInactive }} />
         </span>
-        <span className="text-[9px] font-bold" style={{ color: musicPlaying ? colors.textActive : colors.textInactive }}>موسيقى</span>
+        <span className="text-[9px] font-bold" style={{ color: musicPlaying ? colors.textActive : colors.textInactive }}>{isEn ? "Music" : "موسيقى"}</span>
       </button>
 
       {/* Moments/Gallery */}
@@ -154,7 +157,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         >
           <MapPin className="w-4 h-4" style={{ color: colors.textInactive }} />
         </span>
-        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>الموقع</span>
+        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>{isEn ? "Location" : "الموقع"}</span>
       </button>
 
       {/* RSVP */}
@@ -168,7 +171,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         >
           <Heart className="w-4 h-4" style={{ color: colors.textInactive }} />
         </span>
-        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>تأكيد الحضور</span>
+        <span className="text-[9px] font-bold" style={{ color: colors.textInactive }}>{isEn ? "RSVP" : "تأكيد الحضور"}</span>
       </button>
     </nav>
   );

@@ -33,6 +33,17 @@ export default function InvitationClientPage({
   const [isOpen, setIsOpen] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [snowflakes, setSnowflakes] = useState<{ size: number; left: number; delay: string; duration: number }[]>([]);
+  const [viewingLang, setViewingLang] = useState<"ar" | "en">("ar");
+
+  useEffect(() => {
+    if (localInvitation) {
+      if (localInvitation.languageMode === "en") {
+        setViewingLang("en");
+      } else {
+        setViewingLang("ar");
+      }
+    }
+  }, [localInvitation]);
 
   const handleOpenInvitation = () => {
     setIsOpen(true);
@@ -136,12 +147,50 @@ export default function InvitationClientPage({
         invitation={localInvitation}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
+        viewingLangProp={viewingLang}
+        setViewingLangProp={setViewingLang}
       />
     );
   }
 
+  const isEn = viewingLang === "en";
+  const eventTitle = isEn
+    ? (localInvitation.eventTitleEn || localInvitation.eventTitle)
+    : (localInvitation.eventTitleAr || localInvitation.eventTitle);
+  const eventLocation = isEn
+    ? (localInvitation.eventLocationEn || localInvitation.eventLocation)
+    : (localInvitation.eventLocationAr || localInvitation.eventLocation);
+  const welcomeText = isEn
+    ? (localInvitation.welcomeTextEn || localInvitation.welcomeText)
+    : (localInvitation.welcomeTextAr || localInvitation.welcomeText);
+
+  const eventProgram = (localInvitation.eventProgram || []).map((p: any) => ({
+    time: p.time || "",
+    title: isEn ? (p.titleEn || p.title || "") : (p.titleAr || p.title || ""),
+  }));
+
+  const eventDetails = (localInvitation.eventDetails || []).map((d: any) => ({
+    text: isEn ? (d.textEn || d.text || "") : (d.textAr || d.text || ""),
+  }));
+
   return (
-    <main className="min-h-screen bg-[#F5F2EB] relative flex flex-col justify-center">
+    <main className="min-h-screen bg-[#F5F2EB] relative flex flex-col justify-center" dir={isEn ? "ltr" : "rtl"}>
+      {/* Premium floating language switcher circle */}
+      {localInvitation.languageMode === "both" && (
+        <button
+          onClick={() => setViewingLang(viewingLang === 'ar' ? 'en' : 'ar')}
+          className="fixed top-6 right-6 z-[99999] w-12 h-12 rounded-full border flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-bold font-serif backdrop-blur-md cursor-pointer"
+          style={{
+            background: 'rgba(255, 255, 255, 0.45)',
+            borderColor: 'rgba(172, 140, 96, 0.35)',
+            color: '#ac8c60',
+            boxShadow: 'rgba(172, 140, 96, 0.15) 0px 4px 20px',
+          }}
+        >
+          {viewingLang === 'ar' ? 'EN' : 'AR'}
+        </button>
+      )}
+
       {/* Background audio controller & Navigation bar */}
       {isOpen && (
         <BottomNavbar 
@@ -149,11 +198,12 @@ export default function InvitationClientPage({
           musicPlaying={musicPlaying} 
           setMusicPlaying={setMusicPlaying} 
           theme="gold"
+          viewingLang={viewingLang}
         />
       )}
 
       {/* Wax seal cover splitting envelope */}
-      <EnvelopeOverlay eventTitle={localInvitation.eventTitle} onOpen={handleOpenInvitation} />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} viewingLang={viewingLang} />
 
       {/* Snowfall Animation overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
@@ -172,12 +222,13 @@ export default function InvitationClientPage({
       </div>
 
       {/* Invitation Contents Container */}
-      <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-white shadow-2xl rounded-none md:rounded-[32px] md:my-8" dir="rtl" style={{ color: 'rgb(172, 140, 96)' }}>
+      <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-white shadow-2xl rounded-none md:rounded-[32px] md:my-8" dir={isEn ? "ltr" : "rtl"} style={{ color: 'rgb(172, 140, 96)' }}>
         {/* Hero Banner Section */}
         <InvitationHero 
-          eventTitle={localInvitation.eventTitle} 
+          eventTitle={eventTitle} 
           eventDate={localInvitation.eventDate} 
           isOpen={isOpen} 
+          viewingLang={viewingLang}
         />
 
         {/* Invitation Text Card, Location details & Countdown widgets */}
@@ -196,11 +247,12 @@ export default function InvitationClientPage({
           </div>
           <div className="relative z-10">
             <InvitationBody 
-              eventTitle={localInvitation.eventTitle}
+              eventTitle={eventTitle}
               eventDate={localInvitation.eventDate}
-              eventLocation={localInvitation.eventLocation}
+              eventLocation={eventLocation}
               locationUrl={localInvitation.locationUrl}
-              welcomeText={localInvitation.welcomeText}
+              welcomeText={welcomeText}
+              viewingLang={viewingLang}
             />
           </div>
         </section>
@@ -220,8 +272,8 @@ export default function InvitationClientPage({
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/5" style={{ opacity: 0.25 }} />
           </div>
           <div className="relative z-10 space-y-12">
-            <EventTimeline events={localInvitation.eventProgram} />
-            <EventDetails details={localInvitation.eventDetails} />
+            <EventTimeline events={eventProgram} viewingLang={viewingLang} />
+            <EventDetails details={eventDetails} viewingLang={viewingLang} />
           </div>
         </section>
 
@@ -242,9 +294,10 @@ export default function InvitationClientPage({
           <div className="relative z-10">
             <WishesSection 
               invitationId={localInvitation.id}
-              eventTitle={localInvitation.eventTitle}
+              eventTitle={eventTitle}
               images={localInvitation.images}
-              welcomeText={localInvitation.welcomeText}
+              welcomeText={welcomeText}
+              viewingLang={viewingLang}
             />
           </div>
         </section>
@@ -266,12 +319,12 @@ export default function InvitationClientPage({
           <div className="relative z-10">
             <div className="mx-10 h-px mb-6 bg-black/10" />
             <div className="text-center text-black">
-              <div className="text-xl mb-2">{localInvitation.eventTitle}</div>
-              <div className="text-base mb-2">
-                {new Date(localInvitation.eventDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
+              <div className="text-xl mb-2">{eventTitle}</div>
+              <div className="text-base mb-2 font-sans font-semibold">
+                {new Date(localInvitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#C8C8C8]">
-                صنع بكل حب عبر منصة مازوم
+                {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة مازوم"}
               </p>
               {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
               <div className="h-24" />

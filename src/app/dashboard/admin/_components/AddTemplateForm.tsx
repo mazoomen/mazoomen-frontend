@@ -5,8 +5,10 @@ import api from "@/lib/api";
 import { useLanguage } from "@/components/LanguageContext";
 
 interface TemplateFormData {
-  title: string;
-  description: string;
+  titleAr: string;
+  titleEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
   previewImage: string;
   demoLink: string;
   price: string;
@@ -18,8 +20,8 @@ interface FieldConfig {
   enabled: boolean;
   labelEn: string;
   labelAr: string;
-  defaultEn: string;
-  defaultAr: string;
+  defaultEn: any;
+  defaultAr: any;
   type: string;
 }
 
@@ -30,8 +32,10 @@ interface AddTemplateFormProps {
 }
 
 const INITIAL_FORM: TemplateFormData = {
-  title: "",
-  description: "",
+  titleAr: "",
+  titleEn: "",
+  descriptionAr: "",
+  descriptionEn: "",
   previewImage: "",
   demoLink: "",
   price: "",
@@ -44,6 +48,7 @@ export default function AddTemplateForm({
   onCancel,
 }: AddTemplateFormProps) {
   const { lang } = useLanguage();
+  const [editingLang, setEditingLang] = useState<"ar" | "en">("ar");
   const [form, setForm] = useState<TemplateFormData>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -155,8 +160,10 @@ export default function AddTemplateForm({
     }
 
     setForm({
-      title: initialTemplateData.title || "",
-      description: initialTemplateData.description || "",
+      titleAr: initialTemplateData.titleAr || initialTemplateData.title || "",
+      titleEn: initialTemplateData.titleEn || initialTemplateData.title || "",
+      descriptionAr: initialTemplateData.descriptionAr || initialTemplateData.description || "",
+      descriptionEn: initialTemplateData.descriptionEn || initialTemplateData.description || "",
       previewImage: initialTemplateData.previewImage || "",
       demoLink: initialTemplateData.demoLink || "",
       price: String(initialTemplateData.price || ""),
@@ -168,32 +175,32 @@ export default function AddTemplateForm({
       prev.map((f) => {
         const customField = editableFields[f.key];
         if (customField) {
-          let defEn = customField.default;
-          let defAr = customField.default;
+          let defEn = customField.defaultEn !== undefined ? customField.defaultEn : customField.default;
+          let defAr = customField.defaultAr !== undefined ? customField.defaultAr : customField.default;
 
           // Normalize array fields to ensure they are arrays and have at least 1 element
           if (f.key === "images") {
-            const arr = Array.isArray(customField.default) ? customField.default : [];
-            const finalArr = arr.length ? arr : [""];
-            defEn = finalArr;
-            defAr = finalArr;
+            const arrEn = Array.isArray(defEn) ? defEn : [];
+            const arrAr = Array.isArray(defAr) ? defAr : [];
+            defEn = arrEn.length ? arrEn : [""];
+            defAr = arrAr.length ? arrAr : [""];
           } else if (f.key === "eventProgram") {
-            const arr = Array.isArray(customField.default) ? customField.default : [];
-            const finalArr = arr.length ? arr : [{ time: "", title: "" }];
-            defEn = finalArr;
-            defAr = finalArr;
+            const arrEn = Array.isArray(defEn) ? defEn : [];
+            const arrAr = Array.isArray(defAr) ? defAr : [];
+            defEn = arrEn.length ? arrEn : [{ time: "", title: "" }];
+            defAr = arrAr.length ? arrAr : [{ time: "", title: "" }];
           } else if (f.key === "eventDetails") {
-            const arr = Array.isArray(customField.default) ? customField.default : [];
-            const finalArr = arr.length ? arr : [{ text: "" }];
-            defEn = finalArr;
-            defAr = finalArr;
+            const arrEn = Array.isArray(defEn) ? defEn : [];
+            const arrAr = Array.isArray(defAr) ? defAr : [];
+            defEn = arrEn.length ? arrEn : [{ text: "" }];
+            defAr = arrAr.length ? arrAr : [{ text: "" }];
           }
 
           return {
             ...f,
             enabled: true,
-            labelEn: customField.label || f.labelEn,
-            labelAr: customField.label || f.labelAr,
+            labelEn: customField.labelEn !== undefined ? customField.labelEn : (customField.label || f.labelEn),
+            labelAr: customField.labelAr !== undefined ? customField.labelAr : (customField.label || f.labelAr),
             defaultEn: defEn,
             defaultAr: defAr,
           };
@@ -245,7 +252,7 @@ export default function AddTemplateForm({
     setFields((prev) =>
       prev.map((f, i) =>
         i === index
-          ? lang === "ar"
+          ? editingLang === "ar"
             ? { ...f, labelAr: value }
             : { ...f, labelEn: value }
           : f
@@ -257,7 +264,7 @@ export default function AddTemplateForm({
     setFields((prev) =>
       prev.map((f, i) =>
         i === index
-          ? lang === "ar"
+          ? editingLang === "ar"
             ? { ...f, defaultAr: value }
             : { ...f, defaultEn: value }
           : f
@@ -269,13 +276,13 @@ export default function AddTemplateForm({
     setFields((prev) =>
       prev.map((f, i) => {
         if (i !== fieldIndex) return f;
-        const currentVal = lang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
+        const currentVal = editingLang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
         if (keyOfObject) {
           currentVal[arrayIndex] = { ...currentVal[arrayIndex], [keyOfObject]: value };
         } else {
           currentVal[arrayIndex] = value;
         }
-        return lang === "ar"
+        return editingLang === "ar"
           ? { ...f, defaultAr: currentVal }
           : { ...f, defaultEn: currentVal };
       })
@@ -286,9 +293,9 @@ export default function AddTemplateForm({
     setFields((prev) =>
       prev.map((f, i) => {
         if (i !== fieldIndex) return f;
-        const currentVal = lang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
+        const currentVal = editingLang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
         currentVal.push(itemTemplate);
-        return lang === "ar"
+        return editingLang === "ar"
           ? { ...f, defaultAr: currentVal }
           : { ...f, defaultEn: currentVal };
       })
@@ -299,10 +306,10 @@ export default function AddTemplateForm({
     setFields((prev) =>
       prev.map((f, i) => {
         if (i !== fieldIndex) return f;
-        const currentVal = lang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
+        const currentVal = editingLang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
         if (currentVal.length <= 1) return f;
         const filtered = currentVal.filter((_, idx) => idx !== arrayIndex);
-        return lang === "ar"
+        return editingLang === "ar"
           ? { ...f, defaultAr: filtered }
           : { ...f, defaultEn: filtered };
       })
@@ -318,27 +325,44 @@ export default function AddTemplateForm({
       // Build the JSON schema automatically based on user choices
       const parsedFields: Record<
         string,
-        { type: string; label: string; default: any }
+        {
+          type: string;
+          label: string;
+          default: any;
+          labelAr: string;
+          labelEn: string;
+          defaultAr: any;
+          defaultEn: any;
+        }
       > = {};
       fields.forEach((f) => {
         if (f.enabled) {
-          let defaultValue = lang === "ar" ? f.defaultAr : f.defaultEn;
+          let defAr = f.defaultAr;
+          let defEn = f.defaultEn;
 
           // Clean up empty array items before saving
-          if (f.key === "images" && Array.isArray(defaultValue)) {
-            defaultValue = defaultValue.filter((val: string) => val.trim() !== "");
-          } else if (f.key === "eventProgram" && Array.isArray(defaultValue)) {
-            defaultValue = defaultValue.filter((item: any) => item.time.trim() !== "" || item.title.trim() !== "");
-          } else if (f.key === "eventDetails" && Array.isArray(defaultValue)) {
-            defaultValue = defaultValue.filter((item: any) => item.text.trim() !== "");
-          } else if (typeof defaultValue === "string") {
-            defaultValue = defaultValue.trim();
+          if (f.key === "images") {
+            if (Array.isArray(defAr)) defAr = defAr.filter((val: string) => val.trim() !== "");
+            if (Array.isArray(defEn)) defEn = defEn.filter((val: string) => val.trim() !== "");
+          } else if (f.key === "eventProgram") {
+            if (Array.isArray(defAr)) defAr = defAr.filter((item: any) => item.time.trim() !== "" || item.title.trim() !== "");
+            if (Array.isArray(defEn)) defEn = defEn.filter((item: any) => item.time.trim() !== "" || item.title.trim() !== "");
+          } else if (f.key === "eventDetails") {
+            if (Array.isArray(defAr)) defAr = defAr.filter((item: any) => item.text.trim() !== "");
+            if (Array.isArray(defEn)) defEn = defEn.filter((item: any) => item.text.trim() !== "");
+          } else {
+            if (typeof defAr === "string") defAr = defAr.trim();
+            if (typeof defEn === "string") defEn = defEn.trim();
           }
 
           parsedFields[f.key] = {
             type: f.type,
-            label: lang === "ar" ? f.labelAr.trim() : f.labelEn.trim(),
-            default: defaultValue,
+            label: f.labelAr.trim(),
+            default: defAr,
+            labelAr: f.labelAr.trim(),
+            labelEn: f.labelEn.trim(),
+            defaultAr: defAr,
+            defaultEn: defEn,
           };
         }
       });
@@ -352,8 +376,12 @@ export default function AddTemplateForm({
       }
 
       const body = {
-        title: form.title.trim(),
-        description: form.description.trim(),
+        title: form.titleAr.trim(), // fallback
+        titleAr: form.titleAr.trim(),
+        titleEn: form.titleEn.trim(),
+        description: form.descriptionAr.trim(), // fallback
+        descriptionAr: form.descriptionAr.trim(),
+        descriptionEn: form.descriptionEn.trim(),
         previewImage: form.previewImage.trim(),
         demoLink: form.demoLink.trim() || undefined,
         price: parseFloat(form.price),
@@ -367,8 +395,8 @@ export default function AddTemplateForm({
           type: "success",
           message:
             lang === "ar"
-              ? `تم تحديث القالب "${form.title}" بنجاح!`
-              : `Template "${form.title}" updated successfully!`,
+              ? `تم تحديث القالب "${form.titleAr}" بنجاح!`
+              : `Template "${form.titleEn}" updated successfully!`,
         });
       } else {
         await api.post("/templates", body);
@@ -376,8 +404,8 @@ export default function AddTemplateForm({
           type: "success",
           message:
             lang === "ar"
-              ? `تم إنشاء القالب "${form.title}" بنجاح!`
-              : `Template "${form.title}" created successfully!`,
+              ? `تم إنشاء القالب "${form.titleAr}" بنجاح!`
+              : `Template "${form.titleEn}" created successfully!`,
         });
         setForm(INITIAL_FORM);
       }
@@ -397,8 +425,10 @@ export default function AddTemplateForm({
   };
 
   const isValid =
-    form.title.trim() !== "" &&
-    form.description.trim() !== "" &&
+    form.titleAr.trim() !== "" &&
+    form.titleEn.trim() !== "" &&
+    form.descriptionAr.trim() !== "" &&
+    form.descriptionEn.trim() !== "" &&
     form.previewImage.trim() !== "" &&
     form.price.trim() !== "" &&
     !isNaN(parseFloat(form.price)) &&
@@ -407,6 +437,34 @@ export default function AddTemplateForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 text-neutral-800">
+      {/* ── Language Switcher Button up ───────────────────────── */}
+      <div className="flex justify-end mb-4 font-sans">
+        <div className="flex items-center gap-1 p-1 bg-[#FAF8F5] border border-[#E6E2DA] rounded-full shadow-xs">
+          <button
+            type="button"
+            onClick={() => setEditingLang("ar")}
+            className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
+              editingLang === "ar"
+                ? "bg-[#0B1528] text-[#E5C38B]"
+                : "text-neutral-500 hover:text-black"
+            }`}
+          >
+            AR
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditingLang("en")}
+            className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
+              editingLang === "en"
+                ? "bg-[#0B1528] text-[#E5C38B]"
+                : "text-neutral-500 hover:text-black"
+            }`}
+          >
+            EN
+          </button>
+        </div>
+      </div>
+
       {/* ── Feedback Banner ──────────────────────────────────── */}
       {feedback && (
         <div
@@ -426,13 +484,13 @@ export default function AddTemplateForm({
           htmlFor="template-title"
           className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
-          {lang === "ar" ? "اسم القالب" : "Template Title"} <span className="text-red-400">*</span>
+          {editingLang === "ar" ? "اسم القالب (العربية)" : "Template Title (English)"} <span className="text-red-400">*</span>
         </label>
         <input
           id="template-title"
           type="text"
-          name="title"
-          value={form.title}
+          name={editingLang === "ar" ? "titleAr" : "titleEn"}
+          value={editingLang === "ar" ? form.titleAr : form.titleEn}
           onChange={handleChange}
           placeholder="e.g. Royal Gold Wedding"
           disabled={submitting}
@@ -446,14 +504,14 @@ export default function AddTemplateForm({
           htmlFor="template-description"
           className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
-          {lang === "ar" ? "وصف القالب" : "Description"} <span className="text-red-400">*</span>
+          {editingLang === "ar" ? "وصف القالب (العربية)" : "Description (English)"} <span className="text-red-400">*</span>
         </label>
         <textarea
           id="template-description"
-          name="description"
-          value={form.description}
+          name={editingLang === "ar" ? "descriptionAr" : "descriptionEn"}
+          value={editingLang === "ar" ? form.descriptionAr : form.descriptionEn}
           onChange={handleChange}
-          placeholder={lang === "ar" ? "أدخل تفاصيل وصف القالب..." : "Detailed description of the invitation template..."}
+          placeholder={editingLang === "ar" ? "أدخل تفاصيل وصف القالب باللغة العربية..." : "Detailed description of the invitation template in English..."}
           disabled={submitting}
           rows={3}
           className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50 resize-none font-sans"
@@ -559,8 +617,8 @@ export default function AddTemplateForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#FAF8F5] border border-[#EBE7DF] rounded-xl p-4">
           {fields.map((f, i) => {
-            const label = lang === "ar" ? f.labelAr : f.labelEn;
-            const defaultValue = lang === "ar" ? f.defaultAr : f.defaultEn;
+            const label = editingLang === "ar" ? f.labelAr : f.labelEn;
+            const defaultValue = editingLang === "ar" ? f.defaultAr : f.defaultEn;
             const isArrayField = f.key === "images" || f.key === "eventProgram" || f.key === "eventDetails";
 
             return (
@@ -585,11 +643,11 @@ export default function AddTemplateForm({
                   <div>
                     <span className="text-xs font-bold text-neutral-800">
                       {f.key === "groomName"
-                        ? lang === "ar"
+                        ? editingLang === "ar"
                           ? "اسم العريس (Husband)"
                           : "Husband's Name (Groom)"
                         : f.key === "brideName"
-                        ? lang === "ar"
+                        ? editingLang === "ar"
                           ? "اسم العروس (Wife)"
                           : "Wife's Name (Bride)"
                         : label}
@@ -606,7 +664,7 @@ export default function AddTemplateForm({
                       <div className="grid grid-cols-2 gap-2.5">
                         <div>
                           <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
-                            {lang === "ar" ? "التسمية (Label)" : "Label"}
+                            {editingLang === "ar" ? "التسمية باللغة العربية (Label)" : "Label (English)"}
                           </label>
                           <input
                             type="text"
@@ -619,7 +677,7 @@ export default function AddTemplateForm({
                         </div>
                         <div>
                           <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
-                            {lang === "ar" ? "الافتراضي (Default)" : "Default Value"}
+                            {editingLang === "ar" ? "الافتراضي باللغة العربية (Default)" : "Default Value (English)"}
                           </label>
                           <input
                             type="text"
@@ -635,7 +693,7 @@ export default function AddTemplateForm({
                       <div className="space-y-3">
                         <div className="max-w-md">
                           <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
-                            {lang === "ar" ? "التسمية (Label)" : "Label"}
+                            {editingLang === "ar" ? "التسمية باللغة العربية (Label)" : "Label (English)"}
                           </label>
                           <input
                             type="text"
@@ -650,7 +708,7 @@ export default function AddTemplateForm({
                         {/* Array item builder */}
                         <div className="border border-[#F4F1EA] bg-[#FAF8F5] rounded-xl p-3 space-y-2">
                           <span className="block text-[9px] font-bold text-neutral-450 uppercase tracking-wider mb-1.5">
-                            {lang === "ar" ? "العناصر الافتراضية" : "Default Items List"}
+                            {editingLang === "ar" ? "العناصر الافتراضية (العربية)" : "Default Items List (English)"}
                           </span>
                           
                           {f.key === "images" && Array.isArray(defaultValue) && (
@@ -701,7 +759,7 @@ export default function AddTemplateForm({
                                     type="text"
                                     value={item.title || ""}
                                     onChange={(e) => handleFieldArrayChange(i, idx, "title", e.target.value)}
-                                    placeholder={lang === "ar" ? "مثال: استقبال الضيوف" : "e.g. Reception"}
+                                    placeholder={editingLang === "ar" ? "مثال: استقبال الضيوف" : "e.g. Reception"}
                                     disabled={submitting}
                                     className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
                                   />
@@ -734,7 +792,7 @@ export default function AddTemplateForm({
                                     type="text"
                                     value={item.text || ""}
                                     onChange={(e) => handleFieldArrayChange(i, idx, "text", e.target.value)}
-                                    placeholder={lang === "ar" ? "مثال: يمنع اصطحاب الأطفال" : "e.g. No kids allowed"}
+                                    placeholder={editingLang === "ar" ? "مثال: يمنع اصطحاب الأطفال" : "e.g. No kids allowed"}
                                     disabled={submitting}
                                     className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
                                   />

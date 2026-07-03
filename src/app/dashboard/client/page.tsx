@@ -9,8 +9,22 @@ import { InvitationEditor, RsvpTracker } from "./_components";
 interface PurchaseInvitation {
   id: string;
   slug: string;
+  languageMode?: string | null;
   eventTitle: string;
+  eventTitleAr?: string | null;
+  eventTitleEn?: string | null;
   eventDate: string;
+  eventLocation?: string | null;
+  eventLocationAr?: string | null;
+  eventLocationEn?: string | null;
+  locationUrl?: string | null;
+  welcomeText?: string | null;
+  welcomeTextAr?: string | null;
+  welcomeTextEn?: string | null;
+  images?: string[];
+  musicUrl?: string | null;
+  eventProgram?: any[];
+  eventDetails?: any[];
   isActive: boolean;
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, MessageCircle, Heart, CheckCircle2 } from 'lucide-react';
 import api from '@/lib/api';
 import type { CreateRsvpPayload } from '@/types/invitation';
@@ -10,11 +10,18 @@ interface Wish {
   text: string;
 }
 
-const defaultWishes: Wish[] = [
+const defaultWishesAr: Wish[] = [
   { name: 'محمد العلي', text: 'ألف مبروك! نسعد بحضور حفلكم الكريم.' },
   { name: 'سارة خالد', text: 'بارك الله لكما وبارك عليكما وجمع بينكما في خير 🤍' },
   { name: 'أحمد وندى', text: 'الله يتمم لكم على خير يا رب، فرحنا لكم من قلب.' },
   { name: 'عبدالله السعد', text: 'دعواتنا لكم بحياة سعيدة ومباركة.' }
+];
+
+const defaultWishesEn: Wish[] = [
+  { name: 'John Doe', text: 'Congratulations! Wish you a happy marriage.' },
+  { name: 'Sarah & Michael', text: 'May Allah bless you both and join you in goodness 🤍' },
+  { name: 'Emma Watson', text: 'So happy for you two, wishing you all the best.' },
+  { name: 'Alex Cooper', text: 'Wishing you a lifetime of love and happiness.' }
 ];
 
 interface WishesSectionProps {
@@ -22,15 +29,23 @@ interface WishesSectionProps {
   eventTitle: string;
   images: string[];
   welcomeText?: string | null;
+  viewingLang?: string;
 }
 
 export const WishesSection: React.FC<WishesSectionProps> = ({
   invitationId,
   eventTitle,
   images,
-  welcomeText
+  welcomeText,
+  viewingLang
 }) => {
-  const [wishes, setWishes] = useState<Wish[]>(defaultWishes);
+  const isEn = viewingLang === "en";
+  const [wishes, setWishes] = useState<Wish[]>(isEn ? defaultWishesEn : defaultWishesAr);
+  
+  useEffect(() => {
+    setWishes(isEn ? defaultWishesEn : defaultWishesAr);
+  }, [viewingLang]);
+
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
@@ -45,8 +60,8 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       if (title.includes(d)) {
         const parts = title.split(d);
         return {
-          groom: parts[0]?.trim() || 'العريس',
-          bride: parts[1]?.trim() || 'العروس'
+          groom: parts[0]?.trim() || (isEn ? 'Groom' : 'العريس'),
+          bride: parts[1]?.trim() || (isEn ? 'Bride' : 'العروس')
         };
       }
     }
@@ -102,23 +117,23 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       setStatus('error');
       setErrorMsg(
         err.response?.data?.message || 
-        'حدث خطأ أثناء إرسال ردك. يرجى المحاولة مرة أخرى.'
+        (isEn ? 'An error occurred while sending your response. Please try again.' : 'حدث خطأ أثناء إرسال ردك. يرجى المحاولة مرة أخرى.')
       );
     }
   };
 
   return (
-    <div id="rsvp-section" className="space-y-8">
+    <div id="rsvp-section" className="space-y-8" dir={isEn ? "ltr" : "rtl"}>
       {/* Bride & Groom Message */}
       <div className="text-center mb-8">
-        <h3 className="text-base mb-4 tracking-wide text-[#ac8c60] font-semibold">رسالة العروسين</h3>
+        <h3 className="text-base mb-4 tracking-wide text-[#ac8c60] font-semibold">{isEn ? "Bride & Groom Message" : "رسالة العروسين"}</h3>
         <p className="text-base whitespace-pre-line mb-4 text-black leading-relaxed">
-          فرحتنا لا تكتمل إلا بكم
-          {"\n"}وجودكم شرف، ودعاؤكم سند
-          {"\n"}شاركونا أجمل بداية 🤍
+          {isEn
+            ? `Our joy is incomplete without you\nYour presence is an honor, and your prayers are our support\nJoin us in this beautiful beginning 🤍`
+            : `فرحتنا لا تكتمل إلا بكم\nوجودكم شرف، ودعاؤكم سند\nشاركونا أجمل بداية 🤍`}
         </p>
         <p className="text-base text-black font-semibold">
-          بمحبة ، {groom} {bride ? `& ${bride}` : ''}
+          {isEn ? "With love, " : "بمحبة ، "}{groom}{bride ? ` & ${bride}` : ''}
         </p>
       </div>
 
@@ -132,7 +147,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
 
       {/* Moments Gallery */}
       <div id="moments-section" className="mb-8">
-        <h3 className="text-center text-xl mb-4">لحظات من الحفل</h3>
+        <h3 className="text-center text-xl mb-4">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
         <div className="grid grid-cols-2 gap-3">
           {galleryImages.map((src, index) => (
             <div key={index} className="aspect-square rounded-xl overflow-hidden shadow-md" style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}>
@@ -146,7 +161,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       <div className="text-center py-6">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Users className="w-4 h-4 text-black" />
-          <span className="text-xs tracking-widest uppercase text-black">عدد الحضور</span>
+          <span className="text-xs tracking-widest uppercase text-black">{isEn ? "GUESTS COUNT" : "عدد الحضور"}</span>
         </div>
         <div className="text-4xl font-light mb-3 text-[#ac8c60]">219</div>
         <div className="mx-auto w-16 h-px bg-black/10" />
@@ -165,7 +180,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       >
         <h3 className="text-center text-xl mb-4 font-semibold text-black flex items-center justify-center gap-2">
           <Heart className="w-5 h-5 text-[#ac8c60] fill-[#ac8c60]" />
-          تأكيد حضور الحفل (RSVP)
+          {isEn ? "Confirm Attendance (RSVP)" : "تأكيد حضور الحفل (RSVP)"}
         </h3>
 
         {status === 'success' ? (
@@ -173,38 +188,38 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
             <div className="flex justify-center">
               <CheckCircle2 className="w-16 h-16 text-emerald-600" />
             </div>
-            <h4 className="text-lg font-semibold text-emerald-800">تم تسجيل حضورك بنجاح!</h4>
+            <h4 className="text-lg font-semibold text-emerald-800">{isEn ? "Attendance Registered Successfully!" : "تم تسجيل حضورك بنجاح!"}</h4>
             <p className="text-sm text-gray-700 leading-relaxed">
-              يسعدنا ويشرفنا حضوركم الكريم لمشاركتنا فرحتنا.
-              <br />
-              نتطلع للقائكم في الحفل 🤍
+              {isEn
+                ? "We are honored and delighted to share our joy with you. Looking forward to seeing you!"
+                : "يسعدنا ويشرفنا حضوركم الكريم لمشاركتنا فرحتنا. نتطلع للقائكم في الحفل 🤍"}
             </p>
             <button 
               onClick={() => setStatus('idle')}
               className="mt-4 px-6 py-2 text-xs font-semibold rounded-full border border-black/15 hover:bg-black/5 text-black"
             >
-              تسجيل حضور آخر
+              {isEn ? "Submit another RSVP" : "تسجيل حضور آخر"}
             </button>
           </div>
         ) : (
-          <form onSubmit={handleRsvpSubmit} className="space-y-4 text-right">
+          <form onSubmit={handleRsvpSubmit} className={`space-y-4 ${isEn ? "text-left" : "text-right"}`}>
             {/* Guest Name */}
             <div>
-              <label htmlFor="guest-name" className="block text-sm font-medium text-black mb-1">الاسم الكريم</label>
+              <label htmlFor="guest-name" className="block text-sm font-medium text-black mb-1">{isEn ? "Your Full Name" : "الاسم الكريم"}</label>
               <input
                 id="guest-name"
                 type="text"
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
-                placeholder="أدخل اسمك الكامل"
+                placeholder={isEn ? "Enter your full name" : "أدخل اسمك الكامل"}
                 required
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] text-right"
+                className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] ${isEn ? "text-left" : "text-right"}`}
               />
             </div>
 
             {/* Attendance Choice */}
             <div>
-              <label className="block text-sm font-medium text-black mb-1">هل ستشرفنا بحضورك؟</label>
+              <label className="block text-sm font-medium text-black mb-1">{isEn ? "Will you honor us with your presence?" : "هل ستشرفنا بحضورك؟"}</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -215,7 +230,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
                       : 'bg-white/40 border-gray-200 text-black hover:bg-white/60'
                   }`}
                 >
-                  نعم، بكل سرور
+                  {isEn ? "Yes, gladly" : "نعم، بكل سرور"}
                 </button>
                 <button
                   type="button"
@@ -226,7 +241,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
                       : 'bg-white/40 border-gray-200 text-black hover:bg-white/60'
                   }`}
                 >
-                  أعتذر، متمنياً لكم التوفيق
+                  {isEn ? "Apologize, wishing you all the best" : "أعتذر، متمنياً لكم التوفيق"}
                 </button>
               </div>
             </div>
@@ -234,33 +249,33 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
             {/* Companions Count */}
             {attendance === 'YES' && (
               <div className="animate-fade-in">
-                <label htmlFor="companions-count" className="block text-sm font-medium text-black mb-1">عدد المرافقين</label>
+                <label htmlFor="companions-count" className="block text-sm font-medium text-black mb-1">{isEn ? "Number of companions" : "عدد المرافقين"}</label>
                 <select
                   id="companions-count"
                   value={companionsCount}
                   onChange={(e) => setCompanionsCount(Number(e.target.value))}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#ac8c60]"
                 >
-                  <option value={0}>أنا فقط (بدون مرافقين)</option>
-                  <option value={1}>مرافق واحد (+1)</option>
-                  <option value={2}>مرافقين اثنين (+2)</option>
-                  <option value={3}>ثلاثة مرافقين (+3)</option>
-                  <option value={4}>أربعة مرافقين (+4)</option>
-                  <option value={5}>خمسة مرافقين (+5)</option>
+                  <option value={0}>{isEn ? "Just me (no companions)" : "أنا فقط (بدون مرافقين)"}</option>
+                  <option value={1}>{isEn ? "1 Companion (+1)" : "مرافق واحد (+1)"}</option>
+                  <option value={2}>{isEn ? "2 Companions (+2)" : "مرافقين اثنين (+2)"}</option>
+                  <option value={3}>{isEn ? "3 Companions (+3)" : "ثلاثة مرافقين (+3)"}</option>
+                  <option value={4}>{isEn ? "4 Companions (+4)" : "أربعة مرافقين (+4)"}</option>
+                  <option value={5}>{isEn ? "5 Companions (+5)" : "خمسة مرافقين (+5)"}</option>
                 </select>
               </div>
             )}
 
             {/* Guest Message/Wish */}
             <div>
-              <label htmlFor="wish-text" className="block text-sm font-medium text-black mb-1">تهنئة للعروسين (اختياري)</label>
+              <label htmlFor="wish-text" className="block text-sm font-medium text-black mb-1">{isEn ? "Congratulate the newlyweds (Optional)" : "تهنئة للعروسين (اختياري)"}</label>
               <textarea
                 id="wish-text"
                 rows={2}
                 value={newWish}
                 onChange={(e) => setNewWish(e.target.value)}
-                placeholder="اكتب تهنئتك الجميلة للعروسين..."
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] text-right resize-none"
+                placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب تهنئتك الجميلة للعروسين..."}
+                className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] resize-none ${isEn ? "text-left" : "text-right"}`}
               />
             </div>
 
@@ -278,7 +293,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
               className="w-full py-3 font-semibold text-white rounded-xl shadow-md transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               style={{ background: 'linear-gradient(135deg, rgb(200, 162, 74), rgb(172, 140, 96))' }}
             >
-              {status === 'submitting' ? 'جاري إرسال ردكم...' : 'تأكيد الرد'}
+              {status === 'submitting' ? (isEn ? 'Submitting...' : 'جاري إرسال ردكم...') : (isEn ? 'Confirm RSVP' : 'تأكيد الرد')}
             </button>
           </form>
         )}
@@ -288,7 +303,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       <div className="space-y-4">
         <div className="flex items-center gap-2 justify-center mb-2">
           <MessageCircle className="w-3 h-3 text-black" />
-          <p className="text-xs tracking-widest uppercase text-black font-semibold">تهاني وتبريكات الضيوف</p>
+          <p className="text-xs tracking-widest uppercase text-black font-semibold">{isEn ? "Guests Wishes & Congratulations" : "تهاني وتبريكات الضيوف"}</p>
         </div>
 
         {/* Wish entry list container */}

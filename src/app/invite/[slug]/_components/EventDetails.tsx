@@ -9,10 +9,12 @@ interface DetailItem {
 
 interface EventDetailsProps {
   details?: DetailItem[];
+  viewingLang?: string;
 }
 
-export const EventDetails: React.FC<EventDetailsProps> = ({ details }) => {
+export const EventDetails: React.FC<EventDetailsProps> = ({ details, viewingLang }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isEn = viewingLang === "en";
 
   // Don't render if no details provided
   if (!details || details.length === 0) return null;
@@ -49,10 +51,10 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ details }) => {
 
   return (
     <div className="relative">
-      <h3 className="text-center text-xl mb-6">تفاصيل الحفل</h3>
-      <div className="relative pl-8">
+      <h3 className="text-center text-xl mb-6">{isEn ? "Event Guidelines" : "تفاصيل الحفل"}</h3>
+      <div className={`relative ${isEn ? "pr-8" : "pl-8"}`}>
         <div 
-          className="absolute left-3 top-3 bottom-3 w-px" 
+          className={`absolute ${isEn ? "right-3" : "left-3"} top-3 bottom-3 w-px`} 
           style={{ background: 'linear-gradient(transparent, rgba(172, 140, 96, 0.44), transparent)' }} 
         />
         
@@ -60,7 +62,7 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ details }) => {
           {details.map((detail, index) => (
             <div key={index} className="relative flex items-center gap-3 min-h-[52px] detail-item-row">
               <div 
-                className="absolute -left-5 w-2.5 h-2.5 rounded-full shrink-0" 
+                className={`absolute ${isEn ? "-right-5" : "-left-5"} w-2.5 h-2.5 rounded-full shrink-0`} 
                 style={{ 
                   background: 'rgba(172, 140, 96, 0.19)', 
                   top: '50%', 
@@ -87,7 +89,7 @@ export const EventDetails: React.FC<EventDetailsProps> = ({ details }) => {
                 >
                   <Info className="w-4 h-4 text-[#ac8c60]" />
                 </span>
-                <span className="text-sm leading-tight text-right w-full">{detail.text}</span>
+                <span className={`text-sm leading-tight ${isEn ? "text-left" : "text-right"} w-full`}>{detail.text}</span>
               </div>
             </div>
           ))}

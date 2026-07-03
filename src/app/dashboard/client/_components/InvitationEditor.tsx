@@ -36,10 +36,8 @@ export default function InvitationEditor({
   const isEditing = !!invitation;
 
   // ── Parse initial Groom & Bride names from eventTitle ───────────────
-  const getInitialNames = () => {
-    if (!invitation?.eventTitle) return { groom: "", bride: "" };
-    const title = invitation.eventTitle;
-
+  const parseCoupleNames = (title: string) => {
+    if (!title) return { groom: "", bride: "" };
     if (title.includes(" & ")) {
       const parts = title.split(" & ");
       return { groom: parts[0]?.trim() || "", bride: parts[1]?.trim() || "" };
@@ -52,11 +50,37 @@ export default function InvitationEditor({
     return { groom: title, bride: "" };
   };
 
-  const initialNames = getInitialNames();
+  const [languageMode, setLanguageMode] = useState<string>(invitation?.languageMode || "both");
+  const [editingLang, setEditingLang] = useState<"ar" | "en">("ar");
+
+  const getInitialNamesAr = () => {
+    if (invitation?.eventTitleAr) {
+      return parseCoupleNames(invitation.eventTitleAr);
+    }
+    if (invitation?.eventTitle && /[\u0600-\u06FF]/.test(invitation.eventTitle)) {
+      return parseCoupleNames(invitation.eventTitle);
+    }
+    return { groom: "", bride: "" };
+  };
+
+  const getInitialNamesEn = () => {
+    if (invitation?.eventTitleEn) {
+      return parseCoupleNames(invitation.eventTitleEn);
+    }
+    if (invitation?.eventTitle && !/[\u0600-\u06FF]/.test(invitation.eventTitle)) {
+      return parseCoupleNames(invitation.eventTitle);
+    }
+    return { groom: "", bride: "" };
+  };
+
+  const initNamesAr = getInitialNamesAr();
+  const initNamesEn = getInitialNamesEn();
 
   // ── Form State ──────────────────────────────────────────────────────
-  const [groomName, setGroomName] = useState(initialNames.groom);
-  const [brideName, setBrideName] = useState(initialNames.bride);
+  const [groomNameAr, setGroomNameAr] = useState(initNamesAr.groom);
+  const [groomNameEn, setGroomNameEn] = useState(initNamesEn.groom);
+  const [brideNameAr, setBrideNameAr] = useState(initNamesAr.bride);
+  const [brideNameEn, setBrideNameEn] = useState(initNamesEn.bride);
   const [slug, setSlug] = useState(invitation?.slug || "");
   const [eventDate, setEventDate] = useState(() => {
     if (invitation?.eventDate) {
@@ -64,23 +88,38 @@ export default function InvitationEditor({
     }
     return "";
   });
-  const [eventLocation, setEventLocation] = useState(invitation?.eventLocation || "");
+  const [eventLocationAr, setEventLocationAr] = useState(invitation?.eventLocationAr || (invitation?.eventLocation && /[\u0600-\u06FF]/.test(invitation.eventLocation) ? invitation.eventLocation : ""));
+  const [eventLocationEn, setEventLocationEn] = useState(invitation?.eventLocationEn || (invitation?.eventLocation && !/[\u0600-\u06FF]/.test(invitation.eventLocation) ? invitation.eventLocation : ""));
   const [locationUrl, setLocationUrl] = useState(invitation?.locationUrl || "");
-  const [welcomeText, setWelcomeText] = useState(invitation?.welcomeText || "");
+  const [welcomeTextAr, setWelcomeTextAr] = useState(invitation?.welcomeTextAr || (invitation?.welcomeText && /[\u0600-\u06FF]/.test(invitation.welcomeText) ? invitation.welcomeText : ""));
+  const [welcomeTextEn, setWelcomeTextEn] = useState(invitation?.welcomeTextEn || (invitation?.welcomeText && !/[\u0600-\u06FF]/.test(invitation.welcomeText) ? invitation.welcomeText : ""));
   const [images, setImages] = useState<string[]>(
     invitation?.images?.length ? invitation.images : [""]
   );
   const [musicUrl, setMusicUrl] = useState(invitation?.musicUrl || "");
 
   // ── Event Program (Timeline) State ──────────────────────────────────
-  const [eventProgram, setEventProgram] = useState<{ time: string; title: string }[]>(
-    invitation?.eventProgram?.length ? invitation.eventProgram : [{ time: "", title: "" }]
-  );
+  const [eventProgram, setEventProgram] = useState<{ time: string; titleAr: string; titleEn: string }[]>(() => {
+    if (invitation?.eventProgram?.length) {
+      return invitation.eventProgram.map((p: any) => ({
+        time: p.time || "",
+        titleAr: p.titleAr || p.title || "",
+        titleEn: p.titleEn || p.title || "",
+      }));
+    }
+    return [{ time: "", titleAr: "", titleEn: "" }];
+  });
 
   // ── Event Details State ─────────────────────────────────────────────
-  const [eventDetails, setEventDetails] = useState<{ text: string }[]>(
-    invitation?.eventDetails?.length ? invitation.eventDetails : [{ text: "" }]
-  );
+  const [eventDetails, setEventDetails] = useState<{ textAr: string; textEn: string }[]>(() => {
+    if (invitation?.eventDetails?.length) {
+      return invitation.eventDetails.map((d: any) => ({
+        textAr: d.textAr || d.text || "",
+        textEn: d.textEn || d.text || "",
+      }));
+    }
+    return [{ textAr: "", textEn: "" }];
+  });
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -98,26 +137,26 @@ export default function InvitationEditor({
   };
 
   // ── Manage Dynamic Event Program ─────────────────────────────────────
-  const addProgramItem = () => setEventProgram([...eventProgram, { time: "", title: "" }]);
+  const addProgramItem = () => setEventProgram([...eventProgram, { time: "", titleAr: "", titleEn: "" }]);
   const removeProgramItem = (index: number) => {
     if (eventProgram.length <= 1) return;
     setEventProgram(eventProgram.filter((_, i) => i !== index));
   };
-  const updateProgramItem = (index: number, field: "time" | "title", value: string) => {
+  const updateProgramItem = (index: number, field: "time" | "titleAr" | "titleEn", value: string) => {
     const updated = [...eventProgram];
     updated[index] = { ...updated[index], [field]: value };
     setEventProgram(updated);
   };
 
   // ── Manage Dynamic Event Details ──────────────────────────────────────
-  const addDetailItem = () => setEventDetails([...eventDetails, { text: "" }]);
+  const addDetailItem = () => setEventDetails([...eventDetails, { textAr: "", textEn: "" }]);
   const removeDetailItem = (index: number) => {
     if (eventDetails.length <= 1) return;
     setEventDetails(eventDetails.filter((_, i) => i !== index));
   };
-  const updateDetailItem = (index: number, value: string) => {
+  const updateDetailItem = (index: number, field: "textAr" | "textEn", value: string) => {
     const updated = [...eventDetails];
-    updated[index] = { text: value };
+    updated[index] = { ...updated[index], [field]: value };
     setEventDetails(updated);
   };
 
@@ -128,54 +167,58 @@ export default function InvitationEditor({
     setErrorMsg("");
 
     const filteredImages = images.filter((url) => url.trim() !== "");
-    const generatedTitle = `${groomName.trim()} & ${brideName.trim()}`;
+
+    const titleAr = `${groomNameAr.trim()} و ${brideNameAr.trim()}`;
+    const titleEn = `${groomNameEn.trim()} & ${brideNameEn.trim()}`;
+    const generatedTitle = languageMode === "en" ? titleEn : titleAr;
 
     // ── Build event program: if user left everything empty, auto-fill defaults ──
-    let finalProgram = eventProgram.filter((p) => p.time.trim() !== "" || p.title.trim() !== "");
+    let finalProgram = eventProgram.filter((p) => p.time.trim() !== "" || p.titleAr.trim() !== "" || p.titleEn.trim() !== "");
 
     if (finalProgram.length === 0 && eventDate) {
       const eventTime = eventDate.split("T")[1] || "20:00";
       const formattedTime = formatTimeToArabic(eventTime);
       finalProgram = [
-        { time: formattedTime, title: t("Party start") },
+        { time: formattedTime, titleAr: "بداية الحفل", titleEn: "Party start" },
       ];
     }
 
     // Convert time inputs (HH:mm) to Arabic formatted strings
     finalProgram = finalProgram.map((p) => ({
       time: p.time.includes(":") && !p.time.includes(" ") ? formatTimeToArabic(p.time) : p.time,
-      title: p.title,
+      titleAr: p.titleAr,
+      titleEn: p.titleEn,
     }));
 
-    const filteredDetails = eventDetails.filter((d) => d.text.trim() !== "");
+    const filteredDetails = eventDetails.filter((d) => d.textAr.trim() !== "" || d.textEn.trim() !== "");
+
+    const payload = {
+      slug: slug.trim(),
+      languageMode,
+      eventTitle: generatedTitle,
+      eventTitleAr: titleAr,
+      eventTitleEn: titleEn,
+      eventDate: new Date(eventDate).toISOString(),
+      eventLocation: languageMode === "en" ? eventLocationEn.trim() : eventLocationAr.trim(),
+      eventLocationAr: eventLocationAr.trim(),
+      eventLocationEn: eventLocationEn.trim(),
+      locationUrl: locationUrl.trim() || undefined,
+      welcomeText: languageMode === "en" ? welcomeTextEn.trim() : welcomeTextAr.trim(),
+      welcomeTextAr: welcomeTextAr.trim(),
+      welcomeTextEn: welcomeTextEn.trim(),
+      images: filteredImages,
+      musicUrl: musicUrl.trim() || undefined,
+      eventProgram: finalProgram,
+      eventDetails: filteredDetails,
+    };
 
     try {
       if (isEditing) {
-        await api.put(`/invitations/${invitation.id}`, {
-          slug: slug.trim(),
-          eventTitle: generatedTitle,
-          eventDate: new Date(eventDate).toISOString(),
-          eventLocation: eventLocation.trim(),
-          locationUrl: locationUrl.trim() || undefined,
-          welcomeText: welcomeText.trim() || undefined,
-          images: filteredImages,
-          musicUrl: musicUrl.trim() || undefined,
-          eventProgram: finalProgram,
-          eventDetails: filteredDetails,
-        });
+        await api.put(`/invitations/${invitation.id}`, payload);
       } else {
         await api.post("/invitations", {
+          ...payload,
           purchaseId,
-          slug: slug.trim(),
-          eventTitle: generatedTitle,
-          eventDate: new Date(eventDate).toISOString(),
-          eventLocation: eventLocation.trim(),
-          locationUrl: locationUrl.trim() || undefined,
-          welcomeText: welcomeText.trim() || undefined,
-          images: filteredImages,
-          musicUrl: musicUrl.trim() || undefined,
-          eventProgram: finalProgram,
-          eventDetails: filteredDetails,
         });
       }
 
@@ -205,37 +248,94 @@ export default function InvitationEditor({
   const addBtnClass =
     "mt-2 text-[10px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors tracking-wider";
 
+  const handleLanguageModeChange = (val: string) => {
+    setLanguageMode(val);
+    if (val === "ar") setEditingLang("ar");
+    else if (val === "en") setEditingLang("en");
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
       {/* Title */}
-      <div className="border-b border-[#F4F1EA] pb-3">
-        <h2 className="text-xl font-serif font-medium text-neutral-800">
-          {isEditing ? t("Edit Invitation Details") : t("Create New Invitation")}
-        </h2>
-        <p className="text-[11px] text-neutral-400 mt-1">{t("Template:")} {templateTitle}</p>
+      <div className="border-b border-[#F4F1EA] pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h2 className="text-xl font-serif font-medium text-neutral-800">
+            {isEditing ? t("Edit Invitation Details") : t("Create New Invitation")}
+          </h2>
+          <p className="text-[11px] text-neutral-400 mt-1">{t("Template:")} {templateTitle}</p>
+        </div>
+
+        {/* Language switcher dropdown */}
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">{t("Language")}</label>
+          <select
+            value={languageMode}
+            onChange={(e) => handleLanguageModeChange(e.target.value)}
+            disabled={status === "saving"}
+            className="bg-white border border-[#E6E2DA] rounded-xl px-3 py-1.5 text-[11px] outline-none text-neutral-800 focus:border-black font-sans font-semibold cursor-pointer"
+          >
+            <option value="both">{t("Arabic & English")}</option>
+            <option value="ar">{t("Arabic Only")}</option>
+            <option value="en">{t("English Only")}</option>
+          </select>
+        </div>
       </div>
+
+      {/* Language switcher toggle circles (when bilingual) */}
+      {languageMode === "both" && (
+        <div className={`flex ${isRtl ? "justify-start" : "justify-end"} mb-2`}>
+          <div className="flex items-center gap-1 p-1 bg-[#FAF8F5] border border-[#E6E2DA] rounded-full shadow-xs">
+            <button
+              type="button"
+              onClick={() => setEditingLang("ar")}
+              className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
+                editingLang === "ar"
+                  ? "bg-[#0B1528] text-[#E5C38B]"
+                  : "text-neutral-500 hover:text-black"
+              }`}
+            >
+              AR
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingLang("en")}
+              className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
+                editingLang === "en"
+                  ? "bg-[#0B1528] text-[#E5C38B]"
+                  : "text-neutral-500 hover:text-black"
+              }`}
+            >
+              EN
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Groom & Bride Names Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={labelClass}>{t("Groom's Name")}</label>
+          <label className={labelClass}>
+            {editingLang === "ar" ? `${t("Groom's Name")} (${t("Arabic")})` : `${t("Groom's Name")} (${t("English")})`}
+          </label>
           <input
             type="text"
-            value={groomName}
-            onChange={(e) => setGroomName(e.target.value)}
-            placeholder={t("e.g. Ahmed")}
+            value={editingLang === "ar" ? groomNameAr : groomNameEn}
+            onChange={(e) => editingLang === "ar" ? setGroomNameAr(e.target.value) : setGroomNameEn(e.target.value)}
+            placeholder={editingLang === "ar" ? "مثال: أحمد" : "e.g. Ahmed"}
             required
             disabled={status === "saving"}
             className={inputClass}
           />
         </div>
         <div>
-          <label className={labelClass}>{t("Bride's Name")}</label>
+          <label className={labelClass}>
+            {editingLang === "ar" ? `${t("Bride's Name")} (${t("Arabic")})` : `${t("Bride's Name")} (${t("English")})`}
+          </label>
           <input
             type="text"
-            value={brideName}
-            onChange={(e) => setBrideName(e.target.value)}
-            placeholder={t("e.g. Sarah")}
+            value={editingLang === "ar" ? brideNameAr : brideNameEn}
+            onChange={(e) => editingLang === "ar" ? setBrideNameAr(e.target.value) : setBrideNameEn(e.target.value)}
+            placeholder={editingLang === "ar" ? "مثال: سارة" : "e.g. Sarah"}
             required
             disabled={status === "saving"}
             className={inputClass}
@@ -287,12 +387,14 @@ export default function InvitationEditor({
 
       {/* Event Location Venue */}
       <div>
-        <label className={labelClass}>{t("Event Location (Hall Name)")}</label>
+        <label className={labelClass}>
+          {editingLang === "ar" ? `${t("Event Location (Hall Name)")} (${t("Arabic")})` : `${t("Event Location (Hall Name)")} (${t("English")})`}
+        </label>
         <input
           type="text"
-          value={eventLocation}
-          onChange={(e) => setEventLocation(e.target.value)}
-          placeholder={t("e.g. Royal Hall, Riyadh")}
+          value={editingLang === "ar" ? eventLocationAr : eventLocationEn}
+          onChange={(e) => editingLang === "ar" ? setEventLocationAr(e.target.value) : setEventLocationEn(e.target.value)}
+          placeholder={editingLang === "ar" ? "مثال: قاعة السمو، الرياض" : "e.g. Royal Hall, Riyadh"}
           required
           disabled={status === "saving"}
           className={inputClass}
@@ -316,11 +418,13 @@ export default function InvitationEditor({
 
       {/* Welcome / Invitation Message */}
       <div>
-        <label className={labelClass}>{t("Welcome Invitation Message")}</label>
+        <label className={labelClass}>
+          {editingLang === "ar" ? `${t("Welcome Invitation Message")} (${t("Arabic")})` : `${t("Welcome Invitation Message")} (${t("English")})`}
+        </label>
         <textarea
-          value={welcomeText}
-          onChange={(e) => setWelcomeText(e.target.value)}
-          placeholder={t("Write your welcome message...")}
+          value={editingLang === "ar" ? welcomeTextAr : welcomeTextEn}
+          onChange={(e) => editingLang === "ar" ? setWelcomeTextAr(e.target.value) : setWelcomeTextEn(e.target.value)}
+          placeholder={editingLang === "ar" ? "اكتب رسالة الترحيب والبطاقة باللغة العربية..." : "Write your welcome message in English..."}
           required
           rows={3}
           disabled={status === "saving"}
@@ -401,9 +505,9 @@ export default function InvitationEditor({
               </div>
               <input
                 type="text"
-                value={item.title}
-                onChange={(e) => updateProgramItem(i, "title", e.target.value)}
-                placeholder={t("e.g. Reception")}
+                value={editingLang === "ar" ? item.titleAr : item.titleEn}
+                onChange={(e) => updateProgramItem(i, editingLang === "ar" ? "titleAr" : "titleEn", e.target.value)}
+                placeholder={editingLang === "ar" ? "مثال: استقبال الضيوف" : "e.g. Reception"}
                 disabled={status === "saving"}
                 className={inputClass}
               />
@@ -441,9 +545,9 @@ export default function InvitationEditor({
             <div key={i} className="flex items-center gap-2">
               <input
                 type="text"
-                value={item.text}
-                onChange={(e) => updateDetailItem(i, e.target.value)}
-                placeholder={t("e.g. QR entry only")}
+                value={editingLang === "ar" ? item.textAr : item.textEn}
+                onChange={(e) => updateDetailItem(i, editingLang === "ar" ? "textAr" : "textEn", e.target.value)}
+                placeholder={editingLang === "ar" ? "مثال: الدخول عبر رمز QR" : "e.g. QR entry only"}
                 disabled={status === "saving"}
                 className={inputClass}
               />

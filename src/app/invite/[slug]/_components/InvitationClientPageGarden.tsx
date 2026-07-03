@@ -11,6 +11,8 @@ interface InvitationClientPageGardenProps {
   invitation: InvitationData;
   slug?: string;
   isDeactivatedInitial?: boolean;
+  viewingLangProp?: "ar" | "en";
+  setViewingLangProp?: React.Dispatch<React.SetStateAction<"ar" | "en">>;
 }
 
 interface Particle {
@@ -46,15 +48,37 @@ export default function InvitationClientPageGarden({
   invitation,
   slug,
   isDeactivatedInitial = false,
+  viewingLangProp,
+  setViewingLangProp
 }: InvitationClientPageGardenProps) {
+  const isEn = viewingLangProp === "en";
   const [isOpen, setIsOpen] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const defaultWishesAr: Wish[] = [
+    { name: 'محمد العلي', text: 'ألف مبروك! نسعد بحضور حفلكم الكريم.' },
+    { name: 'سارة خالد', text: 'بارك الله لكما وبارك عليكما وجمع بينكما في خير 🤍' },
+    { name: 'أحمد وندى', text: 'الله يتمم لكم على خير يا رب، فرحنا لكم من قلب.' },
+    { name: 'عبدالله السعد', text: 'دعواتنا لكم بحياة سعيدة ومباركة.' }
+  ];
+
+  const defaultWishesEn: Wish[] = [
+    { name: 'John Doe', text: 'Congratulations! Wish you a happy marriage.' },
+    { name: 'Sarah & Michael', text: 'May Allah bless you both and join you in goodness 🤍' },
+    { name: 'Emma Watson', text: 'So happy for you two, wishing you all the best.' },
+    { name: 'Alex Cooper', text: 'Wishing you a lifetime of love and happiness.' }
+  ];
+
   // RSVP Form States
-  const [wishes, setWishes] = useState<Wish[]>(defaultWishes);
+  const [wishes, setWishes] = useState<Wish[]>(isEn ? defaultWishesEn : defaultWishesAr);
+  
+  useEffect(() => {
+    setWishes(isEn ? defaultWishesEn : defaultWishesAr);
+  }, [viewingLangProp]);
+
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
@@ -236,6 +260,16 @@ export default function InvitationClientPageGarden({
     };
   }, [isOpen]);
 
+  const eventTitle = isEn
+    ? (invitation.eventTitleEn || invitation.eventTitle)
+    : (invitation.eventTitleAr || invitation.eventTitle);
+  const eventLocation = isEn
+    ? (invitation.eventLocationEn || invitation.eventLocation)
+    : (invitation.eventLocationAr || invitation.eventLocation);
+  const welcomeText = isEn
+    ? (invitation.welcomeTextEn || invitation.welcomeText)
+    : (invitation.welcomeTextAr || invitation.welcomeText);
+
   // Couple names helper
   const getCoupleNames = (title: string) => {
     const delimiters = [' & ', ' and ', ' و ', ' مع '];
@@ -243,22 +277,22 @@ export default function InvitationClientPageGarden({
       if (title.includes(d)) {
         const parts = title.split(d);
         return {
-          groom: parts[0]?.trim() || 'العريس',
-          bride: parts[1]?.trim() || 'العروس'
+          groom: parts[0]?.trim() || (isEn ? 'Groom' : 'العريس'),
+          bride: parts[1]?.trim() || (isEn ? 'Bride' : 'العروس')
         };
       }
     }
     return { groom: title, bride: '' };
   };
 
-  const { groom, bride } = getCoupleNames(invitation.eventTitle);
+  const { groom, bride } = getCoupleNames(eventTitle);
 
   // Date utilities
   const parsedDate = new Date(invitation.eventDate);
   
-  const getArabicFormattedDate = () => {
+  const getFormattedDate = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', {
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -272,17 +306,17 @@ export default function InvitationClientPageGarden({
     }
   };
 
-  const getMonthNameAr = () => {
+  const getMonthName = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', { month: 'long' }).format(parsedDate);
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', { month: 'long' }).format(parsedDate);
     } catch {
       return '';
     }
   };
 
-  const getDayNameAr = () => {
+  const getDayName = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', { weekday: 'long' }).format(parsedDate);
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', { weekday: 'long' }).format(parsedDate);
     } catch {
       return '';
     }
@@ -292,19 +326,21 @@ export default function InvitationClientPageGarden({
   const getDayNum = () => parsedDate.getDate();
   const getTimeString = () => {
     try {
-      return new Intl.DateTimeFormat('ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true }).format(parsedDate);
+      return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', { hour: 'numeric', minute: '2-digit', hour12: true }).format(parsedDate);
     } catch {
       return '';
     }
   };
 
-  const defaultWelcomeText = `بقلوبٍ يملؤها الفرح والسرور،\nنتشرف بدعوتكم لمشاركتنا فرحة العمر\nوتوثيق عهد الحب والوفاء\n\nفي حفل زفاف أبنائنا\n\nحضوركم يسعدنا ويضفي على ليلتنا بهجة وسروراً 🌿`;
+  const defaultWelcomeTextAr = `بقلوبٍ يملؤها الفرح والسرور،\nنتشرف بدعوتكم لمشاركتنا فرحة العمر\nوتوثيق عهد الحب والوفاء\n\nفي حفل زفاف أبنائنا\n\nحضوركم يسعدنا ويضفي على ليلتنا بهجة وسروراً 🌿`;
+  const defaultWelcomeTextEn = `With hearts full of joy and happiness,\nWe are honored to invite you to share our lifetime joy\nAnd witness the bond of love and loyalty\n\nIn our children's wedding ceremony\n\nYour presence delights us and adds joy and happiness to our night 🌿`;
+  const defaultWelcomeText = isEn ? defaultWelcomeTextEn : defaultWelcomeTextAr;
 
-  const [hallName, cityName] = invitation.eventLocation.includes('،')
-    ? invitation.eventLocation.split('،')
-    : invitation.eventLocation.includes(',')
-      ? invitation.eventLocation.split(',')
-      : [invitation.eventLocation, ''];
+  const [hallName, cityName] = eventLocation.includes('،')
+    ? eventLocation.split('،')
+    : eventLocation.includes(',')
+      ? eventLocation.split(',')
+      : [eventLocation, ''];
 
   const getGoogleCalendarUrl = () => {
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -313,7 +349,8 @@ export default function InvitationClientPageGarden({
     const endDate = new Date(parsedDate.getTime() + 3 * 60 * 60 * 1000);
     const end = `${endDate.getUTCFullYear()}${pad(endDate.getUTCMonth() + 1)}${pad(endDate.getUTCDate())}T${pad(endDate.getUTCHours())}${pad(endDate.getUTCMinutes())}${pad(endDate.getUTCSeconds())}Z`;
     
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('حفل زفاف ' + invitation.eventTitle)}&dates=${start}/${end}&details=${encodeURIComponent(invitation.welcomeText || defaultWelcomeText)}&location=${encodeURIComponent(invitation.eventLocation)}`;
+    const calendarTitle = isEn ? `Wedding of ${eventTitle}` : `حفل زفاف ${eventTitle}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(calendarTitle)}&dates=${start}/${end}&details=${encodeURIComponent(welcomeText || defaultWelcomeText)}&location=${encodeURIComponent(eventLocation)}`;
   };
 
   const handleRsvpSubmit = async (e: React.FormEvent) => {
@@ -348,21 +385,20 @@ export default function InvitationClientPageGarden({
       setStatus('error');
       setErrorMsg(
         err.response?.data?.message || 
-        'حدث خطأ أثناء إرسال ردك. يرجى المحاولة مرة أخرى.'
+        (isEn ? 'An error occurred while sending your response. Please try again.' : 'حدث خطأ أثناء إرسال ردك. يرجى المحاولة مرة أخرى.')
       );
     }
   };
 
-  const timelineEvents = invitation.eventProgram?.length
-    ? invitation.eventProgram
-    : [];
+  const timelineEvents = (invitation.eventProgram || []).map((p: any) => ({
+    time: p.time || "",
+    title: isEn ? (p.titleEn || p.title || "") : (p.titleAr || p.title || ""),
+  }));
 
-  const detailRules = invitation.eventDetails?.length
-    ? invitation.eventDetails.map((detail) => ({
-        icon: <Info className="w-4.5 h-4.5 text-[#2E5A36]" />,
-        text: detail.text
-      }))
-    : [];
+  const detailRules = (invitation.eventDetails || []).map((d: any) => ({
+    icon: <Info className="w-4.5 h-4.5 text-[#2E5A36]" />,
+    text: isEn ? (d.textEn || d.text || "") : (d.textAr || d.text || ""),
+  }));
 
   return (
     <main className="min-h-screen bg-[#F5F2EB] relative flex flex-col justify-center font-cairo garden-theme">
@@ -458,6 +494,22 @@ export default function InvitationClientPageGarden({
         }
       ` }} />
 
+      {/* Premium floating language switcher circle */}
+      {invitation.languageMode === "both" && setViewingLangProp && (
+        <button
+          onClick={() => setViewingLangProp(isEn ? 'ar' : 'en')}
+          className="fixed top-6 right-6 z-[99999] w-12 h-12 rounded-full border flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-bold font-serif backdrop-blur-md cursor-pointer"
+          style={{
+            background: 'rgba(255, 255, 255, 0.45)',
+            borderColor: 'rgba(46, 90, 54, 0.35)',
+            color: '#2e5a36',
+            boxShadow: 'rgba(46, 90, 54, 0.15) 0px 4px 20px',
+          }}
+        >
+          {isEn ? 'AR' : 'EN'}
+        </button>
+      )}
+
       {/* Background audio controller & Navigation bar */}
       {isOpen && (
         <BottomNavbar 
@@ -465,11 +517,12 @@ export default function InvitationClientPageGarden({
           musicPlaying={musicPlaying} 
           setMusicPlaying={setMusicPlaying} 
           theme="green"
+          viewingLang={isEn ? "en" : "ar"}
         />
       )}
 
       {/* Wax seal cover splitting envelope */}
-      <EnvelopeOverlay eventTitle={invitation.eventTitle} onOpen={handleOpenInvitation} sealImage="/images/98a4144b-74ef-45c4-8066-8c6cbb1e8a0e.png" />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/98a4144b-74ef-45c4-8066-8c6cbb1e8a0e.png" viewingLang={isEn ? "en" : "ar"} />
 
       {/* Falling Leaves and Petals Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
@@ -492,7 +545,7 @@ export default function InvitationClientPageGarden({
       </div>
 
       {/* Invitation Contents Container (Styled exactly like Template 1, restricted inside a phone-like container card) */}
-      <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-white shadow-2xl rounded-none md:rounded-[32px] md:my-8 animate-on-scroll" dir="rtl" style={{ color: '#1B3222' }}>
+      <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-white shadow-2xl rounded-none md:rounded-[32px] md:my-8 animate-on-scroll" dir={isEn ? "ltr" : "rtl"} style={{ color: '#1B3222' }}>
         
         {/* HERO SECTION */}
         <section className="relative min-h-[700px] flex flex-col items-center justify-start text-center pt-24">
@@ -512,7 +565,7 @@ export default function InvitationClientPageGarden({
           </div>
           <div className="relative z-10 -mt-8 pr-6 pl-6 flex flex-col items-center w-full">
             <div className="mx-auto mb-8 h-px w-24 bg-gradient-to-r from-transparent via-[#1B3222]/40 to-transparent" />
-            <div className="text-base tracking-[0.25em] mb-4 text-[#1B3222] font-semibold">حفل زفاف</div>
+            <div className="text-base tracking-[0.25em] mb-4 text-[#1B3222] font-semibold">{isEn ? "Wedding Invitation" : "حفل زفاف"}</div>
             
             {/* Calligraphic Decorative Large Names */}
             <h1 className="font-aref font-bold leading-none text-[#1B3222] select-none my-3 tracking-wide">
@@ -529,7 +582,7 @@ export default function InvitationClientPageGarden({
 
             <div className="mt-10">
               <div className="text-xs font-bold tracking-wide bg-[#FAF9F6]/60 backdrop-blur-xs px-5 py-2.5 rounded-full border border-[#1B3222]/10 text-[#1B3222]">
-                {getArabicFormattedDate()}
+                {getFormattedDate()}
               </div>
             </div>
           </div>
@@ -567,9 +620,9 @@ export default function InvitationClientPageGarden({
                 <div className="flex justify-center mb-2">
                   <span className="text-3xl text-[#2E5A36]">🌿</span>
                 </div>
-                <h4 className="text-sm font-bold tracking-widest text-[#1B3222] mb-4 uppercase">دعوة لحضور حفل زفاف</h4>
+                <h4 className="text-sm font-bold tracking-widest text-[#1B3222] mb-4 uppercase">{isEn ? "Wedding Invitation" : "دعوة لحضور حفل زفاف"}</h4>
                 <div className="text-[15px] whitespace-pre-line text-[#1B3222] leading-relaxed mb-6 font-medium">
-                  {invitation.welcomeText || defaultWelcomeText}
+                  {welcomeText || defaultWelcomeText}
                 </div>
                 <div className="text-xl font-amiri font-bold text-[#2E5A36] tracking-wide">
                   {groom} {bride ? `& ${bride}` : ''}
@@ -579,7 +632,7 @@ export default function InvitationClientPageGarden({
 
             {/* Location indicator */}
             <div className="text-center animate-on-scroll fade-up">
-              <span className="text-xs tracking-widest uppercase text-[#1B3222]/60 font-bold block mb-1">الموقع</span>
+              <span className="text-xs tracking-widest uppercase text-[#1B3222]/60 font-bold block mb-1">{isEn ? "LOCATION" : "الموقع"}</span>
               <h3 className="font-bold text-lg text-[#1B3222]">{hallName?.trim()}</h3>
               {cityName && <p className="text-sm text-[#1B3222]/80 mt-1 font-semibold">{cityName?.trim()}</p>}
             </div>
@@ -591,13 +644,13 @@ export default function InvitationClientPageGarden({
                   <div className="absolute top-0 left-1/3 -translate-x-1/2 w-4 h-4.5 rounded-b-full bg-white/20 border border-white/40" />
                   <div className="absolute top-0 right-1/3 translate-x-1/2 w-4 h-4.5 rounded-b-full bg-white/20 border border-white/40" />
                   <span className="text-[9px] tracking-[0.2em] opacity-85 text-white font-bold">{getYearNum()}</span>
-                  <span className="text-sm font-bold tracking-wider text-white font-amiri">{getMonthNameAr()}</span>
-                  <span className="text-[9px] tracking-[0.2em] opacity-85 text-white font-bold">{getDayNameAr()}</span>
+                  <span className="text-sm font-bold tracking-wider text-white font-amiri">{getMonthName()}</span>
+                  <span className="text-[9px] tracking-[0.2em] opacity-85 text-white font-bold">{getDayName()}</span>
                 </div>
                 <div className="flex flex-col items-center py-5 px-4 bg-white/60 backdrop-blur-md">
                   <span className="font-bold leading-none text-[5rem] text-[#1B3222] font-amiri">{getDayNum()}</span>
                   <div className="w-10 h-px my-3 bg-[#1B3222]/10" />
-                  <span className="text-[11px] tracking-[0.25em] uppercase mb-1 text-[#1B3222] font-semibold">{getDayNameAr()}</span>
+                  <span className="text-[11px] tracking-[0.25em] uppercase mb-1 text-[#1B3222] font-semibold">{getDayName()}</span>
                   <span className="text-sm font-bold tracking-widest text-[#2E5A36]">{getTimeString()}</span>
                 </div>
               </div>
@@ -610,7 +663,7 @@ export default function InvitationClientPageGarden({
                 className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-white/40 shadow-xs backdrop-blur-md hover:bg-white/35 transition-all text-[#1B3222] bg-[#FAF9F6]/60 cursor-pointer"
               >
                 <Calendar className="w-4 h-4 text-[#2E5A36]" />
-                احفظ الموعد في التقويم
+                {isEn ? "Save the Date" : "احفظ الموعد في التقويم"}
               </button>
             </div>
 
@@ -625,13 +678,13 @@ export default function InvitationClientPageGarden({
                 borderRadius: '24px' 
               }}
             >
-              <h4 className="text-center text-xs tracking-widest font-bold text-[#1B3222] mb-3">العد التنازلي للمناسبة</h4>
+              <h4 className="text-center text-xs tracking-widest font-bold text-[#1B3222] mb-3">{isEn ? "COUNTDOWN" : "العد التنازلي للمناسبة"}</h4>
               <div className="grid grid-cols-4 gap-2">
                 {[
-                  { label: 'أيام', val: timeLeft.days },
-                  { label: 'ساعات', val: timeLeft.hours },
-                  { label: 'دقائق', val: timeLeft.minutes },
-                  { label: 'ثواني', val: timeLeft.seconds }
+                  { label: isEn ? 'Days' : 'أيام', val: timeLeft.days },
+                  { label: isEn ? 'Hours' : 'ساعات', val: timeLeft.hours },
+                  { label: isEn ? 'Minutes' : 'دقائق', val: timeLeft.minutes },
+                  { label: isEn ? 'Seconds' : 'ثواني', val: timeLeft.seconds }
                 ].map((item, idx) => (
                   <div key={idx} className="text-center p-2 rounded-xl bg-white/50 border border-[#1B3222]/10 shadow-xs">
                     <div className="text-xl font-bold text-[#1B3222]">
@@ -674,7 +727,7 @@ export default function InvitationClientPageGarden({
                   borderRadius: '24px' 
                 }}
               >
-                <h3 className="text-center text-lg font-bold text-[#1B3222] mb-8">برنامج الحفل</h3>
+                <h3 className="text-center text-lg font-bold text-[#1B3222] mb-8">{isEn ? "Event Program" : "برنامج الحفل"}</h3>
                 <div className="relative">
                   {/* Vertical Center Track Line */}
                   <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" style={{ left: '50%', transform: 'translateX(-50%)' }} />
@@ -698,7 +751,7 @@ export default function InvitationClientPageGarden({
                         style={{ minHeight: '68px' }}
                       >
                         <div className="w-[calc(50%-14px)] pr-4 text-right">
-                          <span className="text-xs font-bold timeline-time block">
+                          <span className="text-xs font-bold timeline-time block text-right">
                             {event.time}
                           </span>
                         </div>
@@ -707,7 +760,7 @@ export default function InvitationClientPageGarden({
                           <div className="w-2.5 h-2.5 rounded-full timeline-dot" />
                         </div>
                         <div className="w-[calc(50%-14px)] pl-4 text-left">
-                          <span className="text-xs font-bold timeline-title block leading-tight">
+                          <span className="text-xs font-bold timeline-title block leading-tight text-left">
                             {event.title}
                           </span>
                         </div>
@@ -731,18 +784,18 @@ export default function InvitationClientPageGarden({
                   borderRadius: '24px' 
                 }}
               >
-                <h3 className="text-center text-lg font-bold text-[#1B3222] mb-5">تفاصيل تهمك</h3>
-                <div className="space-y-4 relative pl-7">
+                <h3 className="text-center text-lg font-bold text-[#1B3222] mb-5">{isEn ? "Event Guidelines" : "تفاصيل تهمك"}</h3>
+                <div className={`space-y-4 relative ${isEn ? "pr-7" : "pl-7"}`}>
                   {/* Vertical track line for details rules */}
                   <div 
-                    className="absolute left-2.5 top-3.5 bottom-3.5 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" 
+                    className={`absolute ${isEn ? "right-2.5" : "left-2.5"} top-3.5 bottom-3.5 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent`} 
                   />
 
                   {detailRules.map((rule, idx) => (
                     <div key={idx} className="relative flex items-center gap-3.5 min-h-[52px] detail-item-row">
                       {/* Circle Bullet (Green, styled exactly like Template 1) */}
                       <div 
-                        className="absolute -left-5 w-2.5 h-2.5 rounded-full shrink-0 timeline-detail-dot" 
+                        className={`absolute ${isEn ? "-right-5" : "-left-5"} w-2.5 h-2.5 rounded-full shrink-0 timeline-detail-dot`} 
                         style={{ 
                           top: '50%', 
                           marginTop: '-5px' 
@@ -753,7 +806,7 @@ export default function InvitationClientPageGarden({
                         <span className="w-7 h-7 rounded-full bg-[#2E5A36]/10 border border-[#2E5A36]/10 flex items-center justify-center shrink-0">
                           {rule.icon}
                         </span>
-                        <span className="text-xs text-[#1B3222] font-semibold leading-tight">{rule.text}</span>
+                        <span className={`text-xs text-[#1B3222] font-semibold leading-tight w-full ${isEn ? "text-left" : "text-right"}`}>{rule.text}</span>
                       </div>
                     </div>
                   ))}
@@ -781,14 +834,14 @@ export default function InvitationClientPageGarden({
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-8">
             {/* Couple Message */}
             <div className="text-center animate-on-scroll">
-              <span className="text-xs tracking-widest uppercase text-[#1B3222]/60 font-bold block mb-1">رسالة العروسين</span>
+              <span className="text-xs tracking-widest uppercase text-[#1B3222]/60 font-bold block mb-1">{isEn ? "Bride & Groom Message" : "رسالة العروسين"}</span>
               <p className="text-[15px] text-[#1B3222] leading-relaxed whitespace-pre-line px-4 font-medium">
-                فرحتنا لا تكتمل إلا بمشاركتكم لنا هذا اليوم البهيج
-                {"\n"}وجودكم بيننا شرف ودعواتكم الصادقة تمنحنا السعادة
-                {"\n"}شاركونا بداية فصل جديد من حياتنا 🌿
+                {isEn
+                  ? `Our joy is incomplete without your presence\nYour presence is an honor, and your prayers give us happiness\nJoin us as we start a new chapter of our lives 🌿`
+                  : `فرحتنا لا تكتمل إلا بمشاركتكم لنا هذا اليوم البهيج\nوجودكم بيننا شرف ودعواتكم الصادقة تمنحنا السعادة\nشاركونا بداية فصل جديد من حياتنا 🌿`}
               </p>
               <p className="text-sm font-bold text-[#2E5A36] mt-3">
-                بكل حب، {groom} {bride ? `& ${bride}` : ''}
+                {isEn ? "With love, " : "بكل حب، "}{groom}{bride ? ` & ${bride}` : ''}
               </p>
             </div>
 
@@ -805,7 +858,7 @@ export default function InvitationClientPageGarden({
             >
               <h3 className="text-center text-lg font-bold text-[#1B3222] mb-6 flex items-center justify-center gap-2">
                 <Heart className="w-5 h-5 text-[#2E5A36] fill-[#2E5A36]" />
-                تأكيد حضور الحفل (RSVP)
+                {isEn ? "Confirm Attendance (RSVP)" : "تأكيد حضور الحفل (RSVP)"}
               </h3>
 
               {status === 'success' ? (
@@ -813,36 +866,38 @@ export default function InvitationClientPageGarden({
                   <div className="flex justify-center">
                     <CheckCircle2 className="w-12 h-12 text-emerald-600" />
                   </div>
-                  <h4 className="text-sm font-bold text-emerald-800">تم تسجيل حضوركم بنجاح!</h4>
+                  <h4 className="text-sm font-bold text-emerald-800">{isEn ? "Attendance Registered Successfully!" : "تم تسجيل حضوركم بنجاح!"}</h4>
                   <p className="text-xs text-gray-700 leading-relaxed">
-                    نسعد جداً بتلبيتكم للدعوة ومشاركتنا ليلة العمر. ننتظر لقاءكم بشوق! 🤍
+                    {isEn
+                      ? "We are delighted by your attendance to share our wedding night. Looking forward to seeing you! 🤍"
+                      : "نسعد جداً بتلبيتكم للدعوة ومشاركتنا ليلة العمر. ننتظر لقاءكم بشوق! 🤍"}
                   </p>
                   <button 
                     onClick={() => setStatus('idle')}
                     className="mt-4 px-6 py-2 text-xs font-semibold rounded-full border border-[#1B3222]/15 hover:bg-[#1B3222]/5 text-[#1B3222] cursor-pointer font-cairo"
                   >
-                    تأكيد حضور ضيف آخر
+                    {isEn ? "Submit another RSVP" : "تأكيد حضور ضيف آخر"}
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleRsvpSubmit} className="space-y-4 text-right">
+                <form onSubmit={handleRsvpSubmit} className={`space-y-4 ${isEn ? "text-left" : "text-right"}`}>
                   {/* Guest Name */}
                   <div>
-                    <label htmlFor="guest-name" className="block text-xs font-semibold text-[#1B3222] mb-1">الاسم الكريم</label>
+                    <label htmlFor="guest-name" className="block text-xs font-semibold text-[#1B3222] mb-1">{isEn ? "Your Full Name" : "الاسم الكريم"}</label>
                     <input
                       id="guest-name"
                       type="text"
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="يرجى كتابة الاسم الثلاثي"
+                      placeholder={isEn ? "Enter your full name" : "يرجى كتابة الاسم الثلاثي"}
                       required
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 focus:bg-white text-[#1B3222] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#AC8C60] text-right text-xs"
+                      className={`w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 focus:bg-white text-[#1B3222] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#AC8C60] text-xs ${isEn ? "text-left" : "text-right"}`}
                     />
                   </div>
 
                   {/* Attendance */}
                   <div>
-                    <label className="block text-xs font-semibold text-[#1B3222] mb-1">هل ستشرفنا بحضورك؟</label>
+                    <label className="block text-xs font-semibold text-[#1B3222] mb-1">{isEn ? "Will you honor us with your presence?" : "هل ستشرفنا بحضورك؟"}</label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
@@ -853,7 +908,7 @@ export default function InvitationClientPageGarden({
                             : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
                         }`}
                       >
-                        نعم، بكل سرور
+                        {isEn ? "Yes, gladly" : "نعم، بكل سرور"}
                       </button>
                       <button
                         type="button"
@@ -864,7 +919,7 @@ export default function InvitationClientPageGarden({
                             : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
                         }`}
                       >
-                        أعتذر، متمنياً لكم السعادة
+                        {isEn ? "Apologize, wishing you happiness" : "أعتذر، متمنياً لكم السعادة"}
                       </button>
                     </div>
                   </div>
@@ -872,33 +927,33 @@ export default function InvitationClientPageGarden({
                   {/* Companions */}
                   {attendance === 'YES' && (
                     <div className="animate-fade-in">
-                      <label htmlFor="companions-count" className="block text-xs font-semibold text-[#1B3222] mb-1">عدد المرافقين</label>
+                      <label htmlFor="companions-count" className="block text-xs font-semibold text-[#1B3222] mb-1">{isEn ? "Number of companions" : "عدد المرافقين"}</label>
                       <select
                         id="companions-count"
                         value={companionsCount}
                         onChange={(e) => setCompanionsCount(Number(e.target.value))}
                         className="w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 text-[#1B3222] text-xs focus:outline-none focus:ring-1 focus:ring-[#AC8C60]"
                       >
-                        <option value={0}>أنا فقط (بدون مرافقين)</option>
-                        <option value={1}>مرافق واحد (+1)</option>
-                        <option value={2}>مرافقين اثنين (+2)</option>
-                        <option value={3}>ثلاثة مرافقين (+3)</option>
-                        <option value={4}>أربعة مرافقين (+4)</option>
-                        <option value={5}>خمسة مرافقين (+5)</option>
+                        <option value={0}>{isEn ? "Just me (no companions)" : "أنا فقط (بدون مرافقين)"}</option>
+                        <option value={1}>{isEn ? "1 Companion (+1)" : "مرافق واحد (+1)"}</option>
+                        <option value={2}>{isEn ? "2 Companions (+2)" : "مرافقين اثنين (+2)"}</option>
+                        <option value={3}>{isEn ? "3 Companions (+3)" : "ثلاثة مرافقين (+3)"}</option>
+                        <option value={4}>{isEn ? "4 Companions (+4)" : "أربعة مرافقين (+4)"}</option>
+                        <option value={5}>{isEn ? "5 Companions (+5)" : "خمسة مرافقين (+5)"}</option>
                       </select>
                     </div>
                   )}
 
                   {/* Message */}
                   <div>
-                    <label htmlFor="wish-text" className="block text-xs font-semibold text-[#1B3222] mb-1">تهنئة خاصة للعروسين (اختياري)</label>
+                    <label htmlFor="wish-text" className="block text-xs font-semibold text-[#1B3222] mb-1">{isEn ? "Special message to the newlyweds (Optional)" : "تهنئة خاصة للعروسين (اختياري)"}</label>
                     <textarea
                       id="wish-text"
                       rows={2}
                       value={newWish}
                       onChange={(e) => setNewWish(e.target.value)}
-                      placeholder="اكتب كلماتك العذبة وتهانيك للعروسين هنا..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 focus:bg-white text-[#1B3222] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#AC8C60] text-right resize-none text-xs"
+                      placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب كلماتك العذبة وتهانيك للعروسين هنا..."}
+                      className={`w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 focus:bg-white text-[#1B3222] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#AC8C60] resize-none text-xs ${isEn ? "text-left" : "text-right"}`}
                     />
                   </div>
 
@@ -914,7 +969,7 @@ export default function InvitationClientPageGarden({
                     className="w-full py-3 font-bold text-white rounded-xl shadow-md transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs"
                     style={{ background: 'linear-gradient(135deg, #1B3222, #2A4D35)' }}
                   >
-                    {status === 'submitting' ? 'جاري إرسال تأكيدكم...' : 'تأكيد الحضور والتهنئة'}
+                    {status === 'submitting' ? (isEn ? 'Submitting...' : 'جاري إرسال تأكيدكم...') : (isEn ? 'Confirm RSVP' : 'تأكيد الحضور والتهنئة')}
                   </button>
                 </form>
               )}
@@ -924,7 +979,7 @@ export default function InvitationClientPageGarden({
             <div className="space-y-4">
               <div className="flex items-center gap-2 justify-center mb-2">
                 <MessageCircle className="w-3.5 h-3.5 text-[#1B3222]/80" />
-                <p className="text-xs tracking-wider uppercase text-[#1B3222]/80 font-bold">تبريكات وتهاني المهنئين</p>
+                <p className="text-xs tracking-wider uppercase text-[#1B3222]/80 font-bold">{isEn ? "Guests wishes & congratulations" : "تبريكات وتهاني المهنئين"}</p>
               </div>
 
               <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
@@ -966,12 +1021,12 @@ export default function InvitationClientPageGarden({
 
           <div className="relative z-10 flex flex-col items-center">
             <div className="w-16 h-px mb-5 bg-[#1B3222]/10" />
-            <h5 className="text-base text-[#1B3222] font-amiri font-bold mb-1">{invitation.eventTitle}</h5>
+            <h5 className="text-base text-[#1B3222] font-amiri font-bold mb-1">{eventTitle}</h5>
             <p className="text-xs text-[#2E5A36] font-semibold mb-4">
-              {new Date(invitation.eventDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
+              {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <p className="text-[9px] uppercase tracking-[0.25em] text-[#1B3222]/50 font-bold">
-              صنع بكل حب عبر منصة مازوم
+              {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة مازوم"}
             </p>
             {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
             <div className="h-24" />

@@ -6,17 +6,20 @@ interface EnvelopeOverlayProps {
   eventTitle: string;
   onOpen: () => void;
   sealImage?: string;
+  viewingLang?: string;
 }
 
 export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ 
   eventTitle, 
   onOpen,
-  sealImage = "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png"
+  sealImage = "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png",
+  viewingLang
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDone, setIsDone] = useState(false);
   
   const isDefaultSeal = sealImage === "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png";
+  const isEn = viewingLang === "en";
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -33,8 +36,8 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
       if (title.includes(d)) {
         const parts = title.split(d);
         return {
-          groom: parts[0]?.trim() || 'العريس',
-          bride: parts[1]?.trim() || 'العروس'
+          groom: parts[0]?.trim() || (isEn ? 'Groom' : 'العريس'),
+          bride: parts[1]?.trim() || (isEn ? 'Bride' : 'العروس')
         };
       }
     }
@@ -209,7 +212,7 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
                 textAlign: 'center',
               }}
             >
-              OPEN
+              {isEn ? 'OPEN' : 'افتح'}
             </span>
           </div>
         </button>

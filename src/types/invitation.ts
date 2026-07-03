@@ -19,6 +19,8 @@ export interface LoginResponse {
 export interface InvitationTemplate {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   thumbnailUrl: string;
   demoLink?: string;
 }
@@ -27,15 +29,22 @@ export interface InvitationData {
   id: string;
   templateId: string;
   slug: string;
+  languageMode?: string | null;
   eventTitle: string;
+  eventTitleAr?: string | null;
+  eventTitleEn?: string | null;
   eventDate: string; // ISO 8601
   eventLocation: string;
+  eventLocationAr?: string | null;
+  eventLocationEn?: string | null;
   locationUrl?: string | null;
   welcomeText?: string | null;
+  welcomeTextAr?: string | null;
+  welcomeTextEn?: string | null;
   images: string[];
   musicUrl: string | null;
-  eventProgram?: { time: string; title: string }[];
-  eventDetails?: { text: string }[];
+  eventProgram?: { time: string; title: string; titleAr?: string | null; titleEn?: string | null }[];
+  eventDetails?: { text: string; textAr?: string | null; textEn?: string | null }[];
   createdAt: string;
   template: InvitationTemplate;
 }
@@ -76,6 +85,8 @@ export interface RsvpListResponse {
 export interface Template {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   description: string;
   previewImage: string;
   price: string | number;

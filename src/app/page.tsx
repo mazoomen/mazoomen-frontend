@@ -40,6 +40,7 @@ export default function Home() {
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
+  const [purchaseLanguageMode, setPurchaseLanguageMode] = useState("both");
 
   useEffect(() => {
     // Check if token exists
@@ -90,6 +91,7 @@ export default function Home() {
       }
       setCheckoutSuccess(false);
       setCheckoutError("");
+      setPurchaseLanguageMode("both");
     }
   }, [buyingTemplate]);
 
@@ -112,7 +114,8 @@ export default function Home() {
       await api.post("/purchase-requests", {
         templateId: buyingTemplate.id,
         contactEmail: email,
-        contactPhone: contactPhone.trim()
+        contactPhone: contactPhone.trim(),
+        languageMode: purchaseLanguageMode
       });
       setCheckoutSuccess(true);
       setTimeout(() => {
@@ -716,6 +719,19 @@ export default function Home() {
                 <div className="h-px bg-[#EBE7DF]" />
 
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-700 mb-1">{lang === "ar" ? "لغة الدعوة" : "Invitation Language"}</label>
+                    <select
+                      value={purchaseLanguageMode}
+                      onChange={(e) => setPurchaseLanguageMode(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72]"
+                    >
+                      <option value="both">{lang === "ar" ? "ثنائي اللغة (العربية والإنجليزية)" : "Bilingual (Arabic & English)"}</option>
+                      <option value="ar">{lang === "ar" ? "العربية فقط" : "Arabic Only"}</option>
+                      <option value="en">{lang === "ar" ? "الإنجليزية فقط" : "English Only"}</option>
+                    </select>
+                  </div>
+
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1">{lang === "ar" ? "رقم الجوال للتواصل" : "Contact Phone"}</label>
                     <input
