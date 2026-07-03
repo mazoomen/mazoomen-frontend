@@ -25,7 +25,7 @@ export interface Order {
   id: string;
   userId: string;
   templateId: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
   createdAt: string;
   user: OrderUser;
   template: OrderTemplate;
@@ -56,6 +56,7 @@ export default function OrdersTable({
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
@@ -89,8 +90,12 @@ export default function OrdersTable({
     }
   };
 
-  // Filter orders by search query
+  // Filter orders by search query and selected status
   const filteredOrders = orders.filter((order) => {
+    if (selectedStatus !== "ALL" && order.status !== selectedStatus) {
+      return false;
+    }
+
     const query = searchQuery.toLowerCase();
     const clientName = `${order.user.firstName} ${order.user.lastName}`.toLowerCase();
     const templateTitle = order.template.title.toLowerCase();
@@ -124,23 +129,42 @@ export default function OrdersTable({
     <div className="space-y-4">
       {/* ── Search and Controls ──────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white border border-[#EBE7DF] p-4 rounded-xl shadow-sm">
-        <div className="relative flex-1 max-w-md">
-          <input
-            type="text"
-            placeholder={
-              lang === "ar"
-                ? "ابحث عن الطلبات بالاسم، الهاتف، البريد أو القالب..."
-                : "Search requests by name, phone, email, or template..."
-            }
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className={`w-full ${lang === "ar" ? "pl-4 pr-9" : "pl-9 pr-4"} py-2 bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg text-xs outline-none focus:border-[#B89C72] text-neutral-800 placeholder-neutral-400`}
-          />
-          <div className={`absolute inset-y-0 ${lang === "ar" ? "right-3" : "left-3"} flex items-center pointer-events-none text-neutral-400`}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 max-w-xl">
+          {/* Search box */}
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder={
+                lang === "ar"
+                  ? "ابحث عن الطلبات بالاسم، الهاتف، البريد أو القالب..."
+                  : "Search requests by name, phone, email, or template..."
+              }
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className={`w-full ${lang === "ar" ? "pl-4 pr-9" : "pl-9 pr-4"} py-2 bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg text-xs outline-none focus:border-[#B89C72] text-neutral-800 placeholder-neutral-400`}
+            />
+            <div className={`absolute inset-y-0 ${lang === "ar" ? "right-3" : "left-3"} flex items-center pointer-events-none text-neutral-400`}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
+
+          {/* Status Dropdown */}
+          <select
+            value={selectedStatus}
+            onChange={(e) => {
+              setSelectedStatus(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs outline-none text-neutral-800 font-medium font-sans cursor-pointer focus:border-[#B89C72]"
+          >
+            <option value="ALL">{lang === "ar" ? "كل الحالات" : "All Statuses"}</option>
+            <option value="PENDING">{lang === "ar" ? "قيد الانتظار" : "Pending"}</option>
+            <option value="APPROVED">{lang === "ar" ? "مقبول" : "Approved"}</option>
+            <option value="REJECTED">{lang === "ar" ? "مرفوض" : "Rejected"}</option>
+            <option value="CANCELLED">{lang === "ar" ? "ملغي" : "Cancelled"}</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-neutral-500 font-sans">
@@ -436,23 +460,26 @@ export default function OrdersTable({
 
 // ── Status Badge Sub-Component ──────────────────────────────────────────
 
-function StatusBadge({ status, lang }: { status: "PENDING" | "APPROVED" | "REJECTED"; lang: "en" | "ar" }) {
+function StatusBadge({ status, lang }: { status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"; lang: "en" | "ar" }) {
   const styles = {
     PENDING: "bg-amber-50 text-amber-600 border-amber-100",
     APPROVED: "bg-emerald-50 text-emerald-600 border-emerald-100",
     REJECTED: "bg-red-50 text-red-600 border-red-100",
+    CANCELLED: "bg-neutral-50 text-neutral-600 border-neutral-200",
   };
 
   const dots = {
     PENDING: "bg-amber-500",
     APPROVED: "bg-emerald-500",
     REJECTED: "bg-red-500",
+    CANCELLED: "bg-neutral-400",
   };
 
   const labels = {
     PENDING: lang === "ar" ? "قيد الانتظار" : "Pending",
     APPROVED: lang === "ar" ? "مقبول" : "Approved",
     REJECTED: lang === "ar" ? "مرفوض" : "Rejected",
+    CANCELLED: lang === "ar" ? "ملغي" : "Cancelled",
   };
 
   return (

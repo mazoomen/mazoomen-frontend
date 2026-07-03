@@ -487,7 +487,7 @@ export default function InvitationEditor({
           <button
             type="submit"
             disabled={status === "saving"}
-            className="px-6 py-2.5 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
           >
             {status === "saving" ? (
               <>

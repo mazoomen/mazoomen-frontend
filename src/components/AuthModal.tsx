@@ -304,7 +304,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             <button
               type="submit"
               disabled={authSubmitting}
-              className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-4 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-4 flex items-center justify-center gap-2 cursor-pointer"
             >
               {authSubmitting ? (
                 <>
@@ -420,7 +420,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             <button
               type="submit"
               disabled={authSubmitting}
-              className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-4 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-4 flex items-center justify-center gap-2 cursor-pointer"
             >
               {authSubmitting ? (
                 <>

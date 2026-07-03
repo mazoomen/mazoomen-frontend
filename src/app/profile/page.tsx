@@ -178,7 +178,7 @@ export default function ProfilePage() {
             <p className="text-xs text-neutral-400 max-w-sm mx-auto leading-relaxed mb-4">{error}</p>
             <button
               onClick={() => router.refresh()}
-              className="px-6 h-10 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm cursor-pointer"
+              className="px-6 h-10 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm cursor-pointer"
             >
               {t("Reload Page")}
             </button>
@@ -342,7 +342,7 @@ export default function ProfilePage() {
                       <button
                         type="submit"
                         disabled={saving}
-                        className="w-full bg-[#2D3142] hover:bg-neutral-800 text-white font-semibold py-3 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                       >
                         {saving ? (
                           <>

@@ -65,6 +65,14 @@ export default function PageLayout({ children }: PageLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-[#FAF9F6] text-[#2D3142] font-sans antialiased">
+      {/* Mobile Drawer Overlay Backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 sm:hidden backdrop-blur-xs animate-fadeIn"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       <Sidebar
         isSidebarExpanded={isSidebarExpanded}
         setIsSidebarExpanded={setIsSidebarExpanded}
@@ -72,6 +80,8 @@ export default function PageLayout({ children }: PageLayoutProps) {
         user={user}
         handleLogout={handleLogout}
         openAuthModal={openAuthModal}
+        isMobileOpen={isMobileMenuOpen}
+        setIsMobileOpen={setIsMobileMenuOpen}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <Header

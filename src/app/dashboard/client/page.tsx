@@ -149,7 +149,7 @@ export default function ClientDashboardPage() {
         <p className="text-xs text-[#7F8487] leading-relaxed mb-4">{error}</p>
         <button
           onClick={fetchPurchases}
-          className="px-4 py-2 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-full transition-all"
+          className="px-4 py-2 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-full transition-all"
         >
           {t("Retry Loading")}
         </button>
@@ -177,7 +177,7 @@ export default function ClientDashboardPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 h-10 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm"
+            className="inline-flex items-center justify-center px-6 h-10 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm"
           >
             {t("Browse Mazoom")}
           </Link>
@@ -207,9 +207,31 @@ export default function ClientDashboardPage() {
                   </div>
                   <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
-                      <h3 className="font-sans font-bold text-neutral-800 text-[14px] leading-tight">
-                        {purchase.template.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-sans font-bold text-neutral-800 text-[14px] leading-tight">
+                          {purchase.template.title}
+                        </h3>
+                        {/* Toggle Switch - top right */}
+                        {hasInvite && (
+                          <button
+                            onClick={() => handleToggleLinkActivation(purchase.invitation!.id, !purchase.invitation!.isActive)}
+                            className="shrink-0 relative cursor-pointer group"
+                            title={purchase.invitation!.isActive ? t("Deactivate Link") : t("Activate Link")}
+                          >
+                            <div className={`w-9 h-5 rounded-full transition-colors duration-300 ${
+                              purchase.invitation!.isActive
+                                ? "bg-[#0B1528]"
+                                : "bg-neutral-300"
+                            }`}>
+                              <div className={`absolute top-0.5 w-4 h-4 rounded-full shadow-sm transition-all duration-300 ${
+                                purchase.invitation!.isActive
+                                  ? `${lang === "ar" ? "left-0.5" : "left-[18px]"} bg-[#E5C38B]`
+                                  : `${lang === "ar" ? "left-[18px]" : "left-0.5"} bg-white`
+                              }`} />
+                            </div>
+                          </button>
+                        )}
+                      </div>
                       <p className="text-[10px] text-[#7F8487] mt-1 font-medium">
                         {t("Purchased")}: {new Date(purchase.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                       </p>
@@ -217,26 +239,15 @@ export default function ClientDashboardPage() {
 
                     {hasInvite ? (
                       <div className="flex flex-col gap-1.5 items-start">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`text-[9px] uppercase tracking-wider font-bold ${purchase.invitation!.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            ● {purchase.invitation!.isActive ? t("Active Invitation") : t("Deactivated Link")}
-                          </span>
-                          <button
-                            onClick={() => handleToggleLinkActivation(purchase.invitation!.id, !purchase.invitation!.isActive)}
-                            className={`text-[9px] px-2 py-0.5 rounded-full border bg-white font-medium hover:bg-neutral-50 cursor-pointer transition-all ${
-                              purchase.invitation!.isActive
-                                ? 'text-rose-600 border-rose-100 hover:bg-rose-50'
-                                : 'text-emerald-600 border-emerald-100 hover:bg-emerald-50'
-                            }`}
-                          >
-                            {purchase.invitation!.isActive ? t("Cancel Link") : t("Activate Link")}
-                          </button>
-                        </div>
+                        <span className={`text-[9px] uppercase tracking-wider font-bold ${purchase.invitation!.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          ● {purchase.invitation!.isActive ? t("Active Invitation") : t("Deactivated Link")}
+                        </span>
                         <a
-                          href={inviteUrl}
-                          target="_blank"
+                          href={purchase.invitation!.isActive ? inviteUrl : undefined}
+                          target={purchase.invitation!.isActive ? "_blank" : undefined}
                           rel="noopener noreferrer"
-                          className={`text-[11px] text-neutral-500 underline hover:text-black transition-all line-clamp-1 ${!purchase.invitation!.isActive ? 'line-through opacity-60' : ''}`}
+                          className={`text-[11px] transition-all line-clamp-1 ${purchase.invitation!.isActive ? 'text-neutral-500 underline hover:text-black cursor-pointer' : 'text-neutral-400 line-through opacity-60 cursor-not-allowed'}`}
+                          onClick={(e) => { if (!purchase.invitation!.isActive) e.preventDefault(); }}
                         >
                           {inviteUrl}
                         </a>
@@ -254,7 +265,7 @@ export default function ClientDashboardPage() {
                   {!hasInvite ? (
                     <button
                       onClick={() => handleOpenEditor(purchase)}
-                      className="w-full py-2 text-xs font-semibold text-white bg-black hover:bg-neutral-800 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
+                      className="w-full py-2 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <span>{t("Create Invitation")}</span>
                     </button>
@@ -280,8 +291,8 @@ export default function ClientDashboardPage() {
                           document.getElementById("rsvp-tracker-section")?.scrollIntoView({ behavior: "smooth" });
                         }}
                         className={`flex-1 py-2 text-[11px] font-semibold rounded-xl transition-all cursor-pointer text-center ${trackingInvitationId === purchase.invitation!.id
-                            ? "bg-black text-white"
-                            : "bg-[#E8DCC4] text-[#5C4D37] hover:bg-[#DECFA7]"
+                            ? "bg-[#0B1528] text-[#E5C38B] hover:bg-[#1A2D4C]"
+                            : "border border-[#1E2E4A] text-[#0B1528] bg-white/40 hover:bg-[#0B1528]/5"
                           }`}
                       >
                         {t("Track RSVPs")}

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import type { InvitationData } from "@/types/invitation";
 import InvitationClientPage from "./_components/InvitationClientPage";
 
+// Force every request to be dynamic (no static caching)
+export const dynamic = "force-dynamic";
+
 // ── Types ──────────────────────────────────────────────────────────────
 
 interface InvitePageProps {
@@ -17,14 +20,10 @@ const API_BASE_URL =
 async function getInvitation(slug: string): Promise<InvitationData | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/invitations/slug/${slug}`, {
-      next: { revalidate: 60 }, // ISR — revalidate every 60s
+      cache: "no-store", // Always fetch fresh — deactivation must take effect immediately
     });
 
     if (!res.ok) {
-      if (res.status === 403) {
-        // Return dummy invitation with deactivated flag
-        return { id: "deactivated", slug } as any;
-      }
       return null;
     }
     return res.json();
@@ -41,8 +40,8 @@ export async function generateMetadata({
   const { slug } = await params;
   const invitation = await getInvitation(slug);
 
-  if (!invitation || invitation.id === "deactivated") {
-    return { title: "Invitation Not Available" };
+  if (!invitation) {
+    return { title: "Invitation Not Found" };
   }
 
   const desc = invitation.welcomeText 
@@ -67,10 +66,6 @@ export default async function InvitePage({ params }: InvitePageProps) {
   const invitation = await getInvitation(slug);
 
   if (!invitation) notFound();
-
-  if (invitation.id === "deactivated") {
-    return <InvitationClientPage slug={slug} isDeactivatedInitial={true} />;
-  }
 
   return <InvitationClientPage invitation={invitation} />;
 }
