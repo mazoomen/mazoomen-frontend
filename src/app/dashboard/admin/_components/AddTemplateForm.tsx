@@ -123,8 +123,26 @@ export default function AddTemplateForm({
       enabled: true,
       labelEn: "Album Image URLs",
       labelAr: "صور ألبوم العروسين",
-      defaultEn: "",
-      defaultAr: "",
+      defaultEn: [""],
+      defaultAr: [""],
+      type: "array",
+    },
+    {
+      key: "eventProgram",
+      enabled: true,
+      labelEn: "Event Program / Timeline",
+      labelAr: "برنامج الحفل",
+      defaultEn: [{ time: "", title: "" }],
+      defaultAr: [{ time: "", title: "" }],
+      type: "array",
+    },
+    {
+      key: "eventDetails",
+      enabled: true,
+      labelEn: "Event Details / Guidelines",
+      labelAr: "تفاصيل الحفل / التعليمات",
+      defaultEn: [{ text: "" }],
+      defaultAr: [{ text: "" }],
       type: "array",
     },
   ]);
@@ -150,18 +168,55 @@ export default function AddTemplateForm({
       prev.map((f) => {
         const customField = editableFields[f.key];
         if (customField) {
+          let defEn = customField.default;
+          let defAr = customField.default;
+
+          // Normalize array fields to ensure they are arrays and have at least 1 element
+          if (f.key === "images") {
+            const arr = Array.isArray(customField.default) ? customField.default : [];
+            const finalArr = arr.length ? arr : [""];
+            defEn = finalArr;
+            defAr = finalArr;
+          } else if (f.key === "eventProgram") {
+            const arr = Array.isArray(customField.default) ? customField.default : [];
+            const finalArr = arr.length ? arr : [{ time: "", title: "" }];
+            defEn = finalArr;
+            defAr = finalArr;
+          } else if (f.key === "eventDetails") {
+            const arr = Array.isArray(customField.default) ? customField.default : [];
+            const finalArr = arr.length ? arr : [{ text: "" }];
+            defEn = finalArr;
+            defAr = finalArr;
+          }
+
           return {
             ...f,
             enabled: true,
             labelEn: customField.label || f.labelEn,
             labelAr: customField.label || f.labelAr,
-            defaultEn: customField.default || f.defaultEn,
-            defaultAr: customField.default || f.defaultAr,
+            defaultEn: defEn,
+            defaultAr: defAr,
           };
         } else {
+          // Normalize default values when enabling from scratch
+          let defEn = f.defaultEn;
+          let defAr = f.defaultAr;
+          if (f.key === "images") {
+            defEn = [""];
+            defAr = [""];
+          } else if (f.key === "eventProgram") {
+            defEn = [{ time: "", title: "" }];
+            defAr = [{ time: "", title: "" }];
+          } else if (f.key === "eventDetails") {
+            defEn = [{ text: "" }];
+            defAr = [{ text: "" }];
+          }
+
           return {
             ...f,
             enabled: false,
+            defaultEn: defEn,
+            defaultAr: defAr,
           };
         }
       })
@@ -210,6 +265,50 @@ export default function AddTemplateForm({
     );
   };
 
+  const handleFieldArrayChange = (fieldIndex: number, arrayIndex: number, keyOfObject: string | null, value: string) => {
+    setFields((prev) =>
+      prev.map((f, i) => {
+        if (i !== fieldIndex) return f;
+        const currentVal = lang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
+        if (keyOfObject) {
+          currentVal[arrayIndex] = { ...currentVal[arrayIndex], [keyOfObject]: value };
+        } else {
+          currentVal[arrayIndex] = value;
+        }
+        return lang === "ar"
+          ? { ...f, defaultAr: currentVal }
+          : { ...f, defaultEn: currentVal };
+      })
+    );
+  };
+
+  const handleAddFieldArrayItem = (fieldIndex: number, itemTemplate: any) => {
+    setFields((prev) =>
+      prev.map((f, i) => {
+        if (i !== fieldIndex) return f;
+        const currentVal = lang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
+        currentVal.push(itemTemplate);
+        return lang === "ar"
+          ? { ...f, defaultAr: currentVal }
+          : { ...f, defaultEn: currentVal };
+      })
+    );
+  };
+
+  const handleRemoveFieldArrayItem = (fieldIndex: number, arrayIndex: number) => {
+    setFields((prev) =>
+      prev.map((f, i) => {
+        if (i !== fieldIndex) return f;
+        const currentVal = lang === "ar" ? [...(Array.isArray(f.defaultAr) ? f.defaultAr : [])] : [...(Array.isArray(f.defaultEn) ? f.defaultEn : [])];
+        if (currentVal.length <= 1) return f;
+        const filtered = currentVal.filter((_, idx) => idx !== arrayIndex);
+        return lang === "ar"
+          ? { ...f, defaultAr: filtered }
+          : { ...f, defaultEn: filtered };
+      })
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback(null);
@@ -219,14 +318,27 @@ export default function AddTemplateForm({
       // Build the JSON schema automatically based on user choices
       const parsedFields: Record<
         string,
-        { type: string; label: string; default: string }
+        { type: string; label: string; default: any }
       > = {};
       fields.forEach((f) => {
         if (f.enabled) {
+          let defaultValue = lang === "ar" ? f.defaultAr : f.defaultEn;
+
+          // Clean up empty array items before saving
+          if (f.key === "images" && Array.isArray(defaultValue)) {
+            defaultValue = defaultValue.filter((val: string) => val.trim() !== "");
+          } else if (f.key === "eventProgram" && Array.isArray(defaultValue)) {
+            defaultValue = defaultValue.filter((item: any) => item.time.trim() !== "" || item.title.trim() !== "");
+          } else if (f.key === "eventDetails" && Array.isArray(defaultValue)) {
+            defaultValue = defaultValue.filter((item: any) => item.text.trim() !== "");
+          } else if (typeof defaultValue === "string") {
+            defaultValue = defaultValue.trim();
+          }
+
           parsedFields[f.key] = {
             type: f.type,
             label: lang === "ar" ? f.labelAr.trim() : f.labelEn.trim(),
-            default: lang === "ar" ? f.defaultAr.trim() : f.defaultEn.trim(),
+            default: defaultValue,
           };
         }
       });
@@ -348,21 +460,21 @@ export default function AddTemplateForm({
         />
       </div>
 
-      {/* ── Preview Image URL ────────────────────────────────── */}
+      {/* ── Preview Image Name or URL ───────────────────────── */}
       <div>
         <label
           htmlFor="template-preview"
           className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
-          {lang === "ar" ? "رابط صورة المعاينة" : "Preview Image URL"} <span className="text-red-400">*</span>
+          {lang === "ar" ? "اسم أو رابط صورة المعاينة" : "Preview Image name or url"} <span className="text-red-400">*</span>
         </label>
         <input
           id="template-preview"
-          type="url"
+          type="text"
           name="previewImage"
           value={form.previewImage}
           onChange={handleChange}
-          placeholder="https://cdn.mazoom.app/templates/preview.jpg"
+          placeholder={lang === "ar" ? "مثال: preview.jpg أو /images/preview.jpg" : "e.g. preview.jpg or /images/preview.jpg"}
           disabled={submitting}
           className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50"
         />
@@ -449,11 +561,14 @@ export default function AddTemplateForm({
           {fields.map((f, i) => {
             const label = lang === "ar" ? f.labelAr : f.labelEn;
             const defaultValue = lang === "ar" ? f.defaultAr : f.defaultEn;
+            const isArrayField = f.key === "images" || f.key === "eventProgram" || f.key === "eventDetails";
 
             return (
               <div
                 key={f.key}
                 className={`rounded-xl border p-3.5 transition-all duration-300 ${
+                  isArrayField ? "col-span-full" : ""
+                } ${
                   f.enabled
                     ? "bg-white border-[#B89C72]/30 shadow-xs"
                     : "bg-[#FAF9F6] border-[#EBE7DF]/70 opacity-60"
@@ -486,33 +601,166 @@ export default function AddTemplateForm({
                 </div>
 
                 {f.enabled && (
-                  <div className="mt-3.5 pt-3 border-t border-[#FAF1EA] grid grid-cols-2 gap-2.5 animate-fadeIn">
-                    <div>
-                      <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
-                        {lang === "ar" ? "التسمية (Label)" : "Label"}
-                      </label>
-                      <input
-                        type="text"
-                        value={label}
-                        onChange={(e) => handleFieldLabelChange(i, e.target.value)}
-                        placeholder="Label"
-                        disabled={submitting}
-                        className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
-                        {lang === "ar" ? "الافتراضي (Default)" : "Default Value"}
-                      </label>
-                      <input
-                        type="text"
-                        value={defaultValue}
-                        onChange={(e) => handleFieldDefaultChange(i, e.target.value)}
-                        placeholder="Default"
-                        disabled={submitting}
-                        className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
-                      />
-                    </div>
+                  <div className="mt-3.5 pt-3 border-t border-[#FAF1EA] space-y-3.5 animate-fadeIn">
+                    {!isArrayField ? (
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                            {lang === "ar" ? "التسمية (Label)" : "Label"}
+                          </label>
+                          <input
+                            type="text"
+                            value={label}
+                            onChange={(e) => handleFieldLabelChange(i, e.target.value)}
+                            placeholder="Label"
+                            disabled={submitting}
+                            className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                            {lang === "ar" ? "الافتراضي (Default)" : "Default Value"}
+                          </label>
+                          <input
+                            type="text"
+                            value={typeof defaultValue === "string" ? defaultValue : ""}
+                            onChange={(e) => handleFieldDefaultChange(i, e.target.value)}
+                            placeholder="Default"
+                            disabled={submitting}
+                            className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="max-w-md">
+                          <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                            {lang === "ar" ? "التسمية (Label)" : "Label"}
+                          </label>
+                          <input
+                            type="text"
+                            value={label}
+                            onChange={(e) => handleFieldLabelChange(i, e.target.value)}
+                            placeholder="Label"
+                            disabled={submitting}
+                            className="w-full rounded-md border border-[#EBE7DF] bg-[#FAF9F6] px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                          />
+                        </div>
+
+                        {/* Array item builder */}
+                        <div className="border border-[#F4F1EA] bg-[#FAF8F5] rounded-xl p-3 space-y-2">
+                          <span className="block text-[9px] font-bold text-neutral-450 uppercase tracking-wider mb-1.5">
+                            {lang === "ar" ? "العناصر الافتراضية" : "Default Items List"}
+                          </span>
+                          
+                          {f.key === "images" && Array.isArray(defaultValue) && (
+                            <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                              {defaultValue.map((url: string, idx: number) => (
+                                <div key={idx} className="flex gap-2 items-center">
+                                  <input
+                                    type="url"
+                                    value={url}
+                                    onChange={(e) => handleFieldArrayChange(i, idx, null, e.target.value)}
+                                    placeholder="https://example.com/image.jpg"
+                                    disabled={submitting}
+                                    className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                  />
+                                  {defaultValue.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveFieldArrayItem(i, idx)}
+                                      className="text-neutral-450 hover:text-red-500 text-xs p-1"
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => handleAddFieldArrayItem(i, "")}
+                                className="text-[9px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors"
+                              >
+                                {lang === "ar" ? "+ إضافة صورة" : "+ Add image URL"}
+                              </button>
+                            </div>
+                          )}
+
+                          {f.key === "eventProgram" && Array.isArray(defaultValue) && (
+                            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                              {defaultValue.map((item: any, idx: number) => (
+                                <div key={idx} className="flex gap-2 items-center">
+                                  <input
+                                    type="time"
+                                    value={item.time || ""}
+                                    onChange={(e) => handleFieldArrayChange(i, idx, "time", e.target.value)}
+                                    disabled={submitting}
+                                    className="w-[100px] shrink-0 rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={item.title || ""}
+                                    onChange={(e) => handleFieldArrayChange(i, idx, "title", e.target.value)}
+                                    placeholder={lang === "ar" ? "مثال: استقبال الضيوف" : "e.g. Reception"}
+                                    disabled={submitting}
+                                    className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                  />
+                                  {defaultValue.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveFieldArrayItem(i, idx)}
+                                      className="text-neutral-450 hover:text-red-500 text-xs p-1"
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => handleAddFieldArrayItem(i, { time: "", title: "" })}
+                                className="text-[9px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors"
+                              >
+                                {lang === "ar" ? "+ إضافة فقرة للبرنامج" : "+ Add program item"}
+                              </button>
+                            </div>
+                          )}
+
+                          {f.key === "eventDetails" && Array.isArray(defaultValue) && (
+                            <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                              {defaultValue.map((item: any, idx: number) => (
+                                <div key={idx} className="flex gap-2 items-center">
+                                  <input
+                                    type="text"
+                                    value={item.text || ""}
+                                    onChange={(e) => handleFieldArrayChange(i, idx, "text", e.target.value)}
+                                    placeholder={lang === "ar" ? "مثال: يمنع اصطحاب الأطفال" : "e.g. No kids allowed"}
+                                    disabled={submitting}
+                                    className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                  />
+                                  {defaultValue.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveFieldArrayItem(i, idx)}
+                                      className="text-neutral-450 hover:text-red-500 text-xs p-1"
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                </div>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => handleAddFieldArrayItem(i, { text: "" })}
+                                className="text-[9px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors"
+                              >
+                                {lang === "ar" ? "+ إضافة تفصيل/تعليمات" : "+ Add detail item"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
