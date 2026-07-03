@@ -353,19 +353,16 @@ export default function InvitationClientPageGarden({
     }
   };
 
-  const timelineEvents = [
-    { time: '08:00 م', title: 'الاستقبال والترحيب بالضيوف الكرام' },
-    { time: '09:00 م', title: 'الزفة المباركة ودخول العروسين' },
-    { time: '10:00 م', title: 'مأدبة العشاء ومشاركة الفرحة' },
-    { time: '11:00 م', title: 'تقطيع قالب الحلوى والتقاط الصور التذكارية' },
-  ];
+  const timelineEvents = invitation.eventProgram?.length
+    ? invitation.eventProgram
+    : [];
 
-  const detailRules = [
-    { icon: <QrCode className="w-4.5 h-4.5 text-[#2E5A36]" />, text: 'الدخول مخصص عبر رمز الدعوة أو رمز QR الخاص بك' },
-    { icon: <Info className="w-4.5 h-4.5 text-[#2E5A36]" />, text: 'يرجى تأكيد الحضور لتسهيل الترتيبات (RSVP)' },
-    { icon: <Baby className="w-4.5 h-4.5 text-[#2E5A36]" />, text: 'جنة الأطفال منازلهم لتستمتعوا بليلتنا الهادئة' },
-    { icon: <Info className="w-4.5 h-4.5 text-[#2E5A36]" />, text: 'الفعالية مخصصة ومصممة للكبار فقط' }
-  ];
+  const detailRules = invitation.eventDetails?.length
+    ? invitation.eventDetails.map((detail) => ({
+        icon: <Info className="w-4.5 h-4.5 text-[#2E5A36]" />,
+        text: detail.text
+      }))
+    : [];
 
   return (
     <main className="min-h-screen bg-[#F5F2EB] relative flex flex-col justify-center font-cairo garden-theme">
@@ -665,100 +662,104 @@ export default function InvitationClientPageGarden({
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-8">
             {/* Timeline (Fully Animated) */}
-            <div 
-              className="p-6 timeline-items-container"
-              ref={timelineContainerRef}
-              style={{ 
-                backdropFilter: 'blur(16px) saturate(120%)', 
-                background: 'rgba(253, 251, 246, 0.65)', 
-                border: '1px solid rgba(255, 255, 255, 0.45)', 
-                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                borderRadius: '24px' 
-              }}
-            >
-              <h3 className="text-center text-lg font-bold text-[#1B3222] mb-8">برنامج الحفل</h3>
-              <div className="relative">
-                {/* Vertical Center Track Line */}
-                <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" style={{ left: '50%', transform: 'translateX(-50%)' }} />
-                
-                {/* Gliding Circular Indicator (Confined to elegant ring like template 1, but in green) */}
-                <div 
-                  ref={timelineIndicatorRef} 
-                  id="timeline-indicator" 
-                  className="absolute pointer-events-none z-20" 
-                  style={{ top: '0px', left: '50%', transform: 'translate(-50%, -50%)', transition: 'top 0.1s ease-out' }}
-                >
-                  <div className="w-5 h-5 rounded-full" style={{ background: 'transparent', border: '2px solid #2E5A36', boxShadow: '0 0 0 4px rgba(46, 90, 54, 0.15), 0 0 18px 8px rgba(46, 90, 54, 0.25), 0 0 36px 16px rgba(46, 90, 54, 0.1)' }} />
-                </div>
+            {timelineEvents.length > 0 && (
+              <div 
+                className="p-6 timeline-items-container"
+                ref={timelineContainerRef}
+                style={{ 
+                  backdropFilter: 'blur(16px) saturate(120%)', 
+                  background: 'rgba(253, 251, 246, 0.65)', 
+                  border: '1px solid rgba(255, 255, 255, 0.45)', 
+                  boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
+                  borderRadius: '24px' 
+                }}
+              >
+                <h3 className="text-center text-lg font-bold text-[#1B3222] mb-8">برنامج الحفل</h3>
+                <div className="relative">
+                  {/* Vertical Center Track Line */}
+                  <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" style={{ left: '50%', transform: 'translateX(-50%)' }} />
+                  
+                  {/* Gliding Circular Indicator (Confined to elegant ring like template 1, but in green) */}
+                  <div 
+                    ref={timelineIndicatorRef} 
+                    id="timeline-indicator" 
+                    className="absolute pointer-events-none z-20" 
+                    style={{ top: '0px', left: '50%', transform: 'translate(-50%, -50%)', transition: 'top 0.1s ease-out' }}
+                  >
+                    <div className="w-5 h-5 rounded-full" style={{ background: 'transparent', border: '2px solid #2E5A36', boxShadow: '0 0 0 4px rgba(46, 90, 54, 0.15), 0 0 18px 8px rgba(46, 90, 54, 0.25), 0 0 36px 16px rgba(46, 90, 54, 0.1)' }} />
+                  </div>
 
-                <div className="space-y-8">
-                  {timelineEvents.map((event, index) => (
-                    <div 
-                      key={index} 
-                      ref={(el) => { timelineItemRefs.current[index] = el; }}
-                      className="relative flex items-center timeline-item" 
-                      style={{ minHeight: '68px' }}
-                    >
-                      <div className="w-[calc(50%-14px)] pr-4 text-right">
-                        <span className="text-xs font-bold timeline-time block">
-                          {event.time}
-                        </span>
+                  <div className="space-y-8">
+                    {timelineEvents.map((event, index) => (
+                      <div 
+                        key={index} 
+                        ref={(el) => { timelineItemRefs.current[index] = el; }}
+                        className="relative flex items-center timeline-item" 
+                        style={{ minHeight: '68px' }}
+                      >
+                        <div className="w-[calc(50%-14px)] pr-4 text-right">
+                          <span className="text-xs font-bold timeline-time block">
+                            {event.time}
+                          </span>
+                        </div>
+                        <div className="w-7 flex justify-center shrink-0 z-10">
+                          {/* Circle Dot (Green, styled exactly like Template 1) */}
+                          <div className="w-2.5 h-2.5 rounded-full timeline-dot" />
+                        </div>
+                        <div className="w-[calc(50%-14px)] pl-4 text-left">
+                          <span className="text-xs font-bold timeline-title block leading-tight">
+                            {event.title}
+                          </span>
+                        </div>
                       </div>
-                      <div className="w-7 flex justify-center shrink-0 z-10">
-                        {/* Circle Dot (Green, styled exactly like Template 1) */}
-                        <div className="w-2.5 h-2.5 rounded-full timeline-dot" />
-                      </div>
-                      <div className="w-[calc(50%-14px)] pl-4 text-left">
-                        <span className="text-xs font-bold timeline-title block leading-tight">
-                          {event.title}
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Details (Fully Animated) */}
+            {detailRules.length > 0 && (
+              <div 
+                ref={detailsContainerRef}
+                className="p-6 details-items-container"
+                style={{ 
+                  backdropFilter: 'blur(16px) saturate(120%)', 
+                  background: 'rgba(253, 251, 246, 0.65)', 
+                  border: '1px solid rgba(255, 255, 255, 0.45)', 
+                  boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
+                  borderRadius: '24px' 
+                }}
+              >
+                <h3 className="text-center text-lg font-bold text-[#1B3222] mb-5">تفاصيل تهمك</h3>
+                <div className="space-y-4 relative pl-7">
+                  {/* Vertical track line for details rules */}
+                  <div 
+                    className="absolute left-2.5 top-3.5 bottom-3.5 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" 
+                  />
+
+                  {detailRules.map((rule, idx) => (
+                    <div key={idx} className="relative flex items-center gap-3.5 min-h-[52px] detail-item-row">
+                      {/* Circle Bullet (Green, styled exactly like Template 1) */}
+                      <div 
+                        className="absolute -left-5 w-2.5 h-2.5 rounded-full shrink-0 timeline-detail-dot" 
+                        style={{ 
+                          top: '50%', 
+                          marginTop: '-5px' 
+                        }} 
+                      />
+
+                      <div className="flex items-center gap-3 flex-1 p-3 bg-white/40 border border-[#1B3222]/5 rounded-xl">
+                        <span className="w-7 h-7 rounded-full bg-[#2E5A36]/10 border border-[#2E5A36]/10 flex items-center justify-center shrink-0">
+                          {rule.icon}
                         </span>
+                        <span className="text-xs text-[#1B3222] font-semibold leading-tight">{rule.text}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Details (Fully Animated) */}
-            <div 
-              ref={detailsContainerRef}
-              className="p-6 details-items-container"
-              style={{ 
-                backdropFilter: 'blur(16px) saturate(120%)', 
-                background: 'rgba(253, 251, 246, 0.65)', 
-                border: '1px solid rgba(255, 255, 255, 0.45)', 
-                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                borderRadius: '24px' 
-              }}
-            >
-              <h3 className="text-center text-lg font-bold text-[#1B3222] mb-5">تفاصيل تهمك</h3>
-              <div className="space-y-4 relative pl-7">
-                {/* Vertical track line for details rules */}
-                <div 
-                  className="absolute left-2.5 top-3.5 bottom-3.5 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" 
-                />
-
-                {detailRules.map((rule, idx) => (
-                  <div key={idx} className="relative flex items-center gap-3.5 min-h-[52px] detail-item-row">
-                    {/* Circle Bullet (Green, styled exactly like Template 1) */}
-                    <div 
-                      className="absolute -left-5 w-2.5 h-2.5 rounded-full shrink-0 timeline-detail-dot" 
-                      style={{ 
-                        top: '50%', 
-                        marginTop: '-5px' 
-                      }} 
-                    />
-
-                    <div className="flex items-center gap-3 flex-1 p-3 bg-white/40 border border-[#1B3222]/5 rounded-xl">
-                      <span className="w-7 h-7 rounded-full bg-[#2E5A36]/10 border border-[#2E5A36]/10 flex items-center justify-center shrink-0">
-                        {rule.icon}
-                      </span>
-                      <span className="text-xs text-[#1B3222] font-semibold leading-tight">{rule.text}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </section>
 

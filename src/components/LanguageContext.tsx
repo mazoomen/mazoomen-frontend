@@ -288,6 +288,53 @@ const translations: Record<string, Record<Language, string>> = {
   "Cancel": { en: "Cancel", ar: "إلغاء" },
   "Saving...": { en: "Saving...", ar: "جاري الحفظ..." },
   "Create Invitation": { en: "Create Invitation", ar: "إنشاء دعوة" },
+
+  // ── InvitationEditor ──────────────────────────────────────────────
+  "Edit Invitation Details": { en: "Edit Invitation Details", ar: "تعديل بيانات الدعوة" },
+  "Create New Invitation": { en: "Create New Invitation", ar: "إنشاء دعوة جديدة" },
+  "Template:": { en: "Template:", ar: "القالب:" },
+  "Groom's Name": { en: "Groom's Name", ar: "اسم العريس" },
+  "Bride's Name": { en: "Bride's Name", ar: "اسم العروس" },
+  "e.g. Ahmed": { en: "e.g. Ahmed", ar: "مثال: أحمد" },
+  "e.g. Sarah": { en: "e.g. Sarah", ar: "مثال: سارة" },
+  "Custom Invite Link": { en: "Custom Invite Link", ar: "رابط الدعوة المخصص" },
+  "Slug hint": {
+    en: "This forms your public shareable link. Lowercase letters, numbers, and hyphens only.",
+    ar: "هذا الرابط سيكون رابط الدعوة العام. حروف إنجليزية صغيرة، أرقام، وشرطات فقط.",
+  },
+  "Event Location (Hall Name)": { en: "Event Location (Hall Name)", ar: "مكان المناسبة (اسم القاعة)" },
+  "e.g. Royal Hall, Riyadh": { en: "e.g. Royal Hall, Riyadh", ar: "مثال: قاعة الملكية - الرياض" },
+  "Google Maps URL": { en: "Google Maps URL", ar: "رابط الموقع (Google Maps)" },
+  "Welcome Invitation Message": { en: "Welcome Invitation Message", ar: "رسالة الترحيب" },
+  "Write your welcome message...": {
+    en: "Write your welcome message to family and friends...",
+    ar: "اكتب رسالة ترحيب للأهل والأصدقاء...",
+  },
+  "Background Music URL (Optional)": { en: "Background Music URL (Optional)", ar: "رابط الموسيقى الخلفية (اختياري)" },
+  "Gallery Photo URLs (Optional)": { en: "Gallery Photo URLs (Optional)", ar: "صور المعرض (اختياري)" },
+  "Photo URL #": { en: "Photo URL #", ar: "رابط الصورة #" },
+  "+ Add another photo": { en: "+ Add another photo", ar: "+ إضافة صورة أخرى" },
+  "Event Program (Optional)": { en: "Event Program (Optional)", ar: "برنامج المناسبة (اختياري)" },
+  "Program hint": {
+    en: "Add the schedule items that will appear on the invitation timeline. If left empty, the event time will be used automatically.",
+    ar: "أضف فقرات البرنامج التي ستظهر في الدعوة. إذا تركت الحقول فارغة سيتم إضافة وقت الحفل تلقائياً.",
+  },
+  "e.g. Reception": { en: "e.g. Reception", ar: "مثال: الاستقبال" },
+  "+ Add another item": { en: "+ Add another item", ar: "+ إضافة فقرة أخرى" },
+  "Event Details (Optional)": { en: "Event Details (Optional)", ar: "تفاصيل الحفل (اختياري)" },
+  "Details hint": {
+    en: "Add rules or details for your guests (e.g. QR entry, dress code, etc.)",
+    ar: "أضف تعليمات أو ملاحظات للضيوف (مثال: الدخول بـ QR، الدرس كود، إلخ)",
+  },
+  "e.g. QR entry only": { en: "e.g. QR entry only", ar: "مثال: الدخول عبر رمز QR فقط" },
+  "+ Add another detail": { en: "+ Add another detail", ar: "+ إضافة تفصيل آخر" },
+  "Saved successfully!": { en: "✓ Saved successfully!", ar: "✓ تم الحفظ بنجاح!" },
+  "Publish Invitation": { en: "Publish Invitation", ar: "نشر الدعوة" },
+  "Save failed": {
+    en: "Failed to save invitation. Please check your fields and try again.",
+    ar: "فشل في حفظ الدعوة. يرجى التحقق من البيانات والمحاولة مرة أخرى.",
+  },
+  "Party start": { en: "Party Start", ar: "بداية الحفل" },
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {

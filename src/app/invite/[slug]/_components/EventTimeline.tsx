@@ -7,17 +7,17 @@ interface TimelineEvent {
   title: string;
 }
 
-const timelineEvents: TimelineEvent[] = [
-  { time: '8:26 م', title: 'الاستقبال (Reception)' },
-  { time: '9:15 م', title: 'الزفة (Zaffa)' },
-  { time: '10:00 م', title: 'مأدبة العشاء (Dinner)' },
-  { time: '11:00 م', title: 'بداية الحفل والتهاني (Party)' },
-];
+interface EventTimelineProps {
+  events?: TimelineEvent[];
+}
 
-export const EventTimeline: React.FC = () => {
+export const EventTimeline: React.FC<EventTimelineProps> = ({ events }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Don't render if no events provided
+  if (!events || events.length === 0) return null;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,7 +86,7 @@ export const EventTimeline: React.FC = () => {
           <div className="w-5 h-5 rounded-full" style={{ background: 'transparent', border: '2px solid rgb(172, 140, 96)', boxShadow: 'rgba(172, 140, 96, 0.145) 0px 0px 0px 4px, rgba(172, 140, 96, 0.27) 0px 0px 18px 8px, rgba(172, 140, 96, 0.094) 0px 0px 36px 16px' }} />
         </div>
 
-        {timelineEvents.map((event, index) => (
+        {events.map((event, index) => (
           <div
             key={index}
             ref={(el) => { itemRefs.current[index] = el; }}

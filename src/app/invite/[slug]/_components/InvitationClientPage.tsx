@@ -220,8 +220,8 @@ export default function InvitationClientPage({
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/5" style={{ opacity: 0.25 }} />
           </div>
           <div className="relative z-10 space-y-12">
-            <EventTimeline />
-            <EventDetails />
+            <EventTimeline events={localInvitation.eventProgram} />
+            <EventDetails details={localInvitation.eventDetails} />
           </div>
         </section>
 

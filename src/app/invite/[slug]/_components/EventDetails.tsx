@@ -1,22 +1,21 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { Info, Baby, QrCode } from 'lucide-react';
+import { Info } from 'lucide-react';
 
-interface DetailRule {
-  icon: React.ReactNode;
+interface DetailItem {
   text: string;
 }
 
-const detailRules: DetailRule[] = [
-  { icon: <QrCode className="w-4 h-4 text-[#ac8c60]" />, text: 'الدخول عبر رمز QR فقط' },
-  { icon: <Info className="w-4 h-4 text-[#ac8c60]" />, text: 'يرجى تأكيد الحضور (RSVP)' },
-  { icon: <Baby className="w-4 h-4 text-[#ac8c60]" />, text: 'جنة الأطفال منازلهم' },
-  { icon: <Info className="w-4 h-4 text-[#ac8c60]" />, text: 'الفعالية مخصصة للكبار فقط' }
-];
+interface EventDetailsProps {
+  details?: DetailItem[];
+}
 
-export const EventDetails: React.FC = () => {
+export const EventDetails: React.FC<EventDetailsProps> = ({ details }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Don't render if no details provided
+  if (!details || details.length === 0) return null;
 
   useEffect(() => {
     const observerOptions = {
@@ -58,7 +57,7 @@ export const EventDetails: React.FC = () => {
         />
         
         <div ref={containerRef} className="space-y-4 details-items-container">
-          {detailRules.map((rule, index) => (
+          {details.map((detail, index) => (
             <div key={index} className="relative flex items-center gap-3 min-h-[52px] detail-item-row">
               <div 
                 className="absolute -left-5 w-2.5 h-2.5 rounded-full shrink-0" 
@@ -86,9 +85,9 @@ export const EventDetails: React.FC = () => {
                     boxShadow: 'rgba(172, 140, 96, 0.19) 0px 0px 10px 4px, rgba(172, 140, 96, 0.082) 0px 0px 20px 8px'
                   }}
                 >
-                  {rule.icon}
+                  <Info className="w-4 h-4 text-[#ac8c60]" />
                 </span>
-                <span className="text-sm leading-tight text-right w-full">{rule.text}</span>
+                <span className="text-sm leading-tight text-right w-full">{detail.text}</span>
               </div>
             </div>
           ))}

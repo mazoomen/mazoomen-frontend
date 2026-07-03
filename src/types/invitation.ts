@@ -34,6 +34,8 @@ export interface InvitationData {
   welcomeText?: string | null;
   images: string[];
   musicUrl: string | null;
+  eventProgram?: { time: string; title: string }[];
+  eventDetails?: { text: string }[];
   createdAt: string;
   template: InvitationTemplate;
 }

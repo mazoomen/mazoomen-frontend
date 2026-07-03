@@ -321,8 +321,8 @@ export default function ClientDashboardPage() {
 
       {/* ── Invitation Editor Overlay Modal (Create / Edit Popup) ───── */}
       {isEditorOpen && editingPurchase && (
-        <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-xl w-full p-8 shadow-2xl relative my-8">
+        <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 overflow-y-auto p-4">
+          <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-xl w-full p-8 shadow-2xl relative my-8 mx-auto">
             {/* Close Button */}
             <button
               onClick={() => {
