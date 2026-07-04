@@ -193,10 +193,10 @@ export default function InvitationClientPage({
 
       {/* Background audio controller & Navigation bar */}
       {isOpen && (
-        <BottomNavbar 
-          musicUrl={localInvitation.musicUrl} 
-          musicPlaying={musicPlaying} 
-          setMusicPlaying={setMusicPlaying} 
+        <BottomNavbar
+          musicUrl={localInvitation.musicUrl}
+          musicPlaying={musicPlaying}
+          setMusicPlaying={setMusicPlaying}
           theme="gold"
           viewingLang={viewingLang}
         />
@@ -224,10 +224,10 @@ export default function InvitationClientPage({
       {/* Invitation Contents Container */}
       <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-white shadow-2xl rounded-none md:rounded-[32px] md:my-8" dir={isEn ? "ltr" : "rtl"} style={{ color: 'rgb(172, 140, 96)' }}>
         {/* Hero Banner Section */}
-        <InvitationHero 
-          eventTitle={eventTitle} 
-          eventDate={localInvitation.eventDate} 
-          isOpen={isOpen} 
+        <InvitationHero
+          eventTitle={eventTitle}
+          eventDate={localInvitation.eventDate}
+          isOpen={isOpen}
           viewingLang={viewingLang}
         />
 
@@ -246,7 +246,7 @@ export default function InvitationClientPage({
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/5" style={{ opacity: 0.25 }} />
           </div>
           <div className="relative z-10">
-            <InvitationBody 
+            <InvitationBody
               eventTitle={eventTitle}
               eventDate={localInvitation.eventDate}
               eventLocation={eventLocation}
@@ -292,7 +292,7 @@ export default function InvitationClientPage({
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-white/5" style={{ opacity: 0.25 }} />
           </div>
           <div className="relative z-10">
-            <WishesSection 
+            <WishesSection
               invitationId={localInvitation.id}
               eventTitle={eventTitle}
               images={localInvitation.images}
@@ -324,7 +324,7 @@ export default function InvitationClientPage({
                 {new Date(localInvitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#C8C8C8]">
-                {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة مازوم"}
+                {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
               </p>
               {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
               <div className="h-24" />

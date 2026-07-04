@@ -48,6 +48,8 @@ export default function AddTemplateForm({
   onCancel,
 }: AddTemplateFormProps) {
   const { lang } = useLanguage();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
+  const formattedSiteUrl = siteUrl.endsWith("/") ? siteUrl : `${siteUrl}/`;
   const [editingLang, setEditingLang] = useState<"ar" | "en">("ar");
   const [form, setForm] = useState<TemplateFormData>(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -546,16 +548,21 @@ export default function AddTemplateForm({
         >
           {lang === "ar" ? "رابط العرض التجريبي (Demo)" : "Demo Link"}
         </label>
-        <input
-          id="template-demo"
-          type="url"
-          name="demoLink"
-          value={form.demoLink}
-          onChange={handleChange}
-          placeholder="https://demo.mazoom.app/template-name"
-          disabled={submitting}
-          className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50"
-        />
+        <div className="flex items-stretch shadow-sm rounded-full overflow-hidden border border-[#EBE7DF]" dir="ltr">
+          <span className="flex items-center bg-[#FAF8F5] border-r border-[#EBE7DF] pl-5 pr-3 text-[11px] text-neutral-400 font-semibold select-none">
+            {formattedSiteUrl}
+          </span>
+          <input
+            id="template-demo"
+            type="text"
+            name="demoLink"
+            value={form.demoLink}
+            onChange={handleChange}
+            placeholder="invite/watercolor-garden-wedding"
+            disabled={submitting}
+            className="w-full bg-white px-5 py-2.5 text-xs outline-none focus:border-[#B89C72] transition-all text-neutral-800 placeholder-gray-400"
+          />
+        </div>
       </div>
 
       {/* ── Price + Premium Row ───────────────────────────────── */}
@@ -721,13 +728,13 @@ export default function AddTemplateForm({
                                     onChange={(e) => handleFieldArrayChange(i, idx, null, e.target.value)}
                                     placeholder="https://example.com/image.jpg"
                                     disabled={submitting}
-                                    className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                    className="w-full rounded-full border border-[#EBE7DF] bg-white px-4 py-2 text-xs text-neutral-850 outline-none focus:border-[#B89C72]"
                                   />
                                   {defaultValue.length > 1 && (
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveFieldArrayItem(i, idx)}
-                                      className="text-neutral-450 hover:text-red-500 text-xs p-1"
+                                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white hover:border-red-200 hover:text-red-500 hover:bg-red-50/50 transition-colors text-neutral-400 cursor-pointer shadow-xs text-xs"
                                     >
                                       ✕
                                     </button>
@@ -753,7 +760,7 @@ export default function AddTemplateForm({
                                     value={item.time || ""}
                                     onChange={(e) => handleFieldArrayChange(i, idx, "time", e.target.value)}
                                     disabled={submitting}
-                                    className="w-[100px] shrink-0 rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                    className="w-[125px] shrink-0 rounded-full border border-[#EBE7DF] bg-white px-4 py-2 text-xs text-neutral-850 outline-none focus:border-[#B89C72] text-center"
                                   />
                                   <input
                                     type="text"
@@ -761,13 +768,13 @@ export default function AddTemplateForm({
                                     onChange={(e) => handleFieldArrayChange(i, idx, "title", e.target.value)}
                                     placeholder={editingLang === "ar" ? "مثال: استقبال الضيوف" : "e.g. Reception"}
                                     disabled={submitting}
-                                    className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                    className="w-full rounded-full border border-[#EBE7DF] bg-white px-4 py-2 text-xs text-neutral-850 outline-none focus:border-[#B89C72]"
                                   />
                                   {defaultValue.length > 1 && (
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveFieldArrayItem(i, idx)}
-                                      className="text-neutral-450 hover:text-red-500 text-xs p-1"
+                                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white hover:border-red-200 hover:text-red-500 hover:bg-red-50/50 transition-colors text-neutral-400 cursor-pointer shadow-xs text-xs"
                                     >
                                       ✕
                                     </button>
@@ -794,13 +801,13 @@ export default function AddTemplateForm({
                                     onChange={(e) => handleFieldArrayChange(i, idx, "text", e.target.value)}
                                     placeholder={editingLang === "ar" ? "مثال: يمنع اصطحاب الأطفال" : "e.g. No kids allowed"}
                                     disabled={submitting}
-                                    className="w-full rounded-md border border-[#EBE7DF] bg-white px-2.5 py-1.5 text-[10px] text-neutral-850 outline-none focus:border-[#B89C72]"
+                                    className="w-full rounded-full border border-[#EBE7DF] bg-white px-4 py-2 text-xs text-neutral-850 outline-none focus:border-[#B89C72]"
                                   />
                                   {defaultValue.length > 1 && (
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveFieldArrayItem(i, idx)}
-                                      className="text-neutral-450 hover:text-red-500 text-xs p-1"
+                                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white hover:border-red-200 hover:text-red-500 hover:bg-red-50/50 transition-colors text-neutral-400 cursor-pointer shadow-xs text-xs"
                                     >
                                       ✕
                                     </button>

@@ -431,7 +431,12 @@ export default function Home() {
                         <button
                           onClick={() => {
                             if (template.demoLink) {
-                              window.open(template.demoLink, "_blank");
+                              const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
+                              const formattedSiteUrl = siteUrl.endsWith("/") ? siteUrl : `${siteUrl}/`;
+                              const fullUrl = template.demoLink.startsWith("http")
+                                ? template.demoLink
+                                : `${formattedSiteUrl}${template.demoLink.startsWith("/") ? template.demoLink.slice(1) : template.demoLink}`;
+                              window.open(fullUrl, "_blank");
                             } else {
                               alert(lang === "ar" ? "لا تتوفر معاينة لهذا القالب حالياً." : "No demo link available for this template.");
                             }

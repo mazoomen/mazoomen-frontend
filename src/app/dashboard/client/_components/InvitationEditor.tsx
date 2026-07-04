@@ -240,11 +240,11 @@ export default function InvitationEditor({
 
   // Input styles
   const inputClass =
-    "w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-neutral-800 placeholder-neutral-400";
+    "w-full bg-white border border-[#E6E2DA] rounded-full px-5 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-neutral-800 placeholder-neutral-400";
   const labelClass =
     "mb-1 block text-[10px] font-bold uppercase tracking-wider text-neutral-500 font-sans";
   const removeBtnClass =
-    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-neutral-200 hover:border-red-500 hover:text-red-500 hover:bg-red-50 transition-colors text-neutral-400";
+    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white hover:border-red-200 hover:text-red-500 hover:bg-red-50/50 transition-colors text-neutral-400 cursor-pointer shadow-xs";
   const addBtnClass =
     "mt-2 text-[10px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors tracking-wider";
 
@@ -346,8 +346,8 @@ export default function InvitationEditor({
       {/* URL Link Slug */}
       <div>
         <label className={labelClass}>{t("Custom Invite Link")}</label>
-        <div className="flex items-stretch shadow-sm rounded-xl overflow-hidden border border-[#E6E2DA]" dir="ltr">
-          <span className="flex items-center bg-[#FAF8F5] border-r border-[#E6E2DA] px-3 text-[11px] text-neutral-400 font-semibold select-none">
+        <div className="flex items-stretch shadow-sm rounded-full overflow-hidden border border-[#E6E2DA]" dir="ltr">
+          <span className="flex items-center bg-[#FAF8F5] border-r border-[#E6E2DA] pl-5 pr-3 text-[11px] text-neutral-400 font-semibold select-none">
             /invite/
           </span>
           <input
@@ -363,7 +363,7 @@ export default function InvitationEditor({
             placeholder="ahmed-and-sarah"
             required
             disabled={status === "saving"}
-            className="w-full bg-white px-4 py-2.5 text-xs outline-none focus:border-black transition-all text-neutral-800 placeholder-neutral-400"
+            className="w-full bg-white px-5 py-2.5 text-xs outline-none focus:border-black transition-all text-neutral-800 placeholder-neutral-400"
           />
         </div>
         <p className="mt-1.5 text-[9px] text-neutral-400 leading-normal">
@@ -428,7 +428,7 @@ export default function InvitationEditor({
           required
           rows={3}
           disabled={status === "saving"}
-          className={`${inputClass} resize-none`}
+          className="w-full bg-white border border-[#E6E2DA] rounded-2xl px-5 py-3 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-neutral-800 placeholder-neutral-400 resize-none"
         />
       </div>
 
@@ -493,7 +493,7 @@ export default function InvitationEditor({
         <div className={`space-y-2 max-h-48 overflow-y-auto ${isRtl ? "pl-1" : "pr-1"}`}>
           {eventProgram.map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className="w-[110px] shrink-0">
+              <div className="w-[130px] shrink-0">
                 <input
                   type="time"
                   value={item.time}
@@ -591,7 +591,7 @@ export default function InvitationEditor({
           <button
             type="submit"
             disabled={status === "saving"}
-            className="px-6 py-2.5 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+            className="px-8 py-3 text-xs font-bold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#15243F] rounded-full transition-all shadow-sm flex items-center gap-2 cursor-pointer"
           >
             {status === "saving" ? (
               <>

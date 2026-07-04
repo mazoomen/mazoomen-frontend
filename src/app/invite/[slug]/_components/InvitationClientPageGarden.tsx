@@ -74,7 +74,7 @@ export default function InvitationClientPageGarden({
 
   // RSVP Form States
   const [wishes, setWishes] = useState<Wish[]>(isEn ? defaultWishesEn : defaultWishesAr);
-  
+
   useEffect(() => {
     setWishes(isEn ? defaultWishesEn : defaultWishesAr);
   }, [viewingLangProp]);
@@ -181,7 +181,7 @@ export default function InvitationClientPageGarden({
 
       const rect = timelineContainerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
-      
+
       const triggerPoint = viewportHeight / 2;
       const containerHeight = rect.height;
       const relativeTop = rect.top - triggerPoint;
@@ -191,7 +191,7 @@ export default function InvitationClientPageGarden({
 
       const firstItem = activeItems[0];
       const lastItem = activeItems[activeItems.length - 1];
-      
+
       const startTop = firstItem.offsetTop + (firstItem.offsetHeight / 2);
       const endTop = lastItem.offsetTop + (lastItem.offsetHeight / 2);
       const range = endTop - startTop;
@@ -289,7 +289,7 @@ export default function InvitationClientPageGarden({
 
   // Date utilities
   const parsedDate = new Date(invitation.eventDate);
-  
+
   const getFormattedDate = () => {
     try {
       return new Intl.DateTimeFormat(isEn ? 'en-US' : 'ar-EG', {
@@ -345,10 +345,10 @@ export default function InvitationClientPageGarden({
   const getGoogleCalendarUrl = () => {
     const pad = (n: number) => n.toString().padStart(2, '0');
     const start = `${parsedDate.getUTCFullYear()}${pad(parsedDate.getUTCMonth() + 1)}${pad(parsedDate.getUTCDate())}T${pad(parsedDate.getUTCHours())}${pad(parsedDate.getUTCMinutes())}${pad(parsedDate.getUTCSeconds())}Z`;
-    
+
     const endDate = new Date(parsedDate.getTime() + 3 * 60 * 60 * 1000);
     const end = `${endDate.getUTCFullYear()}${pad(endDate.getUTCMonth() + 1)}${pad(endDate.getUTCDate())}T${pad(endDate.getUTCHours())}${pad(endDate.getUTCMinutes())}${pad(endDate.getUTCSeconds())}Z`;
-    
+
     const calendarTitle = isEn ? `Wedding of ${eventTitle}` : `حفل زفاف ${eventTitle}`;
     return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(calendarTitle)}&dates=${start}/${end}&details=${encodeURIComponent(welcomeText || defaultWelcomeText)}&location=${encodeURIComponent(eventLocation)}`;
   };
@@ -370,11 +370,11 @@ export default function InvitationClientPageGarden({
 
     try {
       await api.post('/rsvp', payload);
-      
+
       if (newWish.trim()) {
         setWishes([{ name: guestName.trim(), text: newWish.trim() }, ...wishes]);
       }
-      
+
       setStatus('success');
       setGuestName('');
       setNewWish('');
@@ -384,7 +384,7 @@ export default function InvitationClientPageGarden({
       console.error(err);
       setStatus('error');
       setErrorMsg(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         (isEn ? 'An error occurred while sending your response. Please try again.' : 'حدث خطأ أثناء إرسال ردك. يرجى المحاولة مرة أخرى.')
       );
     }
@@ -407,7 +407,8 @@ export default function InvitationClientPageGarden({
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@200..1000&display=swap" rel="stylesheet" />
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .font-aref {
           font-family: 'Aref Ruqaa', serif !important;
           font-size: 3rem !important;
@@ -512,10 +513,10 @@ export default function InvitationClientPageGarden({
 
       {/* Background audio controller & Navigation bar */}
       {isOpen && (
-        <BottomNavbar 
-          musicUrl={invitation.musicUrl} 
-          musicPlaying={musicPlaying} 
-          setMusicPlaying={setMusicPlaying} 
+        <BottomNavbar
+          musicUrl={invitation.musicUrl}
+          musicPlaying={musicPlaying}
+          setMusicPlaying={setMusicPlaying}
           theme="green"
           viewingLang={isEn ? "en" : "ar"}
         />
@@ -546,7 +547,7 @@ export default function InvitationClientPageGarden({
 
       {/* Invitation Contents Container (Styled exactly like Template 1, restricted inside a phone-like container card) */}
       <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-white shadow-2xl rounded-none md:rounded-[32px] md:my-8 animate-on-scroll" dir={isEn ? "ltr" : "rtl"} style={{ color: '#1B3222' }}>
-        
+
         {/* HERO SECTION */}
         <section className="relative min-h-[700px] flex flex-col items-center justify-start text-center pt-24">
           <div className="absolute inset-0 z-0 overflow-hidden">
@@ -566,7 +567,7 @@ export default function InvitationClientPageGarden({
           <div className="relative z-10 -mt-8 pr-6 pl-6 flex flex-col items-center w-full">
             <div className="mx-auto mb-8 h-px w-24 bg-gradient-to-r from-transparent via-[#1B3222]/40 to-transparent" />
             <div className="text-base tracking-[0.25em] mb-4 text-[#1B3222] font-semibold">{isEn ? "Wedding Invitation" : "حفل زفاف"}</div>
-            
+
             {/* Calligraphic Decorative Large Names */}
             <h1 className="font-aref font-bold leading-none text-[#1B3222] select-none my-3 tracking-wide">
               {groom}
@@ -606,14 +607,14 @@ export default function InvitationClientPageGarden({
 
           <div className="relative z-10 space-y-8 w-full max-w-lg mx-auto">
             {/* The main invite card with glassmorphism */}
-            <div 
+            <div
               className="p-8 animate-on-scroll fade-up"
-              style={{ 
-                backdropFilter: 'blur(16px) saturate(120%)', 
-                background: 'rgba(253, 251, 246, 0.65)', 
-                border: '1px solid rgba(255, 255, 255, 0.45)', 
-                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                borderRadius: '28px' 
+              style={{
+                backdropFilter: 'blur(16px) saturate(120%)',
+                background: 'rgba(253, 251, 246, 0.65)',
+                border: '1px solid rgba(255, 255, 255, 0.45)',
+                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)',
+                borderRadius: '28px'
               }}
             >
               <div className="text-center">
@@ -658,7 +659,7 @@ export default function InvitationClientPageGarden({
 
             {/* Save date button */}
             <div className="flex justify-center animate-on-scroll fade-up">
-              <button 
+              <button
                 onClick={() => window.open(getGoogleCalendarUrl(), '_blank')}
                 className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-white/40 shadow-xs backdrop-blur-md hover:bg-white/35 transition-all text-[#1B3222] bg-[#FAF9F6]/60 cursor-pointer"
               >
@@ -668,14 +669,14 @@ export default function InvitationClientPageGarden({
             </div>
 
             {/* Countdown widget */}
-            <div 
+            <div
               className="p-5 animate-on-scroll fade-up"
-              style={{ 
-                backdropFilter: 'blur(16px) saturate(120%)', 
-                background: 'rgba(253, 251, 246, 0.65)', 
-                border: '1px solid rgba(255, 255, 255, 0.45)', 
-                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                borderRadius: '24px' 
+              style={{
+                backdropFilter: 'blur(16px) saturate(120%)',
+                background: 'rgba(253, 251, 246, 0.65)',
+                border: '1px solid rgba(255, 255, 255, 0.45)',
+                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)',
+                borderRadius: '24px'
               }}
             >
               <h4 className="text-center text-xs tracking-widest font-bold text-[#1B3222] mb-3">{isEn ? "COUNTDOWN" : "العد التنازلي للمناسبة"}</h4>
@@ -716,27 +717,27 @@ export default function InvitationClientPageGarden({
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-8">
             {/* Timeline (Fully Animated) */}
             {timelineEvents.length > 0 && (
-              <div 
+              <div
                 className="p-6 timeline-items-container"
                 ref={timelineContainerRef}
-                style={{ 
-                  backdropFilter: 'blur(16px) saturate(120%)', 
-                  background: 'rgba(253, 251, 246, 0.65)', 
-                  border: '1px solid rgba(255, 255, 255, 0.45)', 
-                  boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                  borderRadius: '24px' 
+                style={{
+                  backdropFilter: 'blur(16px) saturate(120%)',
+                  background: 'rgba(253, 251, 246, 0.65)',
+                  border: '1px solid rgba(255, 255, 255, 0.45)',
+                  boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)',
+                  borderRadius: '24px'
                 }}
               >
                 <h3 className="text-center text-lg font-bold text-[#1B3222] mb-8">{isEn ? "Event Program" : "برنامج الحفل"}</h3>
                 <div className="relative">
                   {/* Vertical Center Track Line */}
                   <div className="absolute top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent" style={{ left: '50%', transform: 'translateX(-50%)' }} />
-                  
+
                   {/* Gliding Circular Indicator (Confined to elegant ring like template 1, but in green) */}
-                  <div 
-                    ref={timelineIndicatorRef} 
-                    id="timeline-indicator" 
-                    className="absolute pointer-events-none z-20" 
+                  <div
+                    ref={timelineIndicatorRef}
+                    id="timeline-indicator"
+                    className="absolute pointer-events-none z-20"
                     style={{ top: '0px', left: '50%', transform: 'translate(-50%, -50%)', transition: 'top 0.1s ease-out' }}
                   >
                     <div className="w-5 h-5 rounded-full" style={{ background: 'transparent', border: '2px solid #2E5A36', boxShadow: '0 0 0 4px rgba(46, 90, 54, 0.15), 0 0 18px 8px rgba(46, 90, 54, 0.25), 0 0 36px 16px rgba(46, 90, 54, 0.1)' }} />
@@ -744,10 +745,10 @@ export default function InvitationClientPageGarden({
 
                   <div className="space-y-8">
                     {timelineEvents.map((event, index) => (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         ref={(el) => { timelineItemRefs.current[index] = el; }}
-                        className="relative flex items-center timeline-item" 
+                        className="relative flex items-center timeline-item"
                         style={{ minHeight: '68px' }}
                       >
                         <div className="w-[calc(50%-14px)] pr-4 text-right">
@@ -773,33 +774,33 @@ export default function InvitationClientPageGarden({
 
             {/* Details (Fully Animated) */}
             {detailRules.length > 0 && (
-              <div 
+              <div
                 ref={detailsContainerRef}
                 className="p-6 details-items-container"
-                style={{ 
-                  backdropFilter: 'blur(16px) saturate(120%)', 
-                  background: 'rgba(253, 251, 246, 0.65)', 
-                  border: '1px solid rgba(255, 255, 255, 0.45)', 
-                  boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                  borderRadius: '24px' 
+                style={{
+                  backdropFilter: 'blur(16px) saturate(120%)',
+                  background: 'rgba(253, 251, 246, 0.65)',
+                  border: '1px solid rgba(255, 255, 255, 0.45)',
+                  boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)',
+                  borderRadius: '24px'
                 }}
               >
                 <h3 className="text-center text-lg font-bold text-[#1B3222] mb-5">{isEn ? "Event Guidelines" : "تفاصيل تهمك"}</h3>
                 <div className={`space-y-4 relative ${isEn ? "pr-7" : "pl-7"}`}>
                   {/* Vertical track line for details rules */}
-                  <div 
-                    className={`absolute ${isEn ? "right-2.5" : "left-2.5"} top-3.5 bottom-3.5 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent`} 
+                  <div
+                    className={`absolute ${isEn ? "right-2.5" : "left-2.5"} top-3.5 bottom-3.5 w-px bg-gradient-to-b from-transparent via-[#2E5A36]/30 to-transparent`}
                   />
 
                   {detailRules.map((rule, idx) => (
                     <div key={idx} className="relative flex items-center gap-3.5 min-h-[52px] detail-item-row">
                       {/* Circle Bullet (Green, styled exactly like Template 1) */}
-                      <div 
-                        className={`absolute ${isEn ? "-right-5" : "-left-5"} w-2.5 h-2.5 rounded-full shrink-0 timeline-detail-dot`} 
-                        style={{ 
-                          top: '50%', 
-                          marginTop: '-5px' 
-                        }} 
+                      <div
+                        className={`absolute ${isEn ? "-right-5" : "-left-5"} w-2.5 h-2.5 rounded-full shrink-0 timeline-detail-dot`}
+                        style={{
+                          top: '50%',
+                          marginTop: '-5px'
+                        }}
                       />
 
                       <div className="flex items-center gap-3 flex-1 p-3 bg-white/40 border border-[#1B3222]/5 rounded-xl">
@@ -846,14 +847,14 @@ export default function InvitationClientPageGarden({
             </div>
 
             {/* RSVP Card */}
-            <div 
+            <div
               className="p-6 animate-on-scroll fade-up"
-              style={{ 
-                backdropFilter: 'blur(16px) saturate(120%)', 
-                background: 'rgba(253, 251, 246, 0.65)', 
-                border: '1px solid rgba(255, 255, 255, 0.45)', 
-                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)', 
-                borderRadius: '24px' 
+              style={{
+                backdropFilter: 'blur(16px) saturate(120%)',
+                background: 'rgba(253, 251, 246, 0.65)',
+                border: '1px solid rgba(255, 255, 255, 0.45)',
+                boxShadow: '0 8px 32px 0 rgba(27, 50, 34, 0.06)',
+                borderRadius: '24px'
               }}
             >
               <h3 className="text-center text-lg font-bold text-[#1B3222] mb-6 flex items-center justify-center gap-2">
@@ -872,7 +873,7 @@ export default function InvitationClientPageGarden({
                       ? "We are delighted by your attendance to share our wedding night. Looking forward to seeing you! 🤍"
                       : "نسعد جداً بتلبيتكم للدعوة ومشاركتنا ليلة العمر. ننتظر لقاءكم بشوق! 🤍"}
                   </p>
-                  <button 
+                  <button
                     onClick={() => setStatus('idle')}
                     className="mt-4 px-6 py-2 text-xs font-semibold rounded-full border border-[#1B3222]/15 hover:bg-[#1B3222]/5 text-[#1B3222] cursor-pointer font-cairo"
                   >
@@ -902,22 +903,20 @@ export default function InvitationClientPageGarden({
                       <button
                         type="button"
                         onClick={() => setAttendance('YES')}
-                        className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${
-                          attendance === 'YES'
+                        className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${attendance === 'YES'
                             ? 'bg-[#1B3222] text-white border-[#1B3222]'
                             : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
-                        }`}
+                          }`}
                       >
                         {isEn ? "Yes, gladly" : "نعم، بكل سرور"}
                       </button>
                       <button
                         type="button"
                         onClick={() => setAttendance('NO')}
-                        className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${
-                          attendance === 'NO'
+                        className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${attendance === 'NO'
                             ? 'bg-red-700/10 text-red-900 border-red-200'
                             : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
-                        }`}
+                          }`}
                       >
                         {isEn ? "Apologize, wishing you happiness" : "أعتذر، متمنياً لكم السعادة"}
                       </button>
@@ -984,15 +983,15 @@ export default function InvitationClientPageGarden({
 
               <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
                 {wishes.map((wish, index) => (
-                  <div 
-                    key={index} 
-                    className="p-4" 
-                    style={{ 
-                      background: 'rgba(253, 251, 246, 0.65)', 
-                      backdropFilter: 'blur(12px)', 
-                      border: '1px solid rgba(255, 255, 255, 0.45)', 
-                      borderRadius: '20px', 
-                      boxShadow: '0 4px 16px 0 rgba(27, 50, 34, 0.03)' 
+                  <div
+                    key={index}
+                    className="p-4"
+                    style={{
+                      background: 'rgba(253, 251, 246, 0.65)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.45)',
+                      borderRadius: '20px',
+                      boxShadow: '0 4px 16px 0 rgba(27, 50, 34, 0.03)'
                     }}
                   >
                     <p className="text-xs text-center leading-relaxed text-[#1B3222] font-semibold mb-1">"{wish.text}"</p>
@@ -1026,7 +1025,7 @@ export default function InvitationClientPageGarden({
               {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <p className="text-[9px] uppercase tracking-[0.25em] text-[#1B3222]/50 font-bold">
-              {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة مازوم"}
+              {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
             </p>
             {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
             <div className="h-24" />
