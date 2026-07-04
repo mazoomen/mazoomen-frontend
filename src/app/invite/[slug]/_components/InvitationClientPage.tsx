@@ -304,6 +304,7 @@ export default function InvitationClientPage({
               viewingLang={viewingLang}
               allowGuestUploads={localInvitation.allowGuestUploads !== false}
               moments={localInvitation.moments || []}
+              ownerId={localInvitation.userId || undefined}
               onMomentUploaded={(updated: InvitationData) => setLocalInvitation(updated)}
             />
           </div>

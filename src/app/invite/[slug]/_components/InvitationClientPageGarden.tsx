@@ -928,7 +928,7 @@ export default function InvitationClientPageGarden({
             )}
 
             {/* Camera Upload trigger for moments in Garden theme */}
-            {(invitation.allowGuestUploads || isOwner) && (
+            {invitation.allowGuestUploads !== false && (
               <div className="flex justify-center mt-4">
                 <label className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-[#1B3222]/15 shadow-xs backdrop-blur-md hover:bg-[#1B3222]/5 cursor-pointer bg-white/60 text-[#1B3222]">
                   <Camera className="w-4 h-4 text-[#2E5A36]" />
@@ -948,7 +948,7 @@ export default function InvitationClientPageGarden({
         </section>
 
         {/* WISHES & RSVP SECTION */}
-        <section className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
+        <section id="rsvp-section" className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               src="/videos/Untitled_design.mp4"

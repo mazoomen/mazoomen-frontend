@@ -195,7 +195,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
     }
   };
 
-  const canUpload = allowGuestUploads || isOwner;
+  const canUpload = allowGuestUploads;
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
   return (
