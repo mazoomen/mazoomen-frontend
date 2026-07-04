@@ -28,6 +28,7 @@ export interface InvitationTemplate {
 export interface InvitationData {
   id: string;
   templateId: string;
+  userId?: string | null;
   slug: string;
   languageMode?: string | null;
   eventTitle: string;
@@ -45,6 +46,10 @@ export interface InvitationData {
   musicUrl: string | null;
   eventProgram?: { time: string; title: string; titleAr?: string | null; titleEn?: string | null }[];
   eventDetails?: { text: string; textAr?: string | null; textEn?: string | null }[];
+  contactName?: string | null;
+  contactPhone?: string | null;
+  allowGuestUploads?: boolean;
+  moments?: string[];
   createdAt: string;
   template: InvitationTemplate;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Phone, Music, Camera, MapPin, Heart } from 'lucide-react';
 
 interface BottomNavbarProps {
@@ -9,38 +9,130 @@ interface BottomNavbarProps {
   setMusicPlaying: (playing: boolean) => void;
   theme?: 'gold' | 'green';
   viewingLang?: string;
+  locationUrl?: string | null;
+  onContactClick?: () => void;
 }
+
+const getYouTubeVideoId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
 
 export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   musicUrl,
   musicPlaying,
   setMusicPlaying,
   theme = 'gold',
-  viewingLang
+  viewingLang,
+  locationUrl,
+  onContactClick
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ytPlayerRef = useRef<any>(null);
+  const [ytReady, setYtReady] = useState(false);
 
+  const ytVideoId = musicUrl ? getYouTubeVideoId(musicUrl) : null;
+
+  // Cleanup native audio when switching to YouTube
   useEffect(() => {
-    const playSrc = musicUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'; // beautiful soft fallback instrumental
-    
-    if (!audioRef.current) {
-      audioRef.current = new Audio(playSrc);
-      audioRef.current.loop = true;
-    } else if (audioRef.current.src !== playSrc) {
+    if (ytVideoId && audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = new Audio(playSrc);
-      audioRef.current.loop = true;
+      audioRef.current = null;
+    }
+  }, [ytVideoId]);
+
+  // Initialize YouTube Iframe API
+  useEffect(() => {
+    if (!ytVideoId) {
+      if (ytPlayerRef.current) {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch {}
+          ytPlayerRef.current = null;
+      }
+      return;
     }
 
-    if (musicPlaying) {
-      audioRef.current.play().catch(err => {
-        console.log("Audio autoplay prevented, waiting for user click.", err);
-        setMusicPlaying(false);
+    const initPlayer = () => {
+      if (ytPlayerRef.current) return;
+      ytPlayerRef.current = new (window as any).YT.Player('yt-player-container', {
+        height: '0',
+        width: '0',
+        videoId: ytVideoId,
+        playerVars: {
+          autoplay: musicPlaying ? 1 : 0,
+          loop: 1,
+          playlist: ytVideoId,
+          controls: 0,
+        },
+        events: {
+          onReady: () => {
+            setYtReady(true);
+            if (musicPlaying) {
+              ytPlayerRef.current.playVideo();
+            }
+          },
+        },
       });
+    };
+
+    if (!(window as any).YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+      
+      (window as any).onYouTubeIframeAPIReady = () => {
+        initPlayer();
+      };
     } else {
-      audioRef.current.pause();
+      initPlayer();
     }
-  }, [musicPlaying, musicUrl, setMusicPlaying]);
+
+    return () => {
+      if (ytPlayerRef.current) {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch {}
+        ytPlayerRef.current = null;
+        setYtReady(false);
+      }
+    };
+  }, [ytVideoId]);
+
+  // Control Playback (Standard and YouTube)
+  useEffect(() => {
+    if (ytVideoId) {
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === 'function') {
+        if (musicPlaying) {
+          ytPlayerRef.current.playVideo();
+        } else {
+          ytPlayerRef.current.pauseVideo();
+        }
+      }
+    } else {
+      const playSrc = musicUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      
+      if (!audioRef.current) {
+        audioRef.current = new Audio(playSrc);
+        audioRef.current.loop = true;
+      } else if (audioRef.current.src !== playSrc) {
+        audioRef.current.pause();
+        audioRef.current = new Audio(playSrc);
+        audioRef.current.loop = true;
+      }
+
+      if (musicPlaying) {
+        audioRef.current.play().catch(err => {
+          console.log("Audio autoplay prevented, waiting for user click.", err);
+          setMusicPlaying(false);
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [musicPlaying, musicUrl, ytVideoId, setMusicPlaying]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -48,6 +140,12 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
+      }
+      if (ytPlayerRef.current) {
+        try {
+          ytPlayerRef.current.destroy();
+        } catch {}
+        ytPlayerRef.current = null;
       }
     };
   }, []);
@@ -100,9 +198,14 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
         boxShadow: colors.shadow,
       }}
     >
+      {/* Hidden YouTube player container */}
+      {ytVideoId && (
+        <div id="yt-player-container" style={{ width: 0, height: 0, opacity: 0, pointerEvents: 'none', position: 'absolute' }} />
+      )}
+
       {/* Contact */}
       <button 
-        onClick={() => window.open('https://wa.me/966500000000', '_blank')} 
+        onClick={onContactClick} 
         className="flex flex-col items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
       >
         <span 
@@ -148,7 +251,13 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
 
       {/* Location */}
       <button 
-        onClick={() => scrollToSection('location-section')}
+        onClick={() => {
+          if (locationUrl) {
+            window.open(locationUrl, '_blank');
+          } else {
+            scrollToSection('location-section');
+          }
+        }}
         className="flex flex-col items-center gap-1 cursor-pointer bg-transparent border-none outline-none"
       >
         <span 

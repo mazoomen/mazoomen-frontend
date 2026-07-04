@@ -43,6 +43,7 @@ interface OrdersTableProps {
   orders: Order[];
   onStatusUpdated: (orderId: string, newStatus: "APPROVED" | "REJECTED") => void;
   onLinkStatusUpdated?: (invitationId: string, isActive: boolean) => void;
+  onEditInvitation?: (purchase: any) => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -51,6 +52,7 @@ export default function OrdersTable({
   orders,
   onStatusUpdated,
   onLinkStatusUpdated,
+  onEditInvitation,
 }: OrdersTableProps) {
   const { lang } = useLanguage();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -388,6 +390,17 @@ export default function OrdersTable({
                             )}
                           </button>
                         </div>
+                      ) : order.status === "APPROVED" && order.purchase?.invitation ? (
+                        <button
+                          onClick={() => {
+                            if (onEditInvitation) {
+                              onEditInvitation(order.purchase);
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 rounded bg-[#0B1528] px-2.5 py-1 text-[10px] font-bold text-[#E5C38B] hover:bg-[#15243F] transition-colors select-none cursor-pointer"
+                        >
+                          {lang === "ar" ? "تعديل الدعوة" : "Edit Invitation"}
+                        </button>
                       ) : (
                         <span className="text-neutral-400 font-sans">—</span>
                       )}

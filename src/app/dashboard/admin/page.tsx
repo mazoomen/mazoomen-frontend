@@ -13,6 +13,7 @@ import {
   type Order,
   type User,
 } from "./_components";
+import InvitationEditor from "../client/_components/InvitationEditor";
 
 type LoadStatus = "loading" | "loaded" | "error";
 type TabType = "overview" | "users" | "requests" | "templates";
@@ -37,6 +38,10 @@ export default function AdminDashboardPage() {
   // ── Template Add/Edit States ─────────────────────────────────────────
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isAddingTemplate, setIsAddingTemplate] = useState(false);
+
+  // ── Admin Edit Invitation States ────────────────────────────────────
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<any | null>(null);
 
   // ── User Add/Edit Modal States ───────────────────────────────────────
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -695,6 +700,10 @@ export default function AdminDashboardPage() {
                     orders={orders}
                     onStatusUpdated={handleStatusUpdated}
                     onLinkStatusUpdated={handleLinkStatusUpdated}
+                    onEditInvitation={(purchase) => {
+                      setEditingPurchase(purchase);
+                      setIsEditorOpen(true);
+                    }}
                   />
                 </div>
               )}
@@ -1030,6 +1039,38 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Invitation Editor Overlay Modal (Admin Edit Popup) ───── */}
+      {isEditorOpen && editingPurchase && (
+        <div className="fixed inset-0 bg-[#2D3142]/45 backdrop-blur-sm z-50 overflow-y-auto p-4 flex items-center justify-center">
+          <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-xl w-full p-8 shadow-2xl relative my-8 mx-auto text-neutral-800">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setIsEditorOpen(false);
+                setEditingPurchase(null);
+              }}
+              className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Modal Body */}
+            <InvitationEditor
+              purchaseId={editingPurchase.id}
+              invitation={editingPurchase.invitation}
+              templateTitle={editingPurchase.template?.title || ""}
+              onSaved={() => {
+                setIsEditorOpen(false);
+                setEditingPurchase(null);
+                fetchDashboardData(); // Refresh admin dashboard tables
+              }}
+            />
           </div>
         </div>
       )}

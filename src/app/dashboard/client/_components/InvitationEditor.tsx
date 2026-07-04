@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -94,9 +94,18 @@ export default function InvitationEditor({
   const [welcomeTextAr, setWelcomeTextAr] = useState(invitation?.welcomeTextAr || (invitation?.welcomeText && /[\u0600-\u06FF]/.test(invitation.welcomeText) ? invitation.welcomeText : ""));
   const [welcomeTextEn, setWelcomeTextEn] = useState(invitation?.welcomeTextEn || (invitation?.welcomeText && !/[\u0600-\u06FF]/.test(invitation.welcomeText) ? invitation.welcomeText : ""));
   const [images, setImages] = useState<string[]>(
-    invitation?.images?.length ? invitation.images : [""]
+    invitation?.images?.length ? invitation.images : []
   );
   const [musicUrl, setMusicUrl] = useState(invitation?.musicUrl || "");
+
+  // ── New Fields for WhatsApp & Moments settings ──
+  const [contactName, setContactName] = useState(invitation?.contactName || "");
+  const [contactPhone, setContactPhone] = useState(invitation?.contactPhone || "");
+  const [allowGuestUploads, setAllowGuestUploads] = useState(invitation?.allowGuestUploads !== false);
+
+  // Upload loaders
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [isAudioUploading, setIsAudioUploading] = useState(false);
 
   // ── Event Program (Timeline) State ──────────────────────────────────
   const [eventProgram, setEventProgram] = useState<{ time: string; titleAr: string; titleEn: string }[]>(() => {
@@ -124,16 +133,46 @@ export default function InvitationEditor({
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ── Manage Dynamic Image URLs ────────────────────────────────────────
-  const addImageField = () => setImages([...images, ""]);
-  const removeImageField = (index: number) => {
-    if (images.length <= 1) return;
-    setImages(images.filter((_, i) => i !== index));
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImageUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await api.post<{ url: string }>("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setImages(prev => [...prev.filter(url => url.trim() !== ""), res.data.url]);
+    } catch (err) {
+      console.error(err);
+      alert(isRtl ? "فشل رفع الصورة." : "Image upload failed.");
+    } finally {
+      setIsImageUploading(false);
+    }
   };
-  const updateImage = (index: number, value: string) => {
-    const updated = [...images];
-    updated[index] = value;
-    setImages(updated);
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsAudioUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await api.post<{ url: string }>("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setMusicUrl(res.data.url);
+    } catch (err) {
+      console.error(err);
+      alert(isRtl ? "فشل رفع الملف الصوتي." : "Audio upload failed.");
+    } finally {
+      setIsAudioUploading(false);
+    }
+  };
+
+  const removeImageField = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
   };
 
   // ── Manage Dynamic Event Program ─────────────────────────────────────
@@ -210,6 +249,9 @@ export default function InvitationEditor({
       musicUrl: musicUrl.trim() || undefined,
       eventProgram: finalProgram,
       eventDetails: filteredDetails,
+      contactName: contactName.trim() || undefined,
+      contactPhone: contactPhone.trim() || undefined,
+      allowGuestUploads,
     };
 
     try {
@@ -253,6 +295,8 @@ export default function InvitationEditor({
     if (val === "ar") setEditingLang("ar");
     else if (val === "en") setEditingLang("en");
   };
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
@@ -366,7 +410,7 @@ export default function InvitationEditor({
             className="w-full bg-white px-5 py-2.5 text-xs outline-none focus:border-black transition-all text-neutral-800 placeholder-neutral-400"
           />
         </div>
-        <p className="mt-1.5 text-[9px] text-neutral-400 leading-normal">
+        <p className="mt-1.5 text-[9px] text-neutral-400 leading-normal font-sans">
           {t("Slug hint")}
         </p>
       </div>
@@ -432,62 +476,118 @@ export default function InvitationEditor({
         />
       </div>
 
-      {/* Background Sound Music URL */}
+      {/* Background Sound Music URL & File Upload */}
       <div>
-        <label className={labelClass}>{t("Background Music URL (Optional)")}</label>
-        <input
-          type="url"
-          value={musicUrl}
-          onChange={(e) => setMusicUrl(e.target.value)}
-          placeholder="https://cdn.example.com/audio/nasheed.mp3"
-          disabled={status === "saving"}
-          className={inputClass}
-          dir="ltr"
-        />
+        <label className={labelClass}>{isRtl ? "موسيقى الخلفية (رابط يوتيوب أو ملف صوتي)" : "Background Music (YouTube Link or Audio File)"}</label>
+        <div className="flex gap-2 items-center">
+          <input
+            type="text"
+            value={musicUrl}
+            onChange={(e) => setMusicUrl(e.target.value)}
+            placeholder={isRtl ? "رابط يوتيوب أو ملف صوتي" : "https://youtube.com/watch?v=... or audio URL"}
+            disabled={status === "saving" || isAudioUploading}
+            className={inputClass}
+            dir="ltr"
+          />
+          <label className="flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#E6E2DA] bg-[#FAF8F5] hover:bg-neutral-50 cursor-pointer text-xs shrink-0 select-none text-neutral-600 font-sans font-semibold transition-colors">
+            <span>{isAudioUploading ? (isRtl ? "جاري الرفع..." : "Uploading...") : (isRtl ? "رفع ملف" : "Upload File")}</span>
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={handleAudioUpload}
+              className="hidden"
+              disabled={status === "saving" || isAudioUploading}
+            />
+          </label>
+        </div>
       </div>
 
-      {/* Gallery Images */}
+      {/* Dynamic Image Photo Gallery Uploader */}
       <div>
-        <label className={labelClass}>{t("Gallery Photo URLs (Optional)")}</label>
-        <div className={`space-y-2 max-h-36 overflow-y-auto ${isRtl ? "pl-1" : "pr-1"}`}>
-          {images.map((url, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => updateImage(i, e.target.value)}
-                placeholder={`${t("Photo URL #")}${i + 1}`}
-                disabled={status === "saving"}
-                className={inputClass}
-                dir="ltr"
-              />
-              {images.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeImageField(i)}
-                  className={removeBtnClass}
-                  aria-label={t("Remove")}
-                >
-                  ✕
-                </button>
-              )}
+        <label className={labelClass}>{isRtl ? "صور معرض بطاقة الدعوة" : "Invitation Gallery Photos"}</label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2">
+          {images.filter(url => url.trim() !== "").map((url, i) => (
+            <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-neutral-200 relative group bg-white flex items-center justify-center">
+              <img src={url.startsWith('/public') ? baseUrl + url : url} alt="Gallery thumbnail" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImageField(i)}
+                className="absolute top-2 right-2 bg-black/60 hover:bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
           ))}
+          
+          {/* Upload Card button */}
+          <label className="aspect-square rounded-2xl border border-dashed border-neutral-300 hover:border-black flex flex-col items-center justify-center cursor-pointer transition-colors bg-[#FAF8F5] text-neutral-400 select-none">
+            <span className="text-xl font-light">{isImageUploading ? "..." : "+"}</span>
+            <span className="text-[10px] mt-1 font-semibold font-sans">{isImageUploading ? (isRtl ? "رفع..." : "Uploading...") : (isRtl ? "رفع صورة" : "Upload Photo")}</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              disabled={status === "saving" || isImageUploading}
+            />
+          </label>
         </div>
-        <button
-          type="button"
-          onClick={addImageField}
-          disabled={status === "saving"}
-          className={addBtnClass}
-        >
-          {t("+ Add another photo")}
-        </button>
+      </div>
+
+      {/* WhatsApp Contact & Guest Upload Permissions Section */}
+      <div className="border-t border-[#F4F1EA] pt-4 space-y-4">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 font-sans">
+          {isRtl ? "إعدادات التواصل وصور الضيوف" : "WhatsApp Contact & Guest Permissions"}
+        </h4>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass}>
+              {isRtl ? "اسم مسؤول التواصل (مثل: أخو العريس)" : "Contact Person Name (e.g. Groom's Brother)"}
+            </label>
+            <input
+              type="text"
+              value={contactName}
+              onChange={(e) => setContactName(e.target.value)}
+              placeholder={isRtl ? "مثال: أخو العريس" : "e.g. Groom's Brother"}
+              disabled={status === "saving"}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>
+              {isRtl ? "رقم جوال واتساب (مع رمز الدولة)" : "WhatsApp Phone Number (with country code)"}
+            </label>
+            <input
+              type="text"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              placeholder="e.g. +966500000001"
+              disabled={status === "saving"}
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <input
+            id="allow-guest-uploads"
+            type="checkbox"
+            checked={allowGuestUploads}
+            onChange={(e) => setAllowGuestUploads(e.target.checked)}
+            disabled={status === "saving"}
+            className="w-4.5 h-4.5 rounded border-neutral-300 text-black focus:ring-black accent-black cursor-pointer"
+          />
+          <label htmlFor="allow-guest-uploads" className="text-xs font-semibold text-neutral-700 cursor-pointer select-none font-sans">
+            {isRtl ? "السماح للضيوف بالتقاط ورفع الصور في قسم اللحظات" : "Allow guests to capture and upload photos in the Moments section"}
+          </label>
+        </div>
       </div>
 
       {/* Event Program (Timeline) */}
-      <div>
+      <div className="border-t border-[#F4F1EA] pt-4">
         <label className={labelClass}>{t("Event Program (Optional)")}</label>
-        <p className="mb-2 text-[9px] text-neutral-400 leading-normal">
+        <p className="mb-2 text-[9px] text-neutral-400 leading-normal font-sans">
           {t("Program hint")}
         </p>
         <div className={`space-y-2 max-h-48 overflow-y-auto ${isRtl ? "pl-1" : "pr-1"}`}>
@@ -537,7 +637,7 @@ export default function InvitationEditor({
       {/* Event Details / Guidelines */}
       <div>
         <label className={labelClass}>{t("Event Details (Optional)")}</label>
-        <p className="mb-2 text-[9px] text-neutral-400 leading-normal">
+        <p className="mb-2 text-[9px] text-neutral-400 leading-normal font-sans">
           {t("Details hint")}
         </p>
         <div className={`space-y-2 max-h-36 overflow-y-auto ${isRtl ? "pl-1" : "pr-1"}`}>
@@ -590,8 +690,8 @@ export default function InvitationEditor({
         ) : (
           <button
             type="submit"
-            disabled={status === "saving"}
-            className="px-8 py-3 text-xs font-bold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#15243F] rounded-full transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+            disabled={status === "saving" || isImageUploading || isAudioUploading}
+            className="px-8 py-3 text-xs font-bold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#15243F] rounded-full transition-all shadow-sm flex items-center gap-2 cursor-pointer font-sans"
           >
             {status === "saving" ? (
               <>

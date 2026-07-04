@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Phone } from 'lucide-react';
 import type { InvitationData } from '@/types/invitation';
 import api from '@/lib/api';
 import {
@@ -34,6 +35,7 @@ export default function InvitationClientPage({
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [snowflakes, setSnowflakes] = useState<{ size: number; left: number; delay: string; duration: number }[]>([]);
   const [viewingLang, setViewingLang] = useState<"ar" | "en">("ar");
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     if (localInvitation) {
@@ -199,6 +201,8 @@ export default function InvitationClientPage({
           setMusicPlaying={setMusicPlaying}
           theme="gold"
           viewingLang={viewingLang}
+          locationUrl={localInvitation.locationUrl}
+          onContactClick={() => setShowContactModal(true)}
         />
       )}
 
@@ -298,6 +302,9 @@ export default function InvitationClientPage({
               images={localInvitation.images}
               welcomeText={welcomeText}
               viewingLang={viewingLang}
+              allowGuestUploads={localInvitation.allowGuestUploads !== false}
+              moments={localInvitation.moments || []}
+              onMomentUploaded={(updated: InvitationData) => setLocalInvitation(updated)}
             />
           </div>
         </section>
@@ -332,6 +339,58 @@ export default function InvitationClientPage({
           </div>
         </section>
       </div>
+
+      {/* WhatsApp Custom Contact Modal Popup */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+          <div 
+            className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[28px] max-w-sm w-full p-6 shadow-2xl relative text-center"
+            dir={isEn ? "ltr" : "rtl"}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowContactModal(false)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-black transition-colors cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="w-12 h-12 rounded-full bg-[#128C7E]/10 flex items-center justify-center mx-auto mb-4 text-[#128C7E]">
+              <Phone className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-lg font-bold text-black mb-1 font-sans">
+              {localInvitation.contactName || (isEn ? "WhatsApp Contact" : "للتواصل والاستفسار")}
+            </h3>
+            <p className="text-sm text-neutral-500 font-semibold mb-6 font-sans">
+              {localInvitation.contactPhone || "+966 50 000 0001"}
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <a
+                href={`tel:${localInvitation.contactPhone || "+966500000001"}`}
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-[#EBE7DF] hover:bg-neutral-50 text-black text-xs font-bold transition-all shadow-xs cursor-pointer font-sans"
+              >
+                <Phone className="w-4 h-4 text-[#ac8c60]" />
+                {isEn ? "Call" : "اتصال"}
+              </a>
+              <a
+                href={`https://wa.me/${(localInvitation.contactPhone || "+966500000001").replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#128C7E] text-white hover:bg-[#075e54] text-xs font-bold transition-all shadow-md cursor-pointer font-sans"
+              >
+                <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.725 1.451 5.485.002 9.948-4.463 9.95-9.953.002-2.66-1.033-5.16-2.907-7.037C16.542 1.737 14.045.7 11.4.7 5.922.7 1.458 5.163 1.456 10.648c-.001 1.638.428 3.235 1.242 4.636l-.994 3.63 3.72-.975z" />
+                </svg>
+                {isEn ? "WhatsApp" : "واتساب"}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         @keyframes snowfall {

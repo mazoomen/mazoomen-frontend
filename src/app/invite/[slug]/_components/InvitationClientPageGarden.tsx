@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { InvitationData } from '@/types/invitation';
-import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2 } from 'lucide-react';
+import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
 import type { CreateRsvpPayload } from '@/types/invitation';
 import { EnvelopeOverlay, BottomNavbar } from './index';
@@ -45,18 +45,38 @@ const defaultWishes: Wish[] = [
 ];
 
 export default function InvitationClientPageGarden({
-  invitation,
+  invitation: initialInvitation,
   slug,
   isDeactivatedInitial = false,
   viewingLangProp,
   setViewingLangProp
 }: InvitationClientPageGardenProps) {
   const isEn = viewingLangProp === "en";
+  const [invitation, setInvitation] = useState<InvitationData>(initialInvitation);
   const [isOpen, setIsOpen] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Close lightbox on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedImage(null);
+      }
+    };
+    if (selectedImage) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedImage]);
 
   const defaultWishesAr: Wish[] = [
     { name: 'محمد العلي', text: 'ألف مبروك! نسعد بحضور حفلكم الكريم.' },
@@ -97,6 +117,52 @@ export default function InvitationClientPageGarden({
   const handleOpenInvitation = () => {
     setIsOpen(true);
     setMusicPlaying(true);
+  };
+
+  // Sync prop updates if they change
+  useEffect(() => {
+    setInvitation(initialInvitation);
+  }, [initialInvitation]);
+
+  // Check if owner is logged in
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user");
+      if (stored && invitation.userId) {
+        try {
+          const user = JSON.parse(stored);
+          if (user && user.id === invitation.userId) {
+            setIsOwner(true);
+          }
+        } catch {}
+      }
+    }
+  }, [invitation.userId]);
+
+  const handleCameraUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const momentUrl = uploadRes.data.url;
+
+      const saveRes = await api.post(`/invitations/${invitation.id}/moments`, { url: momentUrl });
+      if (saveRes.data) {
+        setInvitation(saveRes.data);
+      }
+    } catch (err) {
+      console.error("Camera upload failed:", err);
+      alert(isEn ? "Failed to upload photo. Please try again." : "فشل رفع الصورة. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   useEffect(() => {
@@ -519,6 +585,8 @@ export default function InvitationClientPageGarden({
           setMusicPlaying={setMusicPlaying}
           theme="green"
           viewingLang={isEn ? "en" : "ar"}
+          locationUrl={invitation.locationUrl}
+          onContactClick={() => setShowContactModal(true)}
         />
       )}
 
@@ -817,6 +885,68 @@ export default function InvitationClientPageGarden({
           </div>
         </section>
 
+        {/* MOMENTS GALLERY SECTION (Watercolor Garden Theme) */}
+        <section id="moments-section" className="relative min-h-[400px] py-12 px-6 flex flex-col justify-center">
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <video
+              src="/videos/Untitled_design.mp4"
+              autoPlay
+              loop
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
+            />
+            <div className="absolute inset-0 bg-[#FAF9F6]/35" />
+          </div>
+
+          <div className="relative z-10 w-full max-w-lg mx-auto space-y-6">
+            <h3 className="text-center text-lg font-bold text-[#1B3222] font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
+            
+            {invitation.moments && invitation.moments.length > 0 ? (
+              <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+                <div className="grid grid-cols-2 gap-3">
+                  {invitation.moments.map((src, index) => {
+                    const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000') + src : src;
+                    return (
+                      <div 
+                        key={index} 
+                        onClick={() => setSelectedImage(fullUrl)}
+                        className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform" 
+                        style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
+                      >
+                        <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#1B3222]/60 border border-dashed border-[#1B3222]/20 rounded-[22px] font-sans text-xs bg-white/30 backdrop-blur-md">
+                {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته!"}
+              </div>
+            )}
+
+            {/* Camera Upload trigger for moments in Garden theme */}
+            {(invitation.allowGuestUploads || isOwner) && (
+              <div className="flex justify-center mt-4">
+                <label className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-[#1B3222]/15 shadow-xs backdrop-blur-md hover:bg-[#1B3222]/5 cursor-pointer bg-white/60 text-[#1B3222]">
+                  <Camera className="w-4 h-4 text-[#2E5A36]" />
+                  {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Capture Moment" : "شاركنا لحظة")}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleCameraUpload}
+                    disabled={isUploading}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* WISHES & RSVP SECTION */}
         <section className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
@@ -1031,6 +1161,106 @@ export default function InvitationClientPageGarden({
             <div className="h-24" />
           </div>
         </section>
+      {/* WhatsApp Custom Contact Modal Popup */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+          <div 
+            className="bg-[#FAF8F5] border border-[#2E5A36]/15 rounded-[28px] max-w-sm w-full p-6 shadow-2xl relative text-center"
+            dir={isEn ? "ltr" : "rtl"}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowContactModal(false)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-black transition-colors cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            <div className="w-12 h-12 rounded-full bg-[#128C7E]/10 flex items-center justify-center mx-auto mb-4 text-[#128C7E]">
+              <Phone className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-lg font-bold text-[#1B3222] mb-1 font-sans">
+              {invitation.contactName || (isEn ? "WhatsApp Contact" : "للتواصل والاستفسار")}
+            </h3>
+            <p className="text-sm text-[#2E5A36] font-semibold mb-6 font-sans">
+              {invitation.contactPhone || "+966 50 000 0001"}
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <a
+                href={`tel:${invitation.contactPhone || "+966500000001"}`}
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-[#EBE7DF] hover:bg-neutral-50 text-black text-xs font-bold transition-all shadow-xs cursor-pointer font-sans"
+              >
+                <Phone className="w-4 h-4 text-[#2E5A36]" />
+                {isEn ? "Call" : "اتصال"}
+              </a>
+              <a
+                href={`https://wa.me/${(invitation.contactPhone || "+966500000001").replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#128C7E] text-white hover:bg-[#075e54] text-xs font-bold transition-all shadow-md cursor-pointer font-sans"
+              >
+                <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.725 1.451 5.485.002 9.948-4.463 9.95-9.953.002-2.66-1.033-5.16-2.907-7.037C16.542 1.737 14.045.7 11.4.7 5.922.7 1.458 5.163 1.456 10.648c-.001 1.638.428 3.235 1.242 4.636l-.994 3.63 3.72-.975z" />
+                </svg>
+                {isEn ? "WhatsApp" : "واتساب"}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity duration-300"
+          onClick={() => setSelectedImage(null)}
+        >
+          {/* Close button */}
+          <button 
+            className="absolute top-6 right-6 z-[100000] p-2 rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            onClick={() => setSelectedImage(null)}
+            aria-label="Close image viewer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          
+          {/* Image Container */}
+          <div 
+            className="relative max-w-[90%] max-h-[85%] flex items-center justify-center animate-fade-in"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+          >
+            <img 
+              src={selectedImage} 
+              alt="Zoomed preview" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10 select-none animate-scale-up"
+            />
+          </div>
+
+          <style jsx>{`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes scaleUp {
+              from { transform: scale(0.95); opacity: 0; }
+              to { transform: scale(1); opacity: 1; }
+            }
+            .animate-fade-in {
+              animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            .animate-scale-up {
+              animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            }
+            .no-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+        </div>
+      )}
       </div>
     </main>
   );
