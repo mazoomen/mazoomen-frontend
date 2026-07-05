@@ -128,6 +128,18 @@ export default function Home() {
         contactPhone: contactPhone.trim(),
         languageMode: purchaseLanguageMode
       });
+
+      // Synchronize phone number to localStorage user object if it was updated
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (!user.phoneNumber || user.phoneNumber.trim() === "") {
+            user.phoneNumber = contactPhone.trim();
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+        } catch {}
+      }
+
       setCheckoutSuccess(true);
       setTimeout(() => {
         setBuyingTemplate(null);
@@ -675,7 +687,7 @@ export default function Home() {
         </div>
 
         <div className="max-w-[1700px] mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium">
-          <p>&copy; Copyright - 2023 Mazoom. All rights reserved.</p>
+          <p>&copy; Copyright - 2026 Mazoom. All rights reserved.</p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-black transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-black transition-colors">Terms of Service</a>

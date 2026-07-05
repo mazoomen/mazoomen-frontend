@@ -16,7 +16,11 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+
+  const hasGoogleClientId =
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
   // Login inputs
   const [loginEmail, setLoginEmail] = useState("");
@@ -39,6 +43,106 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       }, 0);
     }
   }, [isOpen, initialMode]);
+
+  useEffect(() => {
+    if (isOpen && typeof window !== "undefined") {
+      const existingScript = document.getElementById("google-gsi-script");
+      if (existingScript) {
+        existingScript.remove();
+      }
+
+      const script = document.createElement("script");
+      script.src = `https://accounts.google.com/gsi/client?hl=${lang}`;
+      script.id = "google-gsi-script";
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+
+      script.onload = () => {
+        initializeGoogleGSI();
+      };
+    }
+  }, [isOpen, authMode, lang]);
+
+  const initializeGoogleGSI = () => {
+    const win = window as any;
+    if (typeof window === "undefined" || !win.google) return;
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      return;
+    }
+
+    try {
+      win.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleSignInResponse,
+      });
+
+      const btnEl = document.getElementById("google-signin-btn");
+      if (btnEl) {
+        win.google.accounts.id.renderButton(btnEl, {
+          theme: "outline",
+          size: "large",
+          width: 320,
+          text: "continue_with",
+        });
+      }
+    } catch (e) {
+      console.error("Failed to initialize Google GSI", e);
+    }
+  };
+
+  const handleGoogleSignInResponse = async (response: any) => {
+    const token = response.credential;
+    if (!token) return;
+
+    setAuthSubmitting(true);
+    setAuthError("");
+    try {
+      const res = await api.post("/auth/google", { token });
+      const { accessToken, user } = res.data;
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
+      
+      onClose();
+      window.location.href = user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
+    } catch (err) {
+      console.error(err);
+      setAuthError(t("Google Sign-In failed. Please try again."));
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  const handleGoogleSimulation = async () => {
+    const emailInput = prompt(t("Enter simulated Google Email:"), "googleuser@gmail.com");
+    if (!emailInput) return;
+    const nameInput = prompt(t("Enter simulated Google Name:"), "Google User");
+    if (!nameInput) return;
+
+    const parts = nameInput.trim().split(" ");
+    const firstName = parts[0] || "Google";
+    const lastName = parts.slice(1).join(" ") || "User";
+
+    setAuthSubmitting(true);
+    setAuthError("");
+    try {
+      const mockToken = `mock_${emailInput.trim()}_${firstName}_${lastName}`;
+      const res = await api.post("/auth/google", { token: mockToken });
+      const { accessToken, user } = res.data;
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
+      
+      onClose();
+      window.location.href = user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
+    } catch (err: any) {
+      console.error(err);
+      setAuthError(err.response?.data?.message || t("Google Sign-In failed. Please try again."));
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -315,6 +419,33 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                 t("Login")
               )}
             </button>
+
+            {/* Google Login Section */}
+            <div className="flex items-center my-1 w-full">
+              <div className="flex-1 h-px bg-neutral-200"></div>
+              <span className="px-3 text-[10px] text-neutral-400 font-sans uppercase tracking-wider">{t("or")}</span>
+              <div className="flex-1 h-px bg-neutral-200"></div>
+            </div>
+
+            {hasGoogleClientId ? (
+              <div className="w-full flex justify-center mt-2">
+                <div id="google-signin-btn"></div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleGoogleSimulation}
+                className="w-full border border-[#E6E2DA] bg-white hover:bg-neutral-50 text-neutral-700 font-semibold py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer h-10 mt-2"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#EA4335"
+                    d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.095-5.122 4.095-3.328 0-6.03-2.701-6.03-6.03s2.702-6.03 6.03-6.03c1.524 0 2.91.564 3.978 1.488l3.12-3.12C18.912 2.688 15.783 1.5 12.24 1.5 6.308 1.5 1.5 6.308 1.5 12.24s4.808 10.74 10.74 10.74c5.94 0 11.233-4.269 11.233-10.74 0-.726-.08-1.422-.227-2.083H12.24v.128Z"
+                  />
+                </svg>
+                <span>{lang === "ar" ? "المواصلة باستخدام Google" : "Continue with Google"}</span>
+              </button>
+            )}
           </form>
         ) : (
           <form onSubmit={handleRegisterSubmit} className="w-full flex flex-col">
@@ -431,6 +562,33 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                 t("Register")
               )}
             </button>
+
+            {/* Google Register Section */}
+            <div className="flex items-center my-1 w-full">
+              <div className="flex-1 h-px bg-neutral-200"></div>
+              <span className="px-3 text-[10px] text-neutral-400 font-sans uppercase tracking-wider">{t("or")}</span>
+              <div className="flex-1 h-px bg-neutral-200"></div>
+            </div>
+
+            {hasGoogleClientId ? (
+              <div className="w-full flex justify-center mt-2">
+                <div id="google-signin-btn"></div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleGoogleSimulation}
+                className="w-full border border-[#E6E2DA] bg-white hover:bg-neutral-50 text-neutral-700 font-semibold py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer h-10 mt-2"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#EA4335"
+                    d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.095-5.122 4.095-3.328 0-6.03-2.701-6.03-6.03s2.702-6.03 6.03-6.03c1.524 0 2.91.564 3.978 1.488l3.12-3.12C18.912 2.688 15.783 1.5 12.24 1.5 6.308 1.5 1.5 6.308 1.5 12.24s4.808 10.74 10.74 10.74c5.94 0 11.233-4.269 11.233-10.74 0-.726-.08-1.422-.227-2.083H12.24v.128Z"
+                  />
+                </svg>
+                <span>{lang === "ar" ? "المواصلة باستخدام Google" : "Continue with Google"}</span>
+              </button>
+            )}
           </form>
         )}
       </div>

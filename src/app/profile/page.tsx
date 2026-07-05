@@ -13,7 +13,7 @@ interface UserProfile {
   role: "ADMIN" | "CLIENT";
   firstName: string;
   lastName: string;
-  phoneNumber: string;
+  phoneNumber?: string | null;
   createdAt: string;
 }
 
@@ -60,7 +60,7 @@ export default function ProfilePage() {
         setFirstName(res.data.firstName);
         setLastName(res.data.lastName);
         setEmail(res.data.email);
-        setPhoneNumber(res.data.phoneNumber);
+        setPhoneNumber(res.data.phoneNumber || "");
         setError(null);
       } catch (err) {
         console.error("Error fetching user profile:", err);
@@ -112,7 +112,7 @@ export default function ProfilePage() {
       setFirstName(updatedProfile.firstName);
       setLastName(updatedProfile.lastName);
       setEmail(updatedProfile.email);
-      setPhoneNumber(updatedProfile.phoneNumber);
+      setPhoneNumber(updatedProfile.phoneNumber || "");
       setPassword(""); // Clear password field
 
       // Synchronize update back to user in header & local storage
