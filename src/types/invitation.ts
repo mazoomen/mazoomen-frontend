@@ -52,6 +52,7 @@ export interface InvitationData {
   moments?: string[];
   createdAt: string;
   template: InvitationTemplate;
+  wishes?: { name: string; text: string }[];
 }
 
 

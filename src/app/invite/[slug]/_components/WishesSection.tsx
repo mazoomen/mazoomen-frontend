@@ -10,20 +10,6 @@ interface Wish {
   text: string;
 }
 
-const defaultWishesAr: Wish[] = [
-  { name: 'محمد العلي', text: 'ألف مبروك! نسعد بحضور حفلكم الكريم.' },
-  { name: 'سارة خالد', text: 'بارك الله لكما وبارك عليكما وجمع بينكما في خير 🤍' },
-  { name: 'أحمد وندى', text: 'الله يتمم لكم على خير يا رب، فرحنا لكم من قلب.' },
-  { name: 'عبدالله السعد', text: 'دعواتنا لكم بحياة سعيدة ومباركة.' }
-];
-
-const defaultWishesEn: Wish[] = [
-  { name: 'John Doe', text: 'Congratulations! Wish you a happy marriage.' },
-  { name: 'Sarah & Michael', text: 'May Allah bless you both and join you in goodness 🤍' },
-  { name: 'Emma Watson', text: 'So happy for you two, wishing you all the best.' },
-  { name: 'Alex Cooper', text: 'Wishing you a lifetime of love and happiness.' }
-];
-
 interface WishesSectionProps {
   invitationId: string;
   eventTitle: string;
@@ -34,6 +20,7 @@ interface WishesSectionProps {
   moments: string[];
   ownerId?: string;
   onMomentUploaded?: (updatedInvitation: any) => void;
+  wishes?: Wish[];
 }
 
 export const WishesSection: React.FC<WishesSectionProps> = ({
@@ -45,10 +32,11 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   allowGuestUploads,
   moments: initialMoments = [],
   ownerId,
-  onMomentUploaded
+  onMomentUploaded,
+  wishes: initialWishes = []
 }) => {
   const isEn = viewingLang === "en";
-  const [wishes, setWishes] = useState<Wish[]>(isEn ? defaultWishesEn : defaultWishesAr);
+  const [wishes, setWishes] = useState<Wish[]>(initialWishes);
   const [moments, setMoments] = useState<string[]>(initialMoments);
   const [isUploading, setIsUploading] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -70,8 +58,8 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   }, [selectedImage]);
 
   useEffect(() => {
-    setWishes(isEn ? defaultWishesEn : defaultWishesAr);
-  }, [viewingLang]);
+    setWishes(initialWishes);
+  }, [initialWishes]);
 
   useEffect(() => {
     setMoments(initialMoments);

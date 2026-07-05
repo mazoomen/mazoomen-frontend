@@ -15,6 +15,7 @@ export default function Home() {
   const router = useRouter();
   const { lang, t } = useLanguage();
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +75,17 @@ export default function Home() {
       }
     }
 
+    async function fetchTestimonials() {
+      try {
+        const res = await api.get("/testimonials");
+        setTestimonials(res.data || []);
+      } catch (err) {
+        console.error("Error fetching testimonials:", err);
+      }
+    }
+
     fetchTemplates();
+    fetchTestimonials();
   }, []);
 
   useEffect(() => {
@@ -462,7 +473,7 @@ export default function Home() {
             <h2 className="text-2xl font-serif font-medium text-neutral-800">{t("How It Works")}</h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
             {/* Couple Illustration */}
             <div className="flex justify-center items-center bg-[#FAF8F5] border border-[#E9E4DC] rounded-3xl p-6 shadow-sm h-48 w-full max-w-[240px] mx-auto lg:mx-0 shrink-0">
               <svg className="w-32 h-32 text-[#B89C72]" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -494,12 +505,12 @@ export default function Home() {
             <div className="flex flex-col items-center text-center gap-3">
               <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
                 <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                 </svg>
               </div>
-              <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Customize Online")}</h3>
+              <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Request to Unlock")}</h3>
               <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
-                {t("Customize details like date, coordinates, texts, and music instantly on your dashboard.")}
+                {t("Submit a quick request with your contact info. Once approved by our team, your template becomes fully editable.")}
               </p>
             </div>
 
@@ -507,12 +518,25 @@ export default function Home() {
             <div className="flex flex-col items-center text-center gap-3">
               <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
                 <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.83 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                 </svg>
               </div>
-              <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Download & Share")}</h3>
+              <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Customize Details")}</h3>
               <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
-                {t("Download your invitation image or share the interactive guest link for online RSVP tracking.")}
+                {t("Personalize event date, location coordinates, program timeline, background music, and guidelines on your dashboard.")}
+              </p>
+            </div>
+
+            {/* Step 4 */}
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
+                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                </svg>
+              </div>
+              <h3 className="font-sans font-bold text-sm text-neutral-800">{t("Share & Track RSVPs")}</h3>
+              <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
+                {t("Share your interactive invitation link to gather real-time RSVPs, beautiful wishes, and photos from your guests.")}
               </p>
             </div>
           </div>
@@ -520,81 +544,65 @@ export default function Home() {
       </section>
 
       {/* ── TESTIMONIALS SECTION ───────────────────────────────────── */}
-      <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
-        <div className="max-w-[1700px] mx-auto flex flex-col gap-10 relative">
-          <div className="text-center flex flex-col gap-1">
-            <h2 className="text-[26px] font-serif font-medium text-neutral-800">{t("Testimonials")}</h2>
-          </div>
-
-          <div className="relative w-full">
-            {/* testimonial grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pr-12">
-              {/* Review 1 */}
-              <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
-                <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                  {t("The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free.")}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-neutral-600">AR</span>
-                  </div>
-                  <div>
-                    <h4 className="text-[12px] font-bold text-[#2D3142]">{t("Ahmed Al-Rashid")}</h4>
-                    <span className="text-[10px] text-[#7F8487] block -mt-0.5">{t("Wedding Host")}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Review 2 */}
-              <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
-                <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                  {t("So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!")}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-neutral-600">SA</span>
-                  </div>
-                  <div>
-                    <h4 className="text-[12px] font-bold text-[#2D3142]">{t("Sarah Al-Mansoori")}</h4>
-                    <span className="text-[10px] text-[#7F8487] block -mt-0.5">{t("Bridal Shower Host")}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Review 3 */}
-              <div className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
-                <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
-                  {t("The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!")}
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-neutral-600">KB</span>
-                  </div>
-                  <div>
-                    <h4 className="text-[12px] font-bold text-[#2D3142]">{t("Khalid Bashir")}</h4>
-                    <span className="text-[10px] text-[#7F8487] block -mt-0.5">{t("Anniversary Host")}</span>
-                  </div>
-                </div>
-              </div>
+      {testimonials.length > 0 && (
+        <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
+          <div className="max-w-[1700px] mx-auto flex flex-col gap-10 relative">
+            <div className="text-center flex flex-col gap-1">
+              <h2 className="text-[26px] font-serif font-medium text-neutral-800">{t("Testimonials")}</h2>
             </div>
 
-            {/* Right navigation arrow */}
-            <button className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0">
-              <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+            <div className="relative w-full">
+              {/* testimonial grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pr-12">
+                {testimonials.map((item) => (
+                  <div key={item.id} className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all">
+                    <div className="flex flex-col gap-2">
+                      {/* Rating stars display */}
+                      <div className="flex gap-0.5">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                          <span
+                            key={idx}
+                            className={idx < item.rating ? "text-amber-400 text-xs" : "text-neutral-200 text-xs"}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-[12px] italic text-[#7F8487] leading-relaxed">
+                        {item.comment}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold text-neutral-600">{item.clientInitials}</span>
+                      </div>
+                      <div>
+                        <h4 className="text-[12px] font-bold text-[#2D3142]">{item.clientName}</h4>
+                        <span className="text-[10px] text-[#7F8487] block -mt-0.5">{item.eventTitle}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          {/* Pagination dots */}
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2D3142] transition-all"></span>
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer"></span>
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer"></span>
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer"></span>
+              {/* Right navigation arrow */}
+              <button className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0">
+                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Pagination dots */}
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2D3142] transition-all"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer"></span>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── FOOTER ──────────────────────────────────────────────────── */}
       <footer className="bg-[#FAF8F5] border-t border-[#E6E2DA] px-6 sm:px-10 py-16 mt-auto">

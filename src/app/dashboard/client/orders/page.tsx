@@ -20,6 +20,15 @@ interface PurchaseRequestData {
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
   createdAt: string;
   template: RequestTemplate;
+  purchase?: {
+    id: string;
+    slug: string;
+    testimonial?: {
+      id: string;
+      rating: number;
+      comment: string;
+    } | null;
+  } | null;
 }
 
 export default function ClientOrdersPage() {
@@ -29,6 +38,18 @@ export default function ClientOrdersPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Premium custom themed modal states
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    purchaseId: string | null;
+    rating: number;
+    comment: string;
+  }>({
+    isOpen: false,
+    purchaseId: null,
+    rating: 5,
+    comment: "",
+  });
+
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     requestId: string | null;
@@ -87,6 +108,43 @@ export default function ClientOrdersPage() {
       fetchRequests();
     } catch (err: any) {
       console.error("Failed to cancel request:", err);
+      setAlertModal({
+        isOpen: true,
+        message: err.response?.data?.message || t("Something went wrong. Please try again later."),
+        isSuccess: false,
+      });
+    }
+  };
+
+  // ── Testimonial Review Actions ─────────────────────────────────────
+  const handleOpenReviewModal = (request: PurchaseRequestData) => {
+    if (!request.purchase) return;
+    setReviewModal({
+      isOpen: true,
+      purchaseId: request.purchase.id,
+      rating: request.purchase.testimonial?.rating || 5,
+      comment: request.purchase.testimonial?.comment || "",
+    });
+  };
+
+  const handleSubmittingReview = async () => {
+    try {
+      if (!reviewModal.purchaseId) return;
+      await api.post("/testimonials", {
+        purchaseId: reviewModal.purchaseId,
+        rating: reviewModal.rating,
+        comment: reviewModal.comment,
+      });
+
+      setReviewModal((prev) => ({ ...prev, isOpen: false }));
+      setAlertModal({
+        isOpen: true,
+        message: t("Review Submitted Successfully"),
+        isSuccess: true,
+      });
+      fetchRequests();
+    } catch (err: any) {
+      console.error("Failed to submit review:", err);
       setAlertModal({
         isOpen: true,
         message: err.response?.data?.message || t("Something went wrong. Please try again later."),
@@ -266,13 +324,22 @@ export default function ClientOrdersPage() {
                       </a>
                     </div>
                   ) : status === "APPROVED" ? (
-                    /* Create Invitation link */
-                    <Link
-                      href="/dashboard/client"
-                      className="w-full py-2 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <span>{t("Create Invitation")}</span>
-                    </Link>
+                    <div className="w-full flex gap-2 flex-col sm:flex-row">
+                      <Link
+                        href="/dashboard/client"
+                        className="flex-grow py-2.5 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer text-center"
+                      >
+                        <span>{t("Create Invitation")}</span>
+                      </Link>
+                      {request.purchase && (
+                        <button
+                          onClick={() => handleOpenReviewModal(request)}
+                          className="flex-grow py-2.5 text-xs font-semibold text-neutral-700 bg-white border border-neutral-200 hover:bg-neutral-50 rounded-xl transition-all cursor-pointer text-center"
+                        >
+                          {request.purchase.testimonial ? t("Update Review") : t("Rate Service")}
+                        </button>
+                      )}
+                    </div>
                   ) : status === "CANCELLED" ? (
                     /* Cancelled request status text */
                     <div className="w-full py-2.5 text-center text-xs font-medium text-neutral-500 bg-neutral-50 rounded-xl border border-neutral-200">
@@ -370,6 +437,85 @@ export default function ClientOrdersPage() {
             >
               {lang === "ar" ? "موافق" : "OK"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Custom Review Modal ─────────────────────────────────────── */}
+      {reviewModal.isOpen && (
+        <div className="fixed inset-0 bg-[#0B1528]/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#FAF9F6] border border-[#E6E2DA] rounded-[24px] max-w-md w-full p-6 shadow-2xl relative font-sans space-y-5" dir={lang === "ar" ? "rtl" : "ltr"}>
+            {/* Close Button */}
+            <button
+              onClick={() => setReviewModal((prev) => ({ ...prev, isOpen: false }))}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-black cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className={lang === "ar" ? "text-right" : "text-left"}>
+              <h3 className="text-base font-bold text-neutral-800">
+                {t("Rate and Comment")}
+              </h3>
+              <p className="text-xs text-neutral-500 mt-1">
+                {lang === "ar"
+                  ? "شاركنا رأيك وتقييمك في الخدمة والقالب الذي قمت بشرائه."
+                  : "Share your rating and comment about the template and service you purchased."}
+              </p>
+            </div>
+
+            {/* Stars Selector */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-neutral-700">
+                {t("Rating (Stars)")}
+              </label>
+              <div className="flex gap-2 justify-center py-2 bg-white rounded-xl border border-[#E6E2DA]">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewModal((prev) => ({ ...prev, rating: star }))}
+                    className="text-2xl transition-all hover:scale-110 cursor-pointer focus:outline-none"
+                  >
+                    <span className={star <= reviewModal.rating ? "text-amber-400" : "text-neutral-200"}>
+                      ★
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Comment Area */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-neutral-700">
+                {t("Review Comment")}
+              </label>
+              <textarea
+                value={reviewModal.comment}
+                onChange={(e) => setReviewModal((prev) => ({ ...prev, comment: e.target.value }))}
+                placeholder={t("Write your review here...")}
+                rows={4}
+                className="w-full text-xs border border-neutral-200 rounded-xl p-3 focus:outline-none focus:border-[#E5C38B] bg-white resize-none"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleSubmittingReview}
+                className="flex-grow py-2.5 text-xs font-semibold text-[#E5C38B] bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all cursor-pointer shadow-sm text-center"
+              >
+                {t("Submit Review")}
+              </button>
+              <button
+                onClick={() => setReviewModal((prev) => ({ ...prev, isOpen: false }))}
+                className="flex-grow py-2.5 text-xs font-semibold text-neutral-700 bg-white border border-[#E6E2DA] hover:bg-neutral-50 rounded-xl transition-all cursor-pointer"
+              >
+                {lang === "ar" ? "تراجع" : "Cancel"}
+              </button>
+            </div>
           </div>
         </div>
       )}

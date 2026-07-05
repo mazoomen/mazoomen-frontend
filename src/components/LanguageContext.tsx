@@ -65,6 +65,14 @@ const translations: Record<string, Record<Language, string>> = {
   "جاهزة للتعديل": { en: "Ready to Edit", ar: "جاهزة للتعديل" },
   "تنزيل": { en: "Download", ar: "تنزيل" },
   "تعديل": { en: "Customize", ar: "تعديل" },
+  "Rate Service": { en: "Rate Service", ar: "تقييم الخدمة" },
+  "Update Review": { en: "Update Review", ar: "تحديث التقييم" },
+  "Rate and Comment": { en: "Rate and Comment", ar: "التقييم والتعليق" },
+  "Rating (Stars)": { en: "Rating (Stars)", ar: "التقييم (النجوم)" },
+  "Review Comment": { en: "Review Comment", ar: "التعليق والتعقيب" },
+  "Submit Review": { en: "Submit Review", ar: "إرسال التقييم" },
+  "Review Submitted Successfully": { en: "Review Submitted Successfully", ar: "تم تقديم تقييمك بنجاح" },
+  "Write your review here...": { en: "Write your review here...", ar: "اكتب تقييمك ورأيك هنا..." },
 
   // Categories
   "Weddings": { en: "Weddings", ar: "حفلات زفاف" },
@@ -73,20 +81,6 @@ const translations: Record<string, Record<Language, string>> = {
   "Bridal Showers": { en: "Bridal Showers", ar: "توديع عزوبية" },
   "Engagement Parties": { en: "Engagement Parties", ar: "حفلات خطوبة" },
   "Birthdays": { en: "Birthdays", ar: "أعياد ميلاد" },
-
-  // Quotes
-  "The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free.": {
-    en: "The botanical templates are exceptionally elegant. The guest response tracker made coordinating RSVPs for our wedding completely stress-free.",
-    ar: "كانت قوالب التصاميم النباتية أنيقة للغاية. تعقب ردود الضيوف جعل تنظيم الحضور لحفل زفافنا خالياً تماماً من التوتر.",
-  },
-  "So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!": {
-    en: "So beautiful and extremely simple to customize. Approved in minutes, editable fields work like magic. The audio music player option was a massive hit!",
-    ar: "جميل جداً وسهل التخصيص بشكل لا يصدق. تم اعتماده في دقائق، والحقول القابلة للتعديل تعمل كالسحر. خيار مشغل الموسيقى كان نجاحاً باهراً!",
-  },
-  "The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!": {
-    en: "The guest RSVP count feature was incredibly helpful. I could see the exact counts and companion details live. Saved hours of phone calls!",
-    ar: "كانت ميزة حساب عدد حضور الضيوف مفيدة للغاية. تمكنت من رؤية الأعداد المحددة وتفاصيل المرافقين مباشرة. وفرت ساعات من الاتصالات الهاتفية!",
-  },
 
   // Auth modal
   "Welcome Back!": { en: "Welcome Back!", ar: "مرحباً بعودتك!" },
@@ -173,15 +167,20 @@ const translations: Record<string, Record<Language, string>> = {
     en: "Curate your design layout by browsing and selecting from our premium template gallery.",
     ar: "تصفح واطلع على تصاميم بطاقات الدعوة المتاحة في معرضنا واختر القالب الأنسب لمناسبتك.",
   },
-  "Customize Online": { en: "Customize Online", ar: "عدّل تفاصيل مناسبتك" },
-  "Customize details like date, coordinates, texts, and music instantly on your dashboard.": {
-    en: "Customize details like date, coordinates, texts, and music instantly on your dashboard.",
-    ar: "أدخل معلومات مناسبتك مثل التاريخ، التوقيت، الموقع الجغرافي، الموسيقى، والاسم مباشرة من حسابك.",
+  "Request to Unlock": { en: "Request to Unlock", ar: "أرسل طلب التفعيل" },
+  "Submit a quick request with your contact info. Once approved by our team, your template becomes fully editable.": {
+    en: "Submit a quick request with your contact info. Once approved by our team, your template becomes fully editable.",
+    ar: "قدّم طلباً سريعاً للتفعيل مع معلومات اتصالك، وبمجرد الموافقة عليه سيتم فتح القالب للبدء بالتصميم.",
   },
-  "Download & Share": { en: "Download & Share", ar: "احصل على بطاقتك وشاركها" },
-  "Download your invitation image or share the interactive guest link for online RSVP tracking.": {
-    en: "Download your invitation image or share the interactive guest link for online RSVP tracking.",
-    ar: "حمّل بطاقة دعوتك أو انسخ رابط الدعوة التفاعلي وشاركه مع ضيوفك لتعقب الحضور.",
+  "Customize Details": { en: "Customize Details", ar: "عدّل تفاصيل دعوتك" },
+  "Personalize event date, location coordinates, program timeline, background music, and guidelines on your dashboard.": {
+    en: "Personalize event date, location coordinates, program timeline, background music, and guidelines on your dashboard.",
+    ar: "أدخل بيانات دعوتك بالتفصيل: التاريخ والمكان، برنامج الحفل، الموسيقى الخلفية، والتعليمات من لوحة تحكمك.",
+  },
+  "Share & Track RSVPs": { en: "Share & Track RSVPs", ar: "شاركها وتتبّع الحضور" },
+  "Share your interactive invitation link to gather real-time RSVPs, beautiful wishes, and photos from your guests.": {
+    en: "Share your interactive invitation link to gather real-time RSVPs, beautiful wishes, and photos from your guests.",
+    ar: "انسخ رابط الدعوة التفاعلي وشاركه مع مدعويك لتلقي تأكيدات الحضور والتهاني ومشاركة الصور مباشرة.",
   },
   "Ahmed Al-Rashid": { en: "Ahmed Al-Rashid", ar: "أحمد الرشيد" },
   "Wedding Host": { en: "Wedding Host", ar: "مضيف حفل زفاف" },

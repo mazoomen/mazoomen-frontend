@@ -306,6 +306,7 @@ export default function InvitationClientPage({
               moments={localInvitation.moments || []}
               ownerId={localInvitation.userId || undefined}
               onMomentUploaded={(updated: InvitationData) => setLocalInvitation(updated)}
+              wishes={localInvitation.wishes}
             />
           </div>
         </section>
