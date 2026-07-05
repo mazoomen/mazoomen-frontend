@@ -13,6 +13,7 @@ interface TemplateFormData {
   demoLink: string;
   price: string;
   isPremium: boolean;
+  category: string;
 }
 
 interface FieldConfig {
@@ -40,6 +41,7 @@ const INITIAL_FORM: TemplateFormData = {
   demoLink: "",
   price: "",
   isPremium: false,
+  category: "Weddings",
 };
 
 export default function AddTemplateForm({
@@ -47,7 +49,7 @@ export default function AddTemplateForm({
   onSuccess,
   onCancel,
 }: AddTemplateFormProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:3001");
   const formattedSiteUrl = siteUrl.endsWith("/") ? siteUrl : `${siteUrl}/`;
   const [editingLang, setEditingLang] = useState<"ar" | "en">("ar");
@@ -170,6 +172,7 @@ export default function AddTemplateForm({
       demoLink: initialTemplateData.demoLink || "",
       price: String(initialTemplateData.price || ""),
       isPremium: !!initialTemplateData.isPremium,
+      category: initialTemplateData.category || "Weddings",
     });
 
     const editableFields = initialTemplateData.editableFields || {};
@@ -388,6 +391,7 @@ export default function AddTemplateForm({
         demoLink: form.demoLink.trim() || undefined,
         price: parseFloat(form.price),
         isPremium: form.isPremium,
+        category: form.category,
         editableFields: parsedFields,
       };
 
@@ -435,6 +439,7 @@ export default function AddTemplateForm({
     form.price.trim() !== "" &&
     !isNaN(parseFloat(form.price)) &&
     parseFloat(form.price) >= 0 &&
+    form.category.trim() !== "" &&
     fields.some((f) => f.enabled);
 
   return (
@@ -563,6 +568,30 @@ export default function AddTemplateForm({
             className="w-full bg-white px-5 py-2.5 text-xs outline-none focus:border-[#B89C72] transition-all text-neutral-800 placeholder-gray-400"
           />
         </div>
+      </div>
+
+      {/* ── Category ────────────────────────────────────────── */}
+      <div>
+        <label
+          htmlFor="template-category"
+          className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
+        >
+          {t("Category")} <span className="text-red-400">*</span>
+        </label>
+        <select
+          id="template-category"
+          name="category"
+          value={form.category}
+          onChange={(e) => setForm(prev => ({ ...prev, category: e.target.value }))}
+          disabled={submitting}
+          className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50 font-sans"
+        >
+          <option value="Weddings">{t("Weddings")}</option>
+          <option value="Bridal Showers">{t("Bridal Showers")}</option>
+          <option value="Engagement Parties">{t("Engagement Parties")}</option>
+          <option value="Birthdays">{t("Birthdays")}</option>
+          <option value="Corporate Events">{t("Corporate Events")}</option>
+        </select>
       </div>
 
       {/* ── Price + Premium Row ───────────────────────────────── */}

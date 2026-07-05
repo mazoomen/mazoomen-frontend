@@ -61,6 +61,7 @@ const translations: Record<string, Record<Language, string>> = {
   },
   "Search templates...": { en: "Search templates...", ar: "ابحث عن القوالب..." },
   "Testimonials": { en: "Testimonials", ar: "آراء العملاء" },
+  "All": { en: "All", ar: "الكل" },
   "الكل": { en: "All", ar: "الكل" },
   "جاهزة للتعديل": { en: "Ready to Edit", ar: "جاهزة للتعديل" },
   "تنزيل": { en: "Download", ar: "تنزيل" },
@@ -75,6 +76,7 @@ const translations: Record<string, Record<Language, string>> = {
   "Write your review here...": { en: "Write your review here...", ar: "اكتب تقييمك ورأيك هنا..." },
 
   // Categories
+  "Event Types": { en: "Event Types", ar: "أنواع المناسبات" },
   "Weddings": { en: "Weddings", ar: "حفلات زفاف" },
   "Corporate Events": { en: "Corporate Events", ar: "مناسبات شركات" },
   "Anniversaries": { en: "Anniversaries", ar: "ذكرى سنوية" },

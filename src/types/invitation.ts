@@ -88,6 +88,13 @@ export interface RsvpListResponse {
   rsvps: RsvpResponse[];
 }
 
+export type TemplateCategory =
+  | "Weddings"
+  | "Bridal Showers"
+  | "Engagement Parties"
+  | "Birthdays"
+  | "Corporate Events";
+
 export interface Template {
   id: string;
   title: string;
@@ -100,7 +107,7 @@ export interface Template {
   demoLink?: string | null;
   isPremium: boolean;
   isActive: boolean;
-  category?: string;
+  category: TemplateCategory;
   createdAt: string;
 }
 

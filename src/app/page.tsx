@@ -262,7 +262,7 @@ export default function Home() {
               <div className="fixed inset-0 z-40" onClick={() => setShowEventTypesOverlay(false)}></div>
               <div className="absolute top-14 left-1/2 -translate-x-1/2 w-[340px] sm:w-[420px] bg-white border border-[#E6E2DA] rounded-2xl shadow-xl p-5 z-50 animate-fadeIn text-right font-sans" dir={lang === "ar" ? "rtl" : "ltr"}>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-bold text-neutral-800">Event Types</span>
+                  <span className="text-xs font-bold text-neutral-800">{t("Event Types")}</span>
                   <button
                     onClick={() => setShowEventTypesOverlay(false)}
                     className="text-neutral-400 hover:text-black text-sm"
@@ -272,6 +272,13 @@ export default function Home() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {[
+                    {
+                      name: "All", arName: "All", icon: (
+                        <svg className="w-5 h-5 text-[#B89C72]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                        </svg>
+                      )
+                    },
                     {
                       name: "Weddings", arName: "Weddings", icon: (
                         <svg className="w-5 h-5 text-[#B89C72]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -295,13 +302,6 @@ export default function Home() {
                       )
                     },
                     {
-                      name: "Anniversaries", arName: "Anniversaries", icon: (
-                        <svg className="w-5 h-5 text-[#B89C72]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
-                        </svg>
-                      )
-                    },
-                    {
                       name: "Birthdays", arName: "Birthdays", icon: (
                         <svg className="w-5 h-5 text-[#B89C72]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697-.056-4.024-.166C6.845 7.99 6 7.086 6 6V4.875C6 3.839 6.84 3 7.875 3h8.25c1.035 0 1.875.84 1.875 1.875V6c0 1.086-.845 1.99-1.976 2.084A41.748 41.748 0 0112 8.25zM12 8.25c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.414 18 10.5v.18c0 .907-.638 1.678-1.528 1.86A41.87 41.87 0 0112 12.75a41.87 41.87 0 01-4.472-.21c-.89-.182-1.528-.953-1.528-1.86v-.18c0-1.086.845-1.99 1.976-2.084A41.748 41.748 0 0112 8.25zm0 4.5c1.355 0 2.697.056 4.024.166C17.155 13.01 18 13.914 18 15v4.5A2.25 2.25 0 0115.75 21.75H8.25A2.25 2.25 0 016 19.5V15c0-1.086.845-1.99 1.976-2.084A41.748 41.748 0 0112 12.75z" />
@@ -315,22 +315,30 @@ export default function Home() {
                         </svg>
                       )
                     }
-                  ].map((cat) => (
-                    <button
-                      key={cat.name}
-                      onClick={() => {
-                        setSelectedCategory(selectedCategory === cat.name ? null : cat.name);
-                        setShowEventTypesOverlay(false);
-                      }}
-                      className={`flex flex-col items-center justify-center gap-2 p-3 border rounded-xl hover:bg-neutral-50 transition-all cursor-pointer ${selectedCategory === cat.name
-                        ? "border-[#B89C72] bg-[#FAF8F5] font-semibold text-black"
-                        : "border-neutral-200 text-neutral-600 bg-white"
-                        }`}
-                    >
-                      {cat.icon}
-                      <span className="text-[10px] whitespace-nowrap">{t(cat.name)}</span>
-                    </button>
-                  ))}
+                  ].map((cat) => {
+                    const isActive = cat.name === "All" ? selectedCategory === null : selectedCategory === cat.name;
+                    return (
+                      <button
+                        key={cat.name}
+                        onClick={() => {
+                          if (cat.name === "All") {
+                            setSelectedCategory(null);
+                          } else {
+                            setSelectedCategory(selectedCategory === cat.name ? null : cat.name);
+                          }
+                          setShowEventTypesOverlay(false);
+                        }}
+                        className={`flex flex-col items-center justify-center gap-2 p-3 border rounded-xl hover:bg-neutral-50 transition-all cursor-pointer ${
+                          isActive
+                            ? "border-[#B89C72] bg-[#FAF8F5] font-semibold text-black"
+                            : "border-neutral-200 text-neutral-600 bg-white"
+                          }`}
+                      >
+                        {cat.icon}
+                        <span className="text-[10px] whitespace-normal text-center leading-tight max-w-[85px]">{t(cat.name)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -732,19 +740,6 @@ export default function Home() {
                 <div className="h-px bg-[#EBE7DF]" />
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 mb-1">{lang === "ar" ? "لغة الدعوة" : "Invitation Language"}</label>
-                    <select
-                      value={purchaseLanguageMode}
-                      onChange={(e) => setPurchaseLanguageMode(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72]"
-                    >
-                      <option value="both">{lang === "ar" ? "ثنائي اللغة (العربية والإنجليزية)" : "Bilingual (Arabic & English)"}</option>
-                      <option value="ar">{lang === "ar" ? "العربية فقط" : "Arabic Only"}</option>
-                      <option value="en">{lang === "ar" ? "الإنجليزية فقط" : "English Only"}</option>
-                    </select>
-                  </div>
-
                   <div>
                     <label className="block text-xs font-semibold text-neutral-700 mb-1">{lang === "ar" ? "رقم الجوال للتواصل" : "Contact Phone"}</label>
                     <input

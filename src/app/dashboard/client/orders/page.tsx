@@ -260,9 +260,9 @@ export default function ClientOrdersPage() {
                       <p className="text-[10px] text-[#7F8487] mt-1 font-medium">
                         {t("Requested")}: {new Date(request.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                       </p>
-                      <p className="text-[9px] font-mono text-neutral-400 mt-1 leading-none">
-                        ID: {request.id}
-                      </p>
+                      <span className="text-[9px] text-[#7F8487] font-mono font-medium">
+                        {t("Phone")}: {request.contactPhone}
+                      </span>
                     </div>
 
                     {/* Status Badge */}
@@ -287,9 +287,7 @@ export default function ClientOrdersPage() {
                           ● {t("Cancelled")}
                         </span>
                       )}
-                      <span className="text-[9px] text-[#7F8487] font-mono font-medium">
-                        {t("Phone")}: {request.contactPhone}
-                      </span>
+
                     </div>
                   </div>
                 </div>
