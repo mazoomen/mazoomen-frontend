@@ -268,26 +268,29 @@ export default function ClientOrdersPage() {
                     {/* Status Badge */}
                     <div className="mt-2.5 flex items-center gap-2">
                       {status === "PENDING" && (
-                        <span className="text-[9px] uppercase tracking-wider font-bold text-amber-500 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
-                          ● {t("Pending")}
+                        <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                          {t("Pending")}
                         </span>
                       )}
                       {status === "APPROVED" && (
-                        <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                          ● {t("Approved")}
+                        <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          {t("Approved")}
                         </span>
                       )}
                       {status === "REJECTED" && (
-                        <span className="text-[9px] uppercase tracking-wider font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
-                          ● {t("Rejected")}
+                        <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                          {t("Rejected")}
                         </span>
                       )}
                       {status === "CANCELLED" && (
-                        <span className="text-[9px] uppercase tracking-wider font-bold text-neutral-500 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200">
-                          ● {t("Cancelled")}
+                        <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold text-neutral-600 bg-neutral-50 px-2 py-0.5 rounded-full border border-neutral-200">
+                          <span className="h-1.5 w-1.5 rounded-full bg-neutral-400" />
+                          {t("Cancelled")}
                         </span>
                       )}
-
                     </div>
                   </div>
                 </div>

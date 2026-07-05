@@ -253,8 +253,13 @@ export default function ClientDashboardPage() {
 
                     {hasInvite ? (
                       <div className="flex flex-col gap-1.5 items-start">
-                        <span className={`text-[9px] uppercase tracking-wider font-bold ${purchase.invitation!.isActive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                          ● {purchase.invitation!.isActive ? t("Active Invitation") : t("Deactivated Link")}
+                        <span className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border ${
+                          purchase.invitation!.isActive
+                            ? "text-emerald-600 bg-emerald-50 border-emerald-100"
+                            : "text-rose-600 bg-rose-50 border-rose-100"
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${purchase.invitation!.isActive ? "bg-emerald-500" : "bg-rose-500"}`} />
+                          {purchase.invitation!.isActive ? t("Active Invitation") : t("Deactivated Link")}
                         </span>
                         <a
                           href={purchase.invitation!.isActive ? inviteUrl : undefined}
@@ -267,8 +272,9 @@ export default function ClientDashboardPage() {
                         </a>
                       </div>
                     ) : (
-                      <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold">
-                        ○ {t("Pending Setup")}
+                      <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        {t("Pending Setup")}
                       </span>
                     )}
                   </div>

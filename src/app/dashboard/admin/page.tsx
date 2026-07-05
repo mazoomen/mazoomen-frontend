@@ -596,9 +596,20 @@ export default function AdminDashboardPage() {
                                   ? "bg-amber-50 text-amber-600 border-amber-100"
                                   : o.status === "APPROVED"
                                   ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                  : "bg-red-50 text-red-600 border-red-100"
+                                  : o.status === "REJECTED"
+                                  ? "bg-red-50 text-red-600 border-red-100"
+                                  : "bg-neutral-50 text-neutral-600 border-neutral-200"
                               }`}
                             >
+                              <span className={`h-1 w-1 rounded-full ${
+                                o.status === "PENDING"
+                                  ? "bg-amber-500"
+                                  : o.status === "APPROVED"
+                                  ? "bg-emerald-500"
+                                  : o.status === "REJECTED"
+                                  ? "bg-red-500"
+                                  : "bg-neutral-400"
+                              }`} />
                               {o.status === "PENDING"
                                 ? lang === "ar"
                                   ? "قيد الانتظار"
@@ -607,9 +618,13 @@ export default function AdminDashboardPage() {
                                 ? lang === "ar"
                                   ? "مقبول"
                                   : "Approved"
+                                : o.status === "REJECTED"
+                                ? lang === "ar"
+                                  ? "مرفوض"
+                                  : "Rejected"
                                 : lang === "ar"
-                                ? "مرفوض"
-                                : "Rejected"}
+                                ? "ملغي"
+                                : "Cancelled"}
                             </span>
                           </div>
                         ))}
