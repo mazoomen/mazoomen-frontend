@@ -780,7 +780,7 @@ export default function AdminDashboardPage() {
 
                               <div className="flex justify-between items-center border-t border-[#FAF1EA] pt-3 mt-auto">
                                 <span className="font-bold text-neutral-800">
-                                  {tpl.price} SAR
+                                  {tpl.price} JOD
                                 </span>
                                 <div className="flex gap-2">
                                   <Button

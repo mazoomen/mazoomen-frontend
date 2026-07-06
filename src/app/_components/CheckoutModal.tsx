@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
+import { useCurrency } from "@/components/CurrencyContext";
 import type { Template } from "@/types/template";
 import { Modal, Button } from "@/components/ui";
 import type { AxiosError } from "axios";
@@ -20,6 +21,7 @@ export default function CheckoutModal({
 }: CheckoutModalProps) {
   const router = useRouter();
   const { t, lang } = useLanguage();
+  const { formatPrice } = useCurrency();
 
   const [contactPhone, setContactPhone] = useState("");
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
@@ -184,7 +186,7 @@ export default function CheckoutModal({
                 {lang === "ar" ? "الإجمالي" : "Total Price"}
               </span>
               <span className="text-base font-bold text-neutral-800">
-                ${buyingTemplate.price}
+                {formatPrice(buyingTemplate.price)}
               </span>
             </div>
             <Button

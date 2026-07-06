@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter, Aref_Ruqaa, Amiri, Cinzel } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageContext";
+import { CurrencyProvider } from "@/components/CurrencyContext";
+import LocationPromptBanner from "@/components/LocationPromptBanner";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -53,7 +55,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans">
         <LanguageProvider>
-          {children}
+          <CurrencyProvider>
+            {children}
+            <LocationPromptBanner />
+          </CurrencyProvider>
         </LanguageProvider>
       </body>
     </html>

@@ -6,12 +6,14 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
+import { useCurrency } from "@/components/CurrencyContext";
 import type { PurchaseRequestData } from "@/types/invitation";
 import { Spinner, ErrorState, Button, Modal } from "@/components/ui";
 import type { AxiosError } from "axios";
 
 export default function ClientOrdersPage() {
   const { lang, t } = useLanguage();
+  const { formatPrice } = useCurrency();
   const [requests, setRequests] = useState<PurchaseRequestData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -232,9 +234,9 @@ export default function ClientOrdersPage() {
                         <h3 className="font-sans font-bold text-neutral-800 text-[14px] leading-tight">
                           {request.template.title}
                         </h3>
-                        <span className="text-[12px] font-bold text-neutral-700 font-mono">
-                          ${request.template.price}
-                        </span>
+                         <span className="text-[12px] font-bold text-neutral-700 font-mono">
+                           {formatPrice(request.template.price)}
+                         </span>
                       </div>
                       <p className="text-[10px] text-[#7F8487] mt-1 font-medium">
                         {t("Requested")}:{" "}

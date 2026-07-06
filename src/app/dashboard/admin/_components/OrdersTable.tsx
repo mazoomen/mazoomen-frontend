@@ -291,7 +291,7 @@ export default function OrdersTable({
                         </div>
                         <div>
                           <p className="font-semibold text-neutral-800">{order.template.title}</p>
-                          <p className="text-[10px] text-neutral-500 font-sans">{order.template.price} SAR</p>
+                          <p className="text-[10px] text-neutral-500 font-sans">{order.template.price} JOD</p>
                         </div>
                       </div>
                     </td>

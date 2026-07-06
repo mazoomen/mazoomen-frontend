@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLanguage } from "@/components/LanguageContext";
+import { useCurrency } from "@/components/CurrencyContext";
 import type { Template } from "@/types/template";
 import { Spinner, Button } from "@/components/ui";
 
@@ -27,6 +28,7 @@ export default function TemplateGrid({
   onLoginTrigger,
 }: TemplateGridProps) {
   const { t, lang } = useLanguage();
+  const { formatPrice } = useCurrency();
 
   return (
     <section id="templates" className="px-6 sm:px-10 py-6 max-w-[1700px] mx-auto w-full flex-1">
@@ -112,9 +114,7 @@ export default function TemplateGrid({
                         {template.title}
                       </h3>
                       <span className="text-[11px] font-bold text-neutral-600 border border-neutral-200 px-1.5 py-0.5 rounded bg-[#FAF9F6] shrink-0 font-sans">
-                        {typeof template.price === "number"
-                          ? `$${template.price}`
-                          : template.price}
+                        {formatPrice(template.price)}
                       </span>
                     </div>
                     <p className="text-[10px] text-neutral-400 line-clamp-2 leading-relaxed">

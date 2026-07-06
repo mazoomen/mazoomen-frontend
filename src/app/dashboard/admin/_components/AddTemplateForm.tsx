@@ -601,7 +601,7 @@ export default function AddTemplateForm({
             htmlFor="template-price"
             className="mb-1.5 block text-xs font-semibold text-gray-700"
           >
-            {lang === "ar" ? "السعر (SAR)" : "Price (SAR)"} <span className="text-red-400">*</span>
+            {lang === "ar" ? "السعر (JOD)" : "Price (JOD)"} <span className="text-red-400">*</span>
           </label>
           <div className="relative">
             <input
@@ -617,7 +617,7 @@ export default function AddTemplateForm({
               className={`w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] py-2.5 ${lang === "ar" ? "pl-14 pr-4" : "pl-4 pr-14"} text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50`}
             />
             <span className={`pointer-events-none absolute ${lang === "ar" ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400`}>
-              {lang === "ar" ? "ريال" : "SAR"}
+              {lang === "ar" ? "دينار" : "JOD"}
             </span>
           </div>
         </div>

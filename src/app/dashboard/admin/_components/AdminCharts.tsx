@@ -823,8 +823,8 @@ export default function AdminCharts({ orders, users }: AdminChartsProps) {
             </h3>
             <p className="text-[10px] text-neutral-400 mt-0.5">
               {lang === "ar"
-                ? "متابعة أداء الأرباح والمبيعات بالريال السعودي."
-                : "Monitor revenue growth and total template unlock orders in SAR."}
+                ? "متابعة أداء الأرباح والمبيعات بالدينار الأردني."
+                : "Monitor revenue growth and total template unlock orders in JOD."}
             </p>
           </div>
 
@@ -844,7 +844,7 @@ export default function AdminCharts({ orders, users }: AdminChartsProps) {
             data={revenueChartData}
             color="gold"
             lang={lang}
-            ySuffix={lang === "ar" ? "ر.س" : "SAR"}
+            ySuffix={lang === "ar" ? "د.أ" : "JOD"}
             valuePrefix=""
           />
         </div>
