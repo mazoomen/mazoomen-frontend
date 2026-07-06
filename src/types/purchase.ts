@@ -60,6 +60,7 @@ export interface PurchaseRequestData {
       id: string;
       rating: number;
       comment: string;
+      isDeleted?: boolean;
     } | null;
   } | null;
 }

@@ -13,6 +13,7 @@ import {
   StatsCards,
   UsersTable,
   ReviewsTable,
+  AdminCharts,
   type Order,
   type User,
 } from "./_components";
@@ -643,6 +644,8 @@ export default function AdminDashboardPage() {
                     totalUsers={totalUsers}
                     totalTemplates={totalTemplates}
                   />
+
+                  <AdminCharts orders={orders} users={users} />
 
                   <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs">
                     <h3 className="mb-4 font-serif text-sm font-bold text-neutral-800">
