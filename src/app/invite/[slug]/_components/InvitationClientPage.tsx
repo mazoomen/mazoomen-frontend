@@ -14,7 +14,7 @@ import {
   BottomNavbar
 } from './index';
 import InvitationClientPageGarden from './InvitationClientPageGarden';
-import "../index-vcqbJqsY.css";
+import "../invitation.css";
 
 interface InvitationClientPageProps {
   invitation?: InvitationData;

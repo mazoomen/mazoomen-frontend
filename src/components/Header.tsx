@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 import type { AuthUser } from "@/types/invitation";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -22,24 +22,19 @@ export default function Header({
   handleLogout,
   openAuthModal,
 }: HeaderProps) {
-  const router = useRouter();
   const { lang, setLang, t } = useLanguage();
-
-  const handleMobileNav = (path: string, requiresAuth = false) => {
-    setIsMobileMenuOpen(false);
-    if (requiresAuth && !isLoggedIn) {
-      openAuthModal("login");
-    } else {
-      router.push(path);
-    }
-  };
 
   return (
     <header className="h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
       <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
-        <div className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/favicon.ico" alt="Logo" className="w-5 h-5 object-contain" />
+        <div className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden relative">
+          <Image
+            src="/favicon.ico"
+            alt="Logo"
+            width={20}
+            height={20}
+            className="object-contain"
+          />
         </div>
         <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B]">Mazoom</span>
       </Link>
@@ -87,6 +82,7 @@ export default function Header({
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="sm:hidden w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] hover:bg-[#1A2D4C] shadow-sm transition-all focus:outline-none cursor-pointer"
           title="Toggle Menu"
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
         >
           <svg
             className="w-4 h-4 text-neutral-300 transition-all duration-300"
@@ -94,6 +90,7 @@ export default function Header({
             stroke="currentColor"
             strokeWidth="2"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             {isMobileMenuOpen ? (
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

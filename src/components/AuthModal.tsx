@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
+import { logger } from "@/lib/logger";
+import { isGoogleOAuthEnabled, GOOGLE_CLIENT_ID, IS_DEV } from "@/lib/env";
 import type { LoginResponse } from "@/types/invitation";
 import type { AxiosError } from "axios";
 import { useLanguage } from "@/components/LanguageContext";
+import { PasswordInput } from "@/components/ui";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,20 +15,57 @@ interface AuthModalProps {
   initialMode: "login" | "register";
 }
 
-export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalProps) {
+// ── Google Sign-In Button ──────────────────────────────────────────────
+function GoogleSignInButton({
+  onClick,
+  label,
+}: {
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full border border-[#E6E2DA] bg-white hover:bg-neutral-50 text-neutral-700 font-semibold py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer h-10 mt-2"
+    >
+      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="#EA4335"
+          d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.095-5.122 4.095-3.328 0-6.03-2.701-6.03-6.03s2.702-6.03 6.03-6.03c1.524 0 2.91.564 3.978 1.488l3.12-3.12C18.912 2.688 15.783 1.5 12.24 1.5 6.308 1.5 1.5 6.308 1.5 12.24s4.808 10.74 10.74 10.74c5.94 0 11.233-4.269 11.233-10.74 0-.726-.08-1.422-.227-2.083H12.24v.128Z"
+        />
+      </svg>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+// ── Divider ────────────────────────────────────────────────────────────
+function OrDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center my-1 w-full">
+      <div className="flex-1 h-px bg-neutral-200" />
+      <span className="px-3 text-[10px] text-neutral-400 font-sans uppercase tracking-wider">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-neutral-200" />
+    </div>
+  );
+}
+
+export default function AuthModal({
+  isOpen,
+  onClose,
+  initialMode,
+}: AuthModalProps) {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const { t, lang } = useLanguage();
 
-  const hasGoogleClientId =
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID &&
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID !== "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
-
   // Login inputs
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Register inputs
   const [regFirstName, setRegFirstName] = useState("");
@@ -33,49 +73,40 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
-  const [showRegPassword, setShowRegPassword] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
-        setAuthMode(initialMode);
-        setAuthError("");
-      }, 0);
+      setAuthMode(initialMode);
+      setAuthError("");
     }
   }, [isOpen, initialMode]);
 
+  // ── Google GSI Script Loading ────────────────────────────────────────
   useEffect(() => {
-    if (isOpen && typeof window !== "undefined") {
-      const existingScript = document.getElementById("google-gsi-script");
-      if (existingScript) {
-        existingScript.remove();
-      }
+    if (!isOpen || !isGoogleOAuthEnabled) return;
 
-      const script = document.createElement("script");
-      script.src = `https://accounts.google.com/gsi/client?hl=${lang}`;
-      script.id = "google-gsi-script";
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
+    const existingScript = document.getElementById("google-gsi-script");
+    if (existingScript) existingScript.remove();
 
-      script.onload = () => {
-        initializeGoogleGSI();
-      };
-    }
-  }, [isOpen, authMode, lang]);
+    const script = document.createElement("script");
+    script.src = `https://accounts.google.com/gsi/client?hl=${lang}`;
+    script.id = "google-gsi-script";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      initializeGoogleGSI();
+    };
+  }, [isOpen, authMode, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initializeGoogleGSI = () => {
-    const win = window as any;
-    if (typeof window === "undefined" || !win.google) return;
-
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      return;
-    }
+    const win = window as Window & { google?: { accounts: { id: { initialize: (config: Record<string, unknown>) => void; renderButton: (el: HTMLElement, config: Record<string, unknown>) => void } } } };
+    if (!win.google) return;
 
     try {
       win.google.accounts.id.initialize({
-        client_id: clientId,
+        client_id: GOOGLE_CLIENT_ID,
         callback: handleGoogleSignInResponse,
       });
 
@@ -89,11 +120,20 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
         });
       }
     } catch (e) {
-      console.error("Failed to initialize Google GSI", e);
+      logger.error("Failed to initialize Google GSI", e);
     }
   };
 
-  const handleGoogleSignInResponse = async (response: any) => {
+  // ── Auth Handlers ────────────────────────────────────────────────────
+  const handleAuthSuccess = (accessToken: string, user: LoginResponse["user"]) => {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("user", JSON.stringify(user));
+    onClose();
+    window.location.href =
+      user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
+  };
+
+  const handleGoogleSignInResponse = async (response: { credential?: string }) => {
     const token = response.credential;
     if (!token) return;
 
@@ -102,13 +142,9 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
     try {
       const res = await api.post("/auth/google", { token });
       const { accessToken, user } = res.data;
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
-      
-      onClose();
-      window.location.href = user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
+      handleAuthSuccess(accessToken, user);
     } catch (err) {
-      console.error(err);
+      logger.error("Google Sign-In failed", err);
       setAuthError(t("Google Sign-In failed. Please try again."));
     } finally {
       setAuthSubmitting(false);
@@ -116,7 +152,13 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
   };
 
   const handleGoogleSimulation = async () => {
-    const emailInput = prompt(t("Enter simulated Google Email:"), "googleuser@gmail.com");
+    // Only available in development mode
+    if (!IS_DEV) return;
+
+    const emailInput = prompt(
+      t("Enter simulated Google Email:"),
+      "googleuser@gmail.com",
+    );
     if (!emailInput) return;
     const nameInput = prompt(t("Enter simulated Google Name:"), "Google User");
     if (!nameInput) return;
@@ -131,14 +173,14 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
       const mockToken = `mock_${emailInput.trim()}_${firstName}_${lastName}`;
       const res = await api.post("/auth/google", { token: mockToken });
       const { accessToken, user } = res.data;
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
-      
-      onClose();
-      window.location.href = user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
-    } catch (err: any) {
-      console.error(err);
-      setAuthError(err.response?.data?.message || t("Google Sign-In failed. Please try again."));
+      handleAuthSuccess(accessToken, user);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      logger.error("Google simulation failed", err);
+      setAuthError(
+        error.response?.data?.message ||
+          t("Google Sign-In failed. Please try again."),
+      );
     } finally {
       setAuthSubmitting(false);
     }
@@ -161,14 +203,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
         email: loginEmail.trim(),
         password: loginPassword,
       });
-
-      const { accessToken, user } = res.data;
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Close modal and redirect
-      onClose();
-      window.location.href = user.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client";
+      handleAuthSuccess(res.data.accessToken, res.data.user);
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
       const msg = error.response?.data?.message;
@@ -217,13 +252,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
         password: regPassword,
         phoneNumber: regPhone.trim(),
       });
-
-      const { accessToken, user } = res.data;
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      onClose();
-      window.location.href = "/dashboard/client";
+      handleAuthSuccess(res.data.accessToken, res.data.user);
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
       if (error.response?.data?.message) {
@@ -237,8 +266,40 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
     }
   };
 
+  // ── Google Section (shared between login & register) ─────────────────
+  const renderGoogleSection = () => (
+    <>
+      <OrDivider label={t("or")} />
+      {isGoogleOAuthEnabled ? (
+        <div className="w-full flex justify-center mt-2">
+          <div id="google-signin-btn" />
+        </div>
+      ) : IS_DEV ? (
+        <GoogleSignInButton
+          onClick={handleGoogleSimulation}
+          label={
+            lang === "ar"
+              ? "المواصلة باستخدام Google"
+              : "Continue with Google"
+          }
+        />
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+          setAuthError("");
+        }
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={authMode === "login" ? t("Login") : t("Register")}
+    >
       <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-sm w-full p-8 shadow-2xl relative flex flex-col items-center">
         {/* Close Button */}
         <button
@@ -247,6 +308,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             setAuthError("");
           }}
           className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors cursor-pointer"
+          aria-label="Close dialog"
         >
           <svg
             className="w-5 h-5"
@@ -254,29 +316,37 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             stroke="currentColor"
             strokeWidth="2"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
 
-        {/* Decorative cake element */}
+        {/* Decorative elements */}
         <div className="hidden sm:flex absolute left-[-28px] top-[30%] -rotate-12 w-14 h-14 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 items-center justify-center z-10">
-          <span className="text-2xl select-none">🎂</span>
+          <span className="text-2xl select-none" aria-hidden="true">🎂</span>
         </div>
-
-        {/* Decorative balloons element */}
         <div className="hidden sm:flex absolute right-[-24px] bottom-[15%] rotate-6 w-16 h-20 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 flex-col justify-between z-10">
-          <div className="w-full h-[65%] rounded bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl">
+          <div className="w-full h-[65%] rounded bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl" aria-hidden="true">
             🎈
           </div>
-          <div className="flex items-center justify-center select-none text-sm leading-none -mt-1 font-serif text-black">
+          <div className="flex items-center justify-center select-none text-sm leading-none -mt-1 font-serif text-black" aria-hidden="true">
             🧑‍🤝‍🧑
           </div>
         </div>
 
         {/* Capsule tabs */}
-        <div className="bg-neutral-100 border border-neutral-200/60 rounded-xl p-1 flex w-full mb-6 mt-2">
+        <div
+          className="bg-neutral-100 border border-neutral-200/60 rounded-xl p-1 flex w-full mb-6 mt-2"
+          role="tablist"
+        >
           <button
+            role="tab"
+            aria-selected={authMode === "login"}
             onClick={() => {
               setAuthMode("login");
               setAuthError("");
@@ -290,6 +360,8 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             {t("Login")}
           </button>
           <button
+            role="tab"
+            aria-selected={authMode === "register"}
             onClick={() => {
               setAuthMode("register");
               setAuthError("");
@@ -306,16 +378,24 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
 
         {/* Error Banner */}
         {authError && (
-          <div className="w-full mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600 flex items-start gap-2">
+          <div
+            className="w-full mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-600 flex items-start gap-2"
+            role="alert"
+          >
             <svg
               className="w-4 h-4 shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <circle cx="12" cy="12" r="10" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 8v4m0 4h.01"
+              />
             </svg>
             <span className="leading-tight">{authError}</span>
           </div>
@@ -346,63 +426,23 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               <div className="flex justify-end -mb-1 mt-1">
                 <button
                   type="button"
-                  onClick={() => alert('Forgot password service is temporarily unavailable. Please contact support.')}
+                  onClick={() =>
+                    alert(
+                      "Forgot password service is temporarily unavailable. Please contact support.",
+                    )
+                  }
                   className="text-[10px] text-neutral-500 hover:text-black transition-colors"
                 >
                   {t("Forgot Password?")}
                 </button>
               </div>
 
-              <div className="relative w-full">
-                <input
-                  type={showLoginPassword ? "text" : "password"}
-                  placeholder={t("Password")}
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  disabled={authSubmitting}
-                  className="w-full bg-white border border-[#E6E2DA] rounded-xl pl-4 pr-10 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowLoginPassword(!showLoginPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
-                >
-                  {showLoginPassword ? (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
+              <PasswordInput
+                value={loginPassword}
+                onChange={setLoginPassword}
+                placeholder={t("Password")}
+                disabled={authSubmitting}
+              />
             </div>
 
             <button
@@ -412,7 +452,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             >
               {authSubmitting ? (
                 <>
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
                   {t("Logging in...")}
                 </>
               ) : (
@@ -420,41 +460,21 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               )}
             </button>
 
-            {/* Google Login Section */}
-            <div className="flex items-center my-1 w-full">
-              <div className="flex-1 h-px bg-neutral-200"></div>
-              <span className="px-3 text-[10px] text-neutral-400 font-sans uppercase tracking-wider">{t("or")}</span>
-              <div className="flex-1 h-px bg-neutral-200"></div>
-            </div>
-
-            {hasGoogleClientId ? (
-              <div className="w-full flex justify-center mt-2">
-                <div id="google-signin-btn"></div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleGoogleSimulation}
-                className="w-full border border-[#E6E2DA] bg-white hover:bg-neutral-50 text-neutral-700 font-semibold py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer h-10 mt-2"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.095-5.122 4.095-3.328 0-6.03-2.701-6.03-6.03s2.702-6.03 6.03-6.03c1.524 0 2.91.564 3.978 1.488l3.12-3.12C18.912 2.688 15.783 1.5 12.24 1.5 6.308 1.5 1.5 6.308 1.5 12.24s4.808 10.74 10.74 10.74c5.94 0 11.233-4.269 11.233-10.74 0-.726-.08-1.422-.227-2.083H12.24v.128Z"
-                  />
-                </svg>
-                <span>{lang === "ar" ? "المواصلة باستخدام Google" : "Continue with Google"}</span>
-              </button>
-            )}
+            {renderGoogleSection()}
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} className="w-full flex flex-col">
+          <form
+            onSubmit={handleRegisterSubmit}
+            className="w-full flex flex-col"
+          >
             <div className="text-center mb-5">
               <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
                 {t("Create Account")}
               </h2>
               <p className="text-[11px] text-neutral-400">
-                {t("Join us to save and coordinate your event invitations")}
+                {t(
+                  "Join us to save and coordinate your event invitations",
+                )}
               </p>
             </div>
 
@@ -480,7 +500,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
 
               <input
                 type="email"
-                placeholder="Email Address"
+                placeholder={t("Email Address")}
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
                 disabled={authSubmitting}
@@ -496,56 +516,12 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
                 className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
               />
 
-              <div className="relative w-full">
-                <input
-                  type={showRegPassword ? "text" : "password"}
-                  placeholder={t("Password (Min. 8 characters)")}
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  disabled={authSubmitting}
-                  className="w-full bg-white border border-[#E6E2DA] rounded-xl pl-4 pr-10 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowRegPassword(!showRegPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
-                >
-                  {showRegPassword ? (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  )}
-                </button>
-              </div>
+              <PasswordInput
+                value={regPassword}
+                onChange={setRegPassword}
+                placeholder={t("Password (Min. 8 characters)")}
+                disabled={authSubmitting}
+              />
             </div>
 
             <button
@@ -555,7 +531,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
             >
               {authSubmitting ? (
                 <>
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
                   {t("Registering...")}
                 </>
               ) : (
@@ -563,32 +539,7 @@ export default function AuthModal({ isOpen, onClose, initialMode }: AuthModalPro
               )}
             </button>
 
-            {/* Google Register Section */}
-            <div className="flex items-center my-1 w-full">
-              <div className="flex-1 h-px bg-neutral-200"></div>
-              <span className="px-3 text-[10px] text-neutral-400 font-sans uppercase tracking-wider">{t("or")}</span>
-              <div className="flex-1 h-px bg-neutral-200"></div>
-            </div>
-
-            {hasGoogleClientId ? (
-              <div className="w-full flex justify-center mt-2">
-                <div id="google-signin-btn"></div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleGoogleSimulation}
-                className="w-full border border-[#E6E2DA] bg-white hover:bg-neutral-50 text-neutral-700 font-semibold py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2.5 cursor-pointer h-10 mt-2"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.095-5.122 4.095-3.328 0-6.03-2.701-6.03-6.03s2.702-6.03 6.03-6.03c1.524 0 2.91.564 3.978 1.488l3.12-3.12C18.912 2.688 15.783 1.5 12.24 1.5 6.308 1.5 1.5 6.308 1.5 12.24s4.808 10.74 10.74 10.74c5.94 0 11.233-4.269 11.233-10.74 0-.726-.08-1.422-.227-2.083H12.24v.128Z"
-                  />
-                </svg>
-                <span>{lang === "ar" ? "المواصلة باستخدام Google" : "Continue with Google"}</span>
-              </button>
-            )}
+            {renderGoogleSection()}
           </form>
         )}
       </div>
