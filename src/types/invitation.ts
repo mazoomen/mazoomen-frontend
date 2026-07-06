@@ -38,6 +38,7 @@ export interface InvitationData {
   id: string;
   templateId: string;
   userId?: string | null;
+  purchaseId?: string | null;
   slug: string;
   languageMode?: string | null;
   eventTitle: string;

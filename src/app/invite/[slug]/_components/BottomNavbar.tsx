@@ -7,7 +7,7 @@ interface BottomNavbarProps {
   musicUrl: string | null;
   musicPlaying: boolean;
   setMusicPlaying: (playing: boolean) => void;
-  theme?: 'gold' | 'green';
+  theme?: 'gold' | 'green' | 'emerald';
   viewingLang?: string;
   locationUrl?: string | null;
   onContactClick?: () => void;
@@ -162,24 +162,57 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   };
 
   const isGreen = theme === 'green';
+  const isEmerald = theme === 'emerald';
   const isEn = viewingLang === "en";
   
   // Custom theme colors configuration
   const colors = {
-    bg: isGreen ? 'rgba(253, 251, 246, 0.75)' : 'rgba(253, 251, 246, 0.75)',
-    border: isGreen ? '1px solid rgba(46, 90, 54, 0.22)' : '1px solid rgba(172, 140, 96, 0.28)',
-    shadow: isGreen ? '0 10px 30px -10px rgba(27, 50, 34, 0.12), 0 1px 3px rgba(27, 50, 34, 0.05)' : '0 10px 30px -10px rgba(172, 140, 96, 0.15), 0 1px 3px rgba(172, 140, 96, 0.05)',
+    bg: isEmerald
+      ? 'rgba(13, 35, 58, 0.85)'
+      : isGreen
+      ? 'rgba(253, 251, 246, 0.75)'
+      : 'rgba(253, 251, 246, 0.75)',
+    border: isEmerald
+      ? '1px solid rgba(197, 168, 128, 0.35)'
+      : isGreen
+      ? '1px solid rgba(46, 90, 54, 0.22)'
+      : '1px solid rgba(172, 140, 96, 0.28)',
+    shadow: isEmerald
+      ? '0 10px 30px -10px rgba(13, 35, 58, 0.5), 0 1px 3px rgba(197, 168, 128, 0.1)'
+      : isGreen
+      ? '0 10px 30px -10px rgba(27, 50, 34, 0.12), 0 1px 3px rgba(27, 50, 34, 0.05)'
+      : '0 10px 30px -10px rgba(172, 140, 96, 0.15), 0 1px 3px rgba(172, 140, 96, 0.05)',
     
-    textInactive: isGreen ? '#4A5D4E' : '#7D6A53',
-    textActive: isGreen ? '#1B3222' : '#ac8c60',
+    textInactive: isEmerald
+      ? 'rgba(255, 255, 255, 0.6)'
+      : isGreen
+      ? '#4A5D4E'
+      : '#7D6A53',
+    textActive: isEmerald
+      ? '#c5a880'
+      : isGreen
+      ? '#1B3222'
+      : '#ac8c60',
     
-    btnActiveBg: isGreen ? 'rgba(46, 90, 54, 0.12)' : 'rgba(172, 140, 96, 0.15)',
-    btnInactiveBg: isGreen ? 'rgba(46, 90, 54, 0.04)' : 'rgba(172, 140, 96, 0.04)',
+    btnActiveBg: isEmerald
+      ? 'rgba(197, 168, 128, 0.18)'
+      : isGreen
+      ? 'rgba(46, 90, 54, 0.12)'
+      : 'rgba(172, 140, 96, 0.15)',
+    btnInactiveBg: isEmerald
+      ? 'rgba(255, 255, 255, 0.06)'
+      : isGreen
+      ? 'rgba(46, 90, 54, 0.04)'
+      : 'rgba(172, 140, 96, 0.04)',
     
-    centerBtnBg: isGreen 
+    centerBtnBg: isEmerald
+      ? 'linear-gradient(135deg, #c5a880 0%, #e2d2bd 50%, #c5a880 100%)'
+      : isGreen 
       ? 'linear-gradient(135deg, #1B3222 0%, #3D7348 50%, #1B3222 100%)'
       : 'linear-gradient(135deg, rgb(172, 140, 96) 0%, rgb(210, 180, 140) 50%, rgb(172, 140, 96) 100%)',
-    centerBtnShadow: isGreen
+    centerBtnShadow: isEmerald
+      ? '0 6px 20px rgba(197, 168, 128, 0.45)'
+      : isGreen
       ? '0 6px 20px rgba(27, 50, 34, 0.35)'
       : '0 6px 20px rgba(172, 140, 96, 0.35)'
   };

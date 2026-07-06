@@ -7,13 +7,15 @@ interface EnvelopeOverlayProps {
   onOpen: () => void;
   sealImage?: string;
   viewingLang?: string;
+  customSealStyle?: React.CSSProperties;
 }
 
 export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ 
   eventTitle, 
   onOpen,
   sealImage = "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png",
-  viewingLang
+  viewingLang,
+  customSealStyle
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -133,6 +135,7 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
               transform: isDefaultSeal ? 'scale(1.12)' : 'scale(1.02)',
               borderRadius: '50%',
               zIndex: 10,
+              ...customSealStyle
             }}
             loading="eager"
           />

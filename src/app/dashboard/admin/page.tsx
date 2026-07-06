@@ -655,7 +655,10 @@ export default function AdminDashboardPage() {
                       orders={orders.slice(0, 5)}
                       onStatusUpdated={handleStatusUpdated}
                       onLinkStatusUpdated={handleLinkStatusUpdated}
-                      onEditInvitation={setEditingPurchase}
+                      onEditInvitation={(purchase) => {
+                        setEditingPurchase(purchase);
+                        setIsEditorOpen(true);
+                      }}
                     />
                   </div>
                 </div>
@@ -677,7 +680,10 @@ export default function AdminDashboardPage() {
                     orders={orders}
                     onStatusUpdated={handleStatusUpdated}
                     onLinkStatusUpdated={handleLinkStatusUpdated}
-                    onEditInvitation={setEditingPurchase}
+                    onEditInvitation={(purchase) => {
+                      setEditingPurchase(purchase);
+                      setIsEditorOpen(true);
+                    }}
                   />
                 </div>
               )}
@@ -1025,7 +1031,7 @@ export default function AdminDashboardPage() {
       {/* ── Invitation Editor Overlay Modal (Admin Edit Popup) ───── */}
       {isEditorOpen && editingPurchase && (
         <div
-          className="fixed inset-0 bg-[#2D3142]/45 backdrop-blur-sm z-50 overflow-y-auto p-4 flex items-center justify-center"
+          className="fixed inset-0 bg-[#2D3142]/45 backdrop-blur-sm z-50 overflow-y-auto p-4 flex justify-center items-start"
           role="dialog"
           aria-modal="true"
         >
