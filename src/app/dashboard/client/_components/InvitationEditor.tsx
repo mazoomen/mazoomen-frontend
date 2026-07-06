@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { useLanguage } from "@/components/LanguageContext";
+import type { InvitationData, PurchaseInvitation, EventProgramItem, EventDetailItem } from "@/types/invitation";
+import type { AxiosError } from "axios";
 
 interface InvitationEditorProps {
   purchaseId: string;
-  invitation: any | null; // InvitationData shape from purchase
+  invitation: InvitationData | PurchaseInvitation | null; // Supports both data models
   templateTitle: string;
   onSaved: () => void;
 }
@@ -110,7 +112,7 @@ export default function InvitationEditor({
   // ── Event Program (Timeline) State ──────────────────────────────────
   const [eventProgram, setEventProgram] = useState<{ time: string; titleAr: string; titleEn: string }[]>(() => {
     if (invitation?.eventProgram?.length) {
-      return invitation.eventProgram.map((p: any) => ({
+      return invitation.eventProgram.map((p: EventProgramItem) => ({
         time: p.time || "",
         titleAr: p.titleAr || p.title || "",
         titleEn: p.titleEn || p.title || "",
@@ -122,7 +124,7 @@ export default function InvitationEditor({
   // ── Event Details State ─────────────────────────────────────────────
   const [eventDetails, setEventDetails] = useState<{ textAr: string; textEn: string }[]>(() => {
     if (invitation?.eventDetails?.length) {
-      return invitation.eventDetails.map((d: any) => ({
+      return invitation.eventDetails.map((d: EventDetailItem) => ({
         textAr: d.textAr || d.text || "",
         textEn: d.textEn || d.text || "",
       }));
@@ -269,10 +271,11 @@ export default function InvitationEditor({
         setStatus("idle");
         onSaved();
       }, 1000);
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
       setStatus("error");
-      if (err.response?.data?.message) {
-        const msg = err.response.data.message;
+      if (error.response?.data?.message) {
+        const msg = error.response.data.message;
         setErrorMsg(Array.isArray(msg) ? msg[0] : msg);
       } else {
         setErrorMsg(t("Save failed"));

@@ -47,6 +47,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
+      lang="ar"
+      dir="rtl"
       className={`${playfair.variable} ${inter.variable} ${arefRuqaa.variable} ${amiri.variable} ${cinzel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">

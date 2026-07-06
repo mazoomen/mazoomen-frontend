@@ -1,20 +1,29 @@
-// ── Auth / User ────────────────────────────────────────────────────────
+// ── Re-exports from split type files ───────────────────────────────────
+// Kept for backward compatibility — new code should import directly
+// from @/types/auth, @/types/template, or @/types/purchase.
+export type { AuthUser, LoginResponse, UserProfile } from "./auth";
+export type { Template, TemplateCategory } from "./template";
+export type {
+  PurchaseData,
+  PurchaseInvitation,
+  PurchaseTemplate,
+  PurchaseRequestData,
+} from "./purchase";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: "ADMIN" | "CLIENT";
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
+// ── Invitation-Specific Types ──────────────────────────────────────────
+
+export interface EventProgramItem {
+  time: string;
+  title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
 }
 
-export interface LoginResponse {
-  accessToken: string;
-  user: AuthUser;
+export interface EventDetailItem {
+  text: string;
+  textAr?: string | null;
+  textEn?: string | null;
 }
-
-// ── Invitation data shape (matches backend GET /invitations/slug/:slug) ──
 
 export interface InvitationTemplate {
   id: string;
@@ -44,8 +53,8 @@ export interface InvitationData {
   welcomeTextEn?: string | null;
   images: string[];
   musicUrl: string | null;
-  eventProgram?: { time: string; title: string; titleAr?: string | null; titleEn?: string | null }[];
-  eventDetails?: { text: string; textAr?: string | null; textEn?: string | null }[];
+  eventProgram?: EventProgramItem[];
+  eventDetails?: EventDetailItem[];
   contactName?: string | null;
   contactPhone?: string | null;
   allowGuestUploads?: boolean;
@@ -55,8 +64,7 @@ export interface InvitationData {
   wishes?: { name: string; text: string }[];
 }
 
-
-// ── RSVP ───────────────────────────────────────────────────────────────
+// ── RSVP Types ─────────────────────────────────────────────────────────
 
 export interface CreateRsvpPayload {
   invitationId: string;
@@ -87,27 +95,3 @@ export interface RsvpListResponse {
   statistics: RsvpStatistics;
   rsvps: RsvpResponse[];
 }
-
-export type TemplateCategory =
-  | "Weddings"
-  | "Bridal Showers"
-  | "Engagement Parties"
-  | "Birthdays"
-  | "Corporate Events";
-
-export interface Template {
-  id: string;
-  title: string;
-  titleAr?: string | null;
-  titleEn?: string | null;
-  description: string;
-  previewImage: string;
-  price: string | number;
-  editableFields: Record<string, unknown>;
-  demoLink?: string | null;
-  isPremium: boolean;
-  isActive: boolean;
-  category: TemplateCategory;
-  createdAt: string;
-}
-

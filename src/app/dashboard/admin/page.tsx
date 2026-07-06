@@ -2,21 +2,25 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import api from "@/lib/api";
-import { Template, AuthUser } from "@/types/invitation";
+import { logger } from "@/lib/logger";
+import type { Template, AuthUser } from "@/types/invitation";
 import { useLanguage } from "@/components/LanguageContext";
 import {
   OrdersTable,
   AddTemplateForm,
   StatsCards,
   UsersTable,
+  ReviewsTable,
   type Order,
   type User,
 } from "./_components";
 import InvitationEditor from "../client/_components/InvitationEditor";
+import { Spinner, ErrorState, Modal, Button } from "@/components/ui";
 
 type LoadStatus = "loading" | "loaded" | "error";
-type TabType = "overview" | "users" | "requests" | "templates";
+type TabType = "overview" | "users" | "requests" | "templates" | "reviews";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -26,6 +30,7 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
 
   // Reactive UI Navigation state
@@ -61,17 +66,19 @@ export default function AdminDashboardPage() {
   // ── Fetch all data simultaneously ────────────────────────────────────
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [ordersRes, usersRes, templatesRes] = await Promise.all([
+      const [ordersRes, usersRes, templatesRes, reviewsRes] = await Promise.all([
         api.get<Order[]>("/purchase-requests"),
         api.get<User[]>("/users"),
-        api.get<Template[]>("/templates"),
+        api.get<Template[]>("/templates?includeInactive=true"),
+        api.get<any[]>("/testimonials/admin"),
       ]);
       setOrders(ordersRes.data);
       setUsers(usersRes.data);
       setTemplates(templatesRes.data);
+      setReviews(reviewsRes.data);
       setStatus("loaded");
     } catch (err) {
-      console.error("Dashboard data fetching error:", err);
+      logger.error("Dashboard data fetching error", err);
       setStatus("error");
     }
   }, []);
@@ -82,7 +89,6 @@ export default function AdminDashboardPage() {
       const stored = localStorage.getItem("user");
       if (stored) {
         try {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           setAdminUser(JSON.parse(stored));
         } catch {}
       }
@@ -101,10 +107,10 @@ export default function AdminDashboardPage() {
   // ── Requests approval status updates ───────────────────────────────────
   const handleStatusUpdated = (
     orderId: string,
-    newStatus: "APPROVED" | "REJECTED",
+    newStatus: "APPROVED" | "REJECTED"
   ) => {
     setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
+      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
   };
 
@@ -163,7 +169,9 @@ export default function AdminDashboardPage() {
       } else {
         // Add Mode: POST /users
         if (!modalForm.password) {
-          throw new Error(lang === "ar" ? "كلمة المرور مطلوبة للمستخدمين الجدد." : "Password is required for new users.");
+          throw new Error(
+            lang === "ar" ? "كلمة المرور مطلوبة للمستخدمين الجدد." : "Password is required for new users."
+          );
         }
 
         await api.post("/users", {
@@ -181,14 +189,18 @@ export default function AdminDashboardPage() {
       setUserModalOpen(false);
       await fetchDashboardData();
     } catch (err: unknown) {
-      console.error(err);
-      const error = err as { response?: { data?: { message?: string | string[] } }; message?: string };
+      logger.error("Failed to save user details", err);
+      const error = err as {
+        response?: { data?: { message?: string | string[] } };
+        message?: string;
+      };
       if (error.response?.data?.message) {
         const msg = error.response.data.message;
         setModalError(Array.isArray(msg) ? msg[0] : msg);
       } else {
         setModalError(
-          error.message || (lang === "ar" ? "فشل حفظ تفاصيل المستخدم." : "Failed to save user details.")
+          error.message ||
+            (lang === "ar" ? "فشل حفظ تفاصيل المستخدم." : "Failed to save user details.")
         );
       }
     } finally {
@@ -205,7 +217,7 @@ export default function AdminDashboardPage() {
         prev.map((t) => (t.id === templateId ? { ...t, isActive: newActive } : t))
       );
     } catch (err) {
-      console.error("Failed to toggle template activation:", err);
+      logger.error("Failed to toggle template activation", err);
     }
   };
 
@@ -228,6 +240,15 @@ export default function AdminDashboardPage() {
     );
   };
 
+  const handleDeleteReview = async (reviewId: string) => {
+    try {
+      await api.delete(`/testimonials/${reviewId}`);
+      setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    } catch (err) {
+      logger.error("Failed to delete review", err);
+    }
+  };
+
   const handleAddSuccess = async () => {
     setIsAddingTemplate(false);
     await fetchDashboardData();
@@ -243,7 +264,7 @@ export default function AdminDashboardPage() {
   const approvedCount = orders.filter((o) => o.status === "APPROVED").length;
   const totalRevenue = orders
     .filter((o) => o.status === "APPROVED")
-    .reduce((sum, o) => sum + parseFloat(o.template.price), 0);
+    .reduce((sum, o) => sum + parseFloat(o.template.price.toString()), 0);
   const totalUsers = users.length;
   const totalTemplates = templates.length;
 
@@ -251,12 +272,11 @@ export default function AdminDashboardPage() {
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#FAF9F6] font-sans">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#EBE7DF] border-t-[#B89C72]" />
-          <p className="text-xs text-neutral-400 font-medium">
-            {lang === "ar" ? "جاري تحميل لوحة التحكم..." : "Loading dashboard details..."}
-          </p>
-        </div>
+        <Spinner
+          label={
+            lang === "ar" ? "جاري تحميل لوحة التحكم..." : "Loading dashboard details..."
+          }
+        />
       </div>
     );
   }
@@ -265,27 +285,21 @@ export default function AdminDashboardPage() {
   if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#FAF9F6] font-sans p-6">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center max-w-md w-full shadow flex flex-col items-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600 mb-4">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <p className="mt-1 text-sm text-red-600 font-bold leading-normal">
-            {lang === "ar"
+        <ErrorState
+          title={
+            lang === "ar"
+              ? "فشل في تحميل لوحة تحكم الإدارة."
+              : "Failed to load Admin Panel."
+          }
+          message={
+            lang === "ar"
               ? "فشل في تحميل لوحة تحكم الإدارة. يرجى التأكد من تشغيل الخادم."
-              : "Failed to load Admin Panel. Make sure the backend server is running."}
-          </p>
-          <button
-            onClick={() => {
-              setStatus("loading");
-              fetchDashboardData();
-            }}
-            className="mt-5 rounded-full bg-red-100 px-6 py-2 text-xs font-bold text-red-700 hover:bg-red-200 transition-all cursor-pointer"
-          >
-            {lang === "ar" ? "إعادة المحاولة" : "Retry Loading"}
-          </button>
-        </div>
+              : "Failed to load Admin Panel. Make sure the backend server is running."
+          }
+          retryLabel={lang === "ar" ? "إعادة المحاولة" : "Retry Loading"}
+          onRetry={fetchDashboardData}
+          className="max-w-md w-full"
+        />
       </div>
     );
   }
@@ -295,7 +309,16 @@ export default function AdminDashboardPage() {
     { id: "overview" as const, labelAr: "لوحة التحكم", labelEn: "Overview" },
     { id: "users" as const, labelAr: "إدارة المستخدمين", labelEn: "Users Directory" },
     { id: "requests" as const, labelAr: "طلبات النماذج", labelEn: "Form Requests" },
-    { id: "templates" as const, labelAr: "إدارة النماذج والقوالب", labelEn: "Forms & Templates" },
+    {
+      id: "templates" as const,
+      labelAr: "إدارة النماذج والقوالب",
+      labelEn: "Forms & Templates",
+    },
+    {
+      id: "reviews" as const,
+      labelAr: "إدارة التقييمات",
+      labelEn: "Client Reviews",
+    },
   ];
 
   return (
@@ -316,15 +339,28 @@ export default function AdminDashboardPage() {
           sidebarOpen
             ? "translate-x-0"
             : lang === "ar"
-            ? "translate-x-full lg:translate-x-0"
-            : "-translate-x-full lg:translate-x-0"
+              ? "translate-x-full lg:translate-x-0"
+              : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Logo and Brand */}
         <div className="flex h-16 items-center border-b border-[#1E2E4A]/30 px-6 justify-between">
           <span className="text-lg font-bold text-white flex items-center gap-2 select-none">
-            <svg width="18" height="18" fill="none" stroke="#E5C38B" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0 text-[#E5C38B]">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="#E5C38B"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+              className="shrink-0 text-[#E5C38B]"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              />
             </svg>
             <span className="text-[#E5C38B] font-serif">Mazoom</span>
             <span className="text-[9px] bg-[#E5C38B]/10 text-[#E5C38B] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
@@ -361,23 +397,88 @@ export default function AdminDashboardPage() {
               }`}
             >
               {item.id === "overview" && (
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
                 </svg>
               )}
               {item.id === "users" && (
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
                 </svg>
               )}
               {item.id === "requests" && (
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               )}
               {item.id === "templates" && (
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              )}
+              {item.id === "reviews" && (
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11.48 3.499c.195-.572.93-.572 1.125 0l2.122 6.24a.75.75 0 00.716.521h6.562c.607 0 .86.779.37 1.17l-5.309 4.148a.75.75 0 00-.273.839l2.122 6.24c.196.572-.453 1.05-.94.7l-5.308-4.149a.75.75 0 00-.895 0l-5.308 4.149c-.487.35-1.136-.128-.94-.7l2.12-6.24a.75.75 0 00-.273-.839l-5.308-4.148c-.49-.391-.237-1.17.37-1.17h6.563a.75.75 0 00.716-.521l2.122-6.24z"
+                  />
                 </svg>
               )}
               <span className="truncate">{lang === "ar" ? item.labelAr : item.labelEn}</span>
@@ -407,7 +508,7 @@ export default function AdminDashboardPage() {
             onClick={handleLogout}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold text-[#7F8487] hover:bg-[#1E2E4A]/30 hover:text-red-400 transition-colors cursor-pointer"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
                 stroke="currentColor"
@@ -427,10 +528,10 @@ export default function AdminDashboardPage() {
         <header className="flex h-16 shrink-0 items-center border-b border-[#1E2E4A]/20 bg-[#0B1528] px-4 backdrop-blur-md lg:hidden text-white justify-between">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-neutral-400 hover:bg-[#1E2E4A]/30 hover:text-white"
+            className="rounded-lg p-2 text-neutral-400 hover:bg-[#1E2E4A]/30 hover:text-white cursor-pointer"
             aria-label="Open sidebar"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M3 12h18M3 6h18M3 18h18"
                 stroke="currentColor"
@@ -445,16 +546,20 @@ export default function AdminDashboardPage() {
                 ? "لوحة التحكم"
                 : "Overview"
               : activeTab === "users"
-              ? lang === "ar"
-                ? "إدارة المستخدمين"
-                : "Users Management"
-              : activeTab === "requests"
-              ? lang === "ar"
-                ? "طلبات النماذج"
-                : "Form Requests"
-              : lang === "ar"
-              ? "إدارة القوالب"
-              : "Forms & Templates"}
+                ? lang === "ar"
+                  ? "إدارة المستخدمين"
+                  : "Users Management"
+                : activeTab === "requests"
+                  ? lang === "ar"
+                    ? "طلبات النماذج"
+                    : "Form Requests"
+                  : activeTab === "templates"
+                    ? lang === "ar"
+                      ? "إدارة القوالب"
+                      : "Forms & Templates"
+                    : lang === "ar"
+                      ? "إدارة التقييمات"
+                      : "Client Reviews"}
           </span>
           <button
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
@@ -476,16 +581,20 @@ export default function AdminDashboardPage() {
                       ? "لوحة التحكم الرئيسية"
                       : "Overview Dashboard"
                     : activeTab === "users"
-                    ? lang === "ar"
-                      ? "دليل المستخدمين"
-                      : "User Directory"
-                    : activeTab === "requests"
-                    ? lang === "ar"
-                      ? "طلبات تفعيل النماذج"
-                      : "Form Unlock Requests"
-                    : lang === "ar"
-                    ? "إدارة القوالب والنماذج"
-                    : "Forms & Templates"}
+                      ? lang === "ar"
+                        ? "دليل المستخدمين"
+                        : "User Directory"
+                      : activeTab === "requests"
+                        ? lang === "ar"
+                          ? "طلبات تفعيل النماذج"
+                          : "Form Unlock Requests"
+                        : activeTab === "templates"
+                          ? lang === "ar"
+                            ? "إدارة القوالب والنماذج"
+                            : "Forms & Templates"
+                          : lang === "ar"
+                            ? "إدارة مراجعات العملاء"
+                            : "Client Reviews Management"}
                 </h1>
                 <p className="text-[11px] text-neutral-400 mt-1 font-sans">
                   {activeTab === "overview"
@@ -493,49 +602,38 @@ export default function AdminDashboardPage() {
                       ? "نظرة عامة على مبيعات وإحصاءات المنصة."
                       : "Overview of platform templates, requests, and total revenue."
                     : activeTab === "users"
-                    ? lang === "ar"
-                      ? "إدارة وتعديل بيانات مستخدمي المنصة وتعيين الصلاحيات."
-                      : "Manage platform users, update information, and assign roles."
-                    : activeTab === "requests"
-                    ? lang === "ar"
-                      ? "التحكم بطلبات فتح القوالب من قبل العملاء وتغيير حالتها."
-                      : "Review, approve, or reject client purchase requests."
-                    : lang === "ar"
-                    ? "استعراض وتعديل قوالب وتصاميم بطاقات الدعوة المتاحة."
-                    : "Browse, edit, and configure available invitation designs and templates."}
+                      ? lang === "ar"
+                        ? "إدارة وتعديل بيانات مستخدمي المنصة وتعيين الصلاحيات."
+                        : "Manage platform users, update information, and assign roles."
+                      : activeTab === "requests"
+                        ? lang === "ar"
+                          ? "طلبات شراء وتفعيل النماذج والقوالب المعلقة من قبل العملاء."
+                          : "Pending custom templates activation and purchases requests."
+                        : activeTab === "templates"
+                          ? lang === "ar"
+                            ? "إضافة وتعديل وحذف النماذج والقوالب المتوفرة على المنصة."
+                            : "Configure templates, prices, preview images, and edit default categories."
+                          : lang === "ar"
+                            ? "عرض والبحث وحذف تقييمات العملاء للنماذج والخدمات."
+                            : "Browse, filter, and delete customer reviews and ratings."}
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  setStatus("loading");
-                  fetchDashboardData();
-                }}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#EBE7DF] px-3.5 py-1.5 text-[10px] font-bold text-neutral-600 shadow-xs transition-all hover:bg-neutral-50 cursor-pointer"
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-neutral-500">
-                  <path
-                    d="M1 4v6h6M23 20v-6h-6"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                {lang === "ar" ? "تحديث البيانات" : "Refresh Data"}
-              </button>
+              {/* Action Buttons based on Tab */}
+              {activeTab === "users" && (
+                <Button variant="primary" onClick={openAddUserModal}>
+                  {lang === "ar" ? "+ مستخدم جديد" : "+ Add User"}
+                </Button>
+              )}
+              {activeTab === "templates" && !isAddingTemplate && !editingTemplate && (
+                <Button variant="primary" onClick={() => setIsAddingTemplate(true)}>
+                  {lang === "ar" ? "+ قالب جديد" : "+ Add Template"}
+                </Button>
+              )}
             </div>
 
-            {/* Render Tab Contents */}
-            <div className="space-y-6">
-              {/* Overview / Stats Dashboard */}
+            {/* Content Area Rendering */}
+            <div className="transition-all duration-300">
               {activeTab === "overview" && (
                 <div className="space-y-6 animate-fadeIn">
                   <StatsCards
@@ -546,160 +644,22 @@ export default function AdminDashboardPage() {
                     totalTemplates={totalTemplates}
                   />
 
-                  {/* Summary Details Grid */}
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    {/* Recent requests */}
-                    <div className="lg:col-span-2 rounded-2xl border border-[#EBE7DF] bg-white p-5 shadow-xs space-y-4">
-                      <div className="flex items-center justify-between border-b border-[#FAF1EA] pb-3">
-                        <h3 className="font-serif font-bold text-neutral-800 text-xs">
-                          {lang === "ar" ? "الطلبات الأخيرة" : "Recent Requests"}
-                        </h3>
-                        <button
-                          onClick={() => setActiveTab("requests")}
-                          className="text-[10px] font-bold text-[#B89C72] hover:text-[#A3875D] transition-colors"
-                        >
-                          {lang === "ar" ? "عرض جميع الطلبات ←" : "View All Requests →"}
-                        </button>
-                      </div>
-
-                      <div className="divide-y divide-[#FAF1EA]">
-                        {orders.slice(0, 3).map((o) => (
-                          <div
-                            key={o.id}
-                            className={`py-3 flex items-center justify-between text-xs font-sans ${
-                              lang === "ar" ? "text-right" : "text-left"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="relative h-8 w-12 shrink-0 overflow-hidden rounded border border-[#EBE7DF] bg-[#FAF8F5]">
-                                <img
-                                  src={o.template.previewImage}
-                                  alt={o.template.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-neutral-800 leading-tight">
-                                  {o.user.firstName} {o.user.lastName}
-                                </p>
-                                <p className="text-[10px] text-neutral-400 mt-0.5">
-                                  {lang === "ar"
-                                    ? `طلب قالب ${o.template.title}`
-                                    : `Requested ${o.template.title}`}
-                                </p>
-                              </div>
-                            </div>
-
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold ${
-                                o.status === "PENDING"
-                                  ? "bg-amber-50 text-amber-600 border-amber-100"
-                                  : o.status === "APPROVED"
-                                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                  : o.status === "REJECTED"
-                                  ? "bg-red-50 text-red-600 border-red-100"
-                                  : "bg-neutral-50 text-neutral-600 border-neutral-200"
-                              }`}
-                            >
-                              <span className={`h-1 w-1 rounded-full ${
-                                o.status === "PENDING"
-                                  ? "bg-amber-500"
-                                  : o.status === "APPROVED"
-                                  ? "bg-emerald-500"
-                                  : o.status === "REJECTED"
-                                  ? "bg-red-500"
-                                  : "bg-neutral-400"
-                              }`} />
-                              {o.status === "PENDING"
-                                ? lang === "ar"
-                                  ? "قيد الانتظار"
-                                  : "Pending"
-                                : o.status === "APPROVED"
-                                ? lang === "ar"
-                                  ? "مقبول"
-                                  : "Approved"
-                                : o.status === "REJECTED"
-                                ? lang === "ar"
-                                  ? "مرفوض"
-                                  : "Rejected"
-                                : lang === "ar"
-                                ? "ملغي"
-                                : "Cancelled"}
-                            </span>
-                          </div>
-                        ))}
-
-                        {orders.length === 0 && (
-                          <p className="text-xs text-neutral-400 py-4 text-center">
-                            {lang === "ar" ? "لا توجد طلبات شراء مسجلة." : "No purchase requests have been made yet."}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Quick navigation panel */}
-                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-5 text-neutral-800 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-serif font-bold text-neutral-800 text-xs border-b border-[#FAF1EA] pb-3">
-                          {lang === "ar" ? "الوصول السريع" : "Quick Actions"}
-                        </h3>
-                        <div className="mt-4 space-y-2 font-sans text-xs">
-                          <button
-                            onClick={() => setActiveTab("templates")}
-                            className={`flex w-full items-center gap-2.5 rounded-xl bg-[#FAF9F6] border border-[#EBE7DF] hover:bg-[#FAF8F5] hover:border-[#B89C72]/50 px-3.5 py-2.5 text-neutral-700 font-bold transition-all ${
-                              lang === "ar" ? "text-right" : "text-left"
-                            }`}
-                          >
-                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0 text-[#B89C72]">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span>{lang === "ar" ? "إضافة قالب جديد" : "Add New Template"}</span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("requests")}
-                            className={`flex w-full items-center gap-2.5 rounded-xl bg-[#FAF9F6] border border-[#EBE7DF] hover:bg-[#FAF8F5] hover:border-[#B89C72]/50 px-3.5 py-2.5 text-neutral-700 font-bold transition-all ${
-                              lang === "ar" ? "text-right" : "text-left"
-                            }`}
-                          >
-                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0 text-[#B89C72]">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>
-                              {lang === "ar"
-                                ? `مراجعة ${pendingCount} طلب معلق`
-                                : `Review ${pendingCount} Pending Requests`}
-                            </span>
-                          </button>
-                          <button
-                            onClick={() => setActiveTab("users")}
-                            className={`flex w-full items-center gap-2.5 rounded-xl bg-[#FAF9F6] border border-[#EBE7DF] hover:bg-[#FAF8F5] hover:border-[#B89C72]/50 px-3.5 py-2.5 text-neutral-700 font-bold transition-all ${
-                              lang === "ar" ? "text-right" : "text-left"
-                            }`}
-                          >
-                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0 text-[#B89C72]">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <span>
-                              {lang === "ar"
-                                ? `إدارة ${totalUsers} مستخدم نشط`
-                                : `Manage ${totalUsers} Active Users`}
-                            </span>
-                          </button>
-                        </div>
-                      </div>
-                      <div className="pt-4 border-t border-[#FAF1EA] mt-4 text-[10px] text-neutral-400 leading-normal font-sans">
-                        {lang === "ar"
-                          ? "استخدم روابط الاختصارات أعلاه للوصول السريع لمجموعات إدارة عناصر المنصة."
-                          : "Use these shortcut links to jump directly to specific control sections."}
-                      </div>
-                    </div>
+                  <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs">
+                    <h3 className="mb-4 font-serif text-sm font-bold text-neutral-800">
+                      {lang === "ar" ? "الطلبات الأخيرة" : "Recent Purchase Requests"}
+                    </h3>
+                    <OrdersTable
+                      orders={orders.slice(0, 5)}
+                      onStatusUpdated={handleStatusUpdated}
+                      onLinkStatusUpdated={handleLinkStatusUpdated}
+                      onEditInvitation={setEditingPurchase}
+                    />
                   </div>
                 </div>
               )}
 
-              {/* Users Directory tab */}
               {activeTab === "users" && (
-                <div className="space-y-4 animate-fadeIn bg-white border border-[#EBE7DF] p-6 rounded-2xl shadow-xs">
+                <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs animate-fadeIn">
                   <UsersTable
                     users={users}
                     onEditUser={openEditUserModal}
@@ -708,101 +668,81 @@ export default function AdminDashboardPage() {
                 </div>
               )}
 
-              {/* Requests Management tab */}
               {activeTab === "requests" && (
-                <div className="space-y-4 animate-fadeIn bg-white border border-[#EBE7DF] p-6 rounded-2xl shadow-xs">
+                <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs animate-fadeIn">
                   <OrdersTable
                     orders={orders}
                     onStatusUpdated={handleStatusUpdated}
                     onLinkStatusUpdated={handleLinkStatusUpdated}
-                    onEditInvitation={(purchase) => {
-                      setEditingPurchase(purchase);
-                      setIsEditorOpen(true);
-                    }}
+                    onEditInvitation={setEditingPurchase}
                   />
                 </div>
               )}
 
-              {/* Templates Management tab */}
               {activeTab === "templates" && (
-                <div className="space-y-6 animate-fadeIn">
-                  {editingTemplate ? (
-                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 sm:p-8 shadow-xs space-y-4">
-                      <div className="border-b border-[#FAF1EA] pb-3 flex justify-between items-center">
-                        <h3 className="font-serif font-bold text-neutral-800 text-sm">
-                          {lang === "ar" ? "تعديل القالب" : "Edit Template"}: {editingTemplate.title}
+                <div className="animate-fadeIn">
+                  {isAddingTemplate && (
+                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs">
+                      <div className="mb-6 flex items-center justify-between border-b border-[#FAF1EA] pb-3">
+                        <h3 className="font-serif text-sm font-bold text-neutral-850">
+                          {lang === "ar" ? "إضافة قالب زفاف جديد" : "Add New Wedding Template"}
                         </h3>
-                        <button
-                          onClick={() => setEditingTemplate(null)}
-                          className="text-xs text-neutral-400 hover:text-neutral-650 cursor-pointer font-bold font-sans"
-                        >
-                          {lang === "ar" ? "← رجوع للقائمة" : "← Back to List"}
-                        </button>
-                      </div>
-                      <AddTemplateForm
-                        initialTemplateData={editingTemplate}
-                        onSuccess={handleEditSuccess}
-                        onCancel={() => setEditingTemplate(null)}
-                      />
-                    </div>
-                  ) : isAddingTemplate ? (
-                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 sm:p-8 shadow-xs space-y-4">
-                      <div className="border-b border-[#FAF1EA] pb-3 flex justify-between items-center">
-                        <h3 className="font-serif font-bold text-neutral-800 text-sm">
-                          {lang === "ar" ? "إنشاء قالب زفاف جديد" : "Create New Wedding Template"}
-                        </h3>
-                        <button
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => setIsAddingTemplate(false)}
-                          className="text-xs text-neutral-400 hover:text-neutral-650 cursor-pointer font-bold font-sans"
                         >
-                          {lang === "ar" ? "← رجوع للقائمة" : "← Back to List"}
-                        </button>
+                          {lang === "ar" ? "إلغاء وتراجع" : "Cancel"}
+                        </Button>
                       </div>
                       <AddTemplateForm
                         onSuccess={handleAddSuccess}
                         onCancel={() => setIsAddingTemplate(false)}
                       />
                     </div>
-                  ) : (
-                    <div className="space-y-4 bg-white border border-[#EBE7DF] p-6 rounded-2xl shadow-xs">
-                      {/* Section Header */}
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#FAF1EA] pb-4">
-                        <div>
-                          <h3 className="font-serif font-bold text-neutral-800 text-sm">
-                            {lang === "ar" ? "القوالب والنماذج المتاحة" : "Existing Invitation Templates"}
-                          </h3>
-                          <p className="text-[10px] text-neutral-450 mt-0.5">
-                            {lang === "ar"
-                              ? "عرض وتعديل وتفعيل أو إيقاف قوالب دعوات الزفاف المسجلة في المنصة."
-                              : "View, edit, activate, or deactivate invitation templates registered on the platform."}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setIsAddingTemplate(true)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0B1528] px-4 py-2.5 text-xs font-bold text-[#E5C38B] hover:bg-[#1E2E4A] transition-all cursor-pointer shadow-sm"
-                        >
-                          <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                          </svg>
-                          <span>{lang === "ar" ? "إضافة قالب جديد" : "Add New Template"}</span>
-                        </button>
-                      </div>
+                  )}
 
-                      {/* Template Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                  {editingTemplate && (
+                    <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs">
+                      <div className="mb-6 flex items-center justify-between border-b border-[#FAF1EA] pb-3">
+                        <h3 className="font-serif text-sm font-bold text-neutral-850">
+                          {lang === "ar" ? "تعديل بيانات القالب" : "Edit Template Details"} —{" "}
+                          <span className="text-[#B89C72]">{editingTemplate.title}</span>
+                        </h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingTemplate(null)}
+                        >
+                          {lang === "ar" ? "إلغاء وتراجع" : "Cancel"}
+                        </Button>
+                      </div>
+                      <AddTemplateForm
+                        onSuccess={handleEditSuccess}
+                        initialTemplateData={editingTemplate}
+                        onCancel={() => setEditingTemplate(null)}
+                      />
+                    </div>
+                  )}
+
+                  {!isAddingTemplate && !editingTemplate && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {templates.map((tpl) => (
                           <div
                             key={tpl.id}
-                            className="rounded-xl border border-[#EBE7DF] bg-[#FAF8F5]/30 overflow-hidden flex flex-col justify-between group hover:shadow-md transition-all duration-300"
+                            className="bg-white border border-[#EBE7DF] rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
                           >
-                            {/* Image Preview & Badges */}
-                            <div className="relative aspect-video bg-neutral-100 overflow-hidden border-b border-[#EBE7DF]">
-                              <img
+                            {/* Image Section */}
+                            <div className="w-full aspect-[4/3] bg-[#FAF8F5] p-3 border-b border-[#FAF1EA] flex items-center justify-center relative overflow-hidden shrink-0">
+                              <Image
                                 src={tpl.previewImage}
                                 alt={tpl.title}
-                                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                                fill
+                                unoptimized
+                                className="object-cover group-hover:scale-102 transition-transform duration-500"
                               />
-                              <div className="absolute top-2.5 inset-x-2.5 flex justify-between items-center">
+                              <div className="absolute top-2.5 inset-x-2.5 flex justify-between items-center z-10">
                                 <span
                                   className={`rounded-full px-2 py-0.5 text-[8px] font-bold text-white shadow-xs ${
                                     tpl.isActive ? "bg-emerald-500" : "bg-rose-500"
@@ -813,8 +753,8 @@ export default function AdminDashboardPage() {
                                       ? "نشط"
                                       : "Active"
                                     : lang === "ar"
-                                    ? "معطل"
-                                    : "Inactive"}
+                                      ? "معطل"
+                                      : "Inactive"}
                                 </span>
                                 {tpl.isPremium && (
                                   <span className="bg-amber-500 text-white rounded-full px-2 py-0.5 text-[8px] font-bold shadow-xs">
@@ -827,37 +767,41 @@ export default function AdminDashboardPage() {
                             {/* Details */}
                             <div className="p-4 flex-1 flex flex-col justify-between gap-4 font-sans text-xs">
                               <div>
-                                <h4 className="font-bold text-neutral-850 truncate">{tpl.title}</h4>
+                                <h4 className="font-bold text-neutral-850 truncate">
+                                  {tpl.title}
+                                </h4>
                                 <p className="text-[10px] text-neutral-450 mt-1 line-clamp-2 leading-relaxed">
                                   {tpl.description}
                                 </p>
                               </div>
 
                               <div className="flex justify-between items-center border-t border-[#FAF1EA] pt-3 mt-auto">
-                                <span className="font-bold text-neutral-800">{tpl.price} SAR</span>
+                                <span className="font-bold text-neutral-800">
+                                  {tpl.price} SAR
+                                </span>
                                 <div className="flex gap-2">
-                                  <button
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => setEditingTemplate(tpl)}
-                                    className="px-2.5 py-1.5 rounded-lg border border-[#EBE7DF] bg-white text-neutral-600 font-bold hover:bg-neutral-50 cursor-pointer"
                                   >
                                     {lang === "ar" ? "تعديل" : "Edit"}
-                                  </button>
-                                  <button
-                                    onClick={() => handleToggleTemplateActivation(tpl.id, tpl.isActive)}
-                                    className={`px-2.5 py-1.5 rounded-lg border font-bold cursor-pointer transition-all ${
-                                      tpl.isActive
-                                        ? "border-rose-200 text-rose-600 bg-rose-50/20 hover:bg-rose-50"
-                                        : "border-emerald-200 text-emerald-600 bg-emerald-50/20 hover:bg-emerald-50"
-                                    }`}
+                                  </Button>
+                                  <Button
+                                    variant={tpl.isActive ? "danger" : "gold"}
+                                    size="sm"
+                                    onClick={() =>
+                                      handleToggleTemplateActivation(tpl.id, tpl.isActive)
+                                    }
                                   >
                                     {tpl.isActive
                                       ? lang === "ar"
                                         ? "تعطيل"
                                         : "Deactivate"
                                       : lang === "ar"
-                                      ? "تفعيل"
-                                      : "Activate"}
-                                  </button>
+                                        ? "تفعيل"
+                                        : "Activate"}
+                                  </Button>
                                 </div>
                               </div>
                             </div>
@@ -865,14 +809,28 @@ export default function AdminDashboardPage() {
                         ))}
 
                         {templates.length === 0 && (
-                          <div className="col-span-full p-12 text-center bg-[#FAF9F6]/50 flex flex-col items-center">
+                          <div className="col-span-full p-12 text-center bg-[#FAF9F6]/50 flex flex-col items-center border border-dashed border-neutral-250 rounded-2xl">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-400 mb-3">
-                              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              <svg
+                                width="24"
+                                height="24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
                               </svg>
                             </div>
                             <p className="mt-1 text-xs text-neutral-400">
-                              {lang === "ar" ? "لا توجد قوالب زفاف مضافة بعد." : "No templates added yet."}
+                              {lang === "ar"
+                                ? "لا توجد قوالب زفاف مضافة بعد."
+                                : "No templates added yet."}
                             </p>
                           </div>
                         )}
@@ -881,186 +839,193 @@ export default function AdminDashboardPage() {
                   )}
                 </div>
               )}
+
+              {activeTab === "reviews" && (
+                <div className="rounded-2xl border border-[#EBE7DF] bg-white p-6 shadow-xs animate-fadeIn">
+                  <ReviewsTable
+                    reviews={reviews}
+                    onDeleteReview={handleDeleteReview}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </main>
       </div>
 
       {/* ── User Add/Edit Popup Modal overlay ──────────────────── */}
-      {userModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white border border-[#EBE7DF] rounded-2xl w-full max-w-md p-6 shadow-xl space-y-4 text-neutral-800">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-[#FAF1EA] pb-3">
-              <h3 className="font-serif font-bold text-neutral-800 text-sm">
-                {editingUser
-                  ? lang === "ar"
-                    ? "تعديل تفاصيل الحساب"
-                    : "Edit User Details"
-                  : lang === "ar"
-                  ? "إضافة حساب مستخدم جديد"
-                  : "Add New User Account"}
-              </h3>
-              <button
-                onClick={() => setUserModalOpen(false)}
-                className="text-neutral-400 hover:text-neutral-600 text-sm font-sans"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleModalSubmit} className="space-y-4 font-sans text-xs">
-              {modalError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-600 font-medium">
-                  {modalError}
-                </div>
-              )}
-
-              {/* First & Last Name */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                    {lang === "ar" ? "الاسم الأول" : "First Name"} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={modalForm.firstName}
-                    onChange={(e) => setModalForm({ ...modalForm, firstName: e.target.value })}
-                    className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                    {lang === "ar" ? "اسم العائلة" : "Last Name"} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={modalForm.lastName}
-                    onChange={(e) => setModalForm({ ...modalForm, lastName: e.target.value })}
-                    className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72]"
-                  />
-                </div>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                  {lang === "ar" ? "البريد الإلكتروني" : "Email Address"} *
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={modalForm.email}
-                  onChange={(e) => setModalForm({ ...modalForm, email: e.target.value })}
-                  className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72]"
-                />
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                  {lang === "ar" ? "رقم الهاتف" : "Phone Number"} *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="+966501234567"
-                  value={modalForm.phoneNumber}
-                  onChange={(e) => setModalForm({ ...modalForm, phoneNumber: e.target.value })}
-                  className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72]"
-                />
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                  {lang === "ar" ? "كلمة المرور" : "Password"}{" "}
-                  {!editingUser ? "*" : `(${lang === "ar" ? "اتركه فارغاً للاحتفاظ بالحالي" : "leave empty to keep current"})`}
-                </label>
-                <input
-                  type="password"
-                  required={!editingUser}
-                  value={modalForm.password}
-                  onChange={(e) => setModalForm({ ...modalForm, password: e.target.value })}
-                  className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72]"
-                />
-              </div>
-
-              {/* Role Selection */}
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
-                  {lang === "ar" ? "الصلاحية / الدور" : "Role"} *
-                </label>
-                <select
-                  value={modalForm.role}
-                  onChange={(e) => setModalForm({ ...modalForm, role: e.target.value as "ADMIN" | "CLIENT" })}
-                  className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 outline-none focus:border-[#B89C72]"
-                >
-                  <option value="CLIENT">{lang === "ar" ? "CLIENT (عميل)" : "CLIENT"}</option>
-                  <option value="ADMIN">{lang === "ar" ? "ADMIN (مشرف)" : "ADMIN"}</option>
-                </select>
-              </div>
-
-              {/* Active Status Switch */}
-              <div className="flex items-center justify-between p-3 bg-[#FAF9F6] border border-[#EBE7DF] rounded-xl">
-                <div>
-                  <span className="block text-xs font-bold text-neutral-700">
-                    {lang === "ar" ? "حالة الحساب" : "Account Status"}
-                  </span>
-                  <span className="block text-[10px] text-neutral-400 mt-0.5">
-                    {lang === "ar"
-                      ? "تفعيل أو تعطيل حساب المستخدم"
-                      : "Activate or deactivate the user account"}
-                  </span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={modalForm.isActive}
-                    onChange={(e) => setModalForm({ ...modalForm, isActive: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                </label>
-              </div>
-
-              {/* Modal Footer Controls */}
-              <div className="flex gap-2 justify-end pt-3 border-t border-[#FAF1EA] mt-4">
-                <button
-                  type="button"
-                  onClick={() => setUserModalOpen(false)}
-                  className="px-4 py-2 border border-[#EBE7DF] bg-white rounded-lg hover:bg-neutral-50 text-neutral-600 transition-all font-bold cursor-pointer"
-                >
-                  {lang === "ar" ? "إلغاء" : "Cancel"}
-                </button>
-                <button
-                  type="submit"
-                  disabled={modalSubmitting}
-                  className="px-5 py-2 bg-[#0B1528] text-[#E5C38B] rounded-lg hover:bg-[#1E2E4A] font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {modalSubmitting ? (
-                    <>
-                      <div className="w-3 h-3 rounded-full border border-[#E5C38B]/30 border-t-[#E5C38B] animate-spin"></div>
-                      {lang === "ar" ? "جاري الحفظ..." : "Saving..."}
-                    </>
-                  ) : lang === "ar" ? (
-                    "حفظ الحساب"
-                  ) : (
-                    "Save User"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
+      <Modal
+        isOpen={userModalOpen}
+        onClose={() => setUserModalOpen(false)}
+        backdrop="dark"
+        className="bg-white border border-[#EBE7DF] rounded-2xl w-full max-w-md p-6 shadow-xl space-y-4 text-neutral-800"
+        ariaLabel={
+          editingUser
+            ? lang === "ar"
+              ? "تعديل تفاصيل الحساب"
+              : "Edit User Details"
+            : lang === "ar"
+              ? "إضافة حساب مستخدم جديد"
+              : "Add New User Account"
+        }
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-[#FAF1EA] pb-3">
+          <h3 className="font-serif font-bold text-neutral-800 text-sm">
+            {editingUser
+              ? lang === "ar"
+                ? "تعديل تفاصيل الحساب"
+                : "Edit User Details"
+              : lang === "ar"
+                ? "إضافة حساب مستخدم جديد"
+                : "Add New User Account"}
+          </h3>
         </div>
-      )}
+
+        {/* Form */}
+        <form onSubmit={handleModalSubmit} className="space-y-4 font-sans text-xs text-right" dir="rtl">
+          {modalError && (
+            <div
+              className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-600 font-medium text-center"
+              role="alert"
+            >
+              {modalError}
+            </div>
+          )}
+
+          {/* First & Last Name */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+                {lang === "ar" ? "الاسم الأول" : "First Name"} *
+              </label>
+              <input
+                type="text"
+                required
+                value={modalForm.firstName}
+                onChange={(e) => setModalForm({ ...modalForm, firstName: e.target.value })}
+                className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72] text-right"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+                {lang === "ar" ? "اسم العائلة" : "Last Name"} *
+              </label>
+              <input
+                type="text"
+                required
+                value={modalForm.lastName}
+                onChange={(e) => setModalForm({ ...modalForm, lastName: e.target.value })}
+                className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72] text-right"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+              {lang === "ar" ? "البريد الإلكتروني" : "Email Address"} *
+            </label>
+            <input
+              type="email"
+              required
+              value={modalForm.email}
+              onChange={(e) => setModalForm({ ...modalForm, email: e.target.value })}
+              className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72] text-right"
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+              {lang === "ar" ? "رقم الهاتف" : "Phone Number"} *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="+966501234567"
+              value={modalForm.phoneNumber}
+              onChange={(e) => setModalForm({ ...modalForm, phoneNumber: e.target.value })}
+              className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72] text-right"
+            />
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+              {lang === "ar" ? "كلمة المرور" : "Password"}{" "}
+              {!editingUser
+                ? "*"
+                : `(${lang === "ar" ? "اتركه فارغاً للاحتفاظ بالحالي" : "leave empty to keep current"})`}
+            </label>
+            <input
+              type="password"
+              required={!editingUser}
+              value={modalForm.password}
+              onChange={(e) => setModalForm({ ...modalForm, password: e.target.value })}
+              className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72] text-right"
+            />
+          </div>
+
+          {/* Role Selection */}
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
+              {lang === "ar" ? "الصلاحية / الدور" : "Role"} *
+            </label>
+            <select
+              value={modalForm.role}
+              onChange={(e) =>
+                setModalForm({ ...modalForm, role: e.target.value as "ADMIN" | "CLIENT" })
+              }
+              className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 outline-none focus:border-[#B89C72]"
+            >
+              <option value="CLIENT">{lang === "ar" ? "CLIENT (عميل)" : "CLIENT"}</option>
+              <option value="ADMIN">{lang === "ar" ? "ADMIN (مشرف)" : "ADMIN"}</option>
+            </select>
+          </div>
+
+          {/* Active Status Switch */}
+          <div className="flex items-center justify-between p-3 bg-[#FAF9F6] border border-[#EBE7DF] rounded-xl">
+            <div>
+              <span className="block text-xs font-bold text-neutral-700">
+                {lang === "ar" ? "حالة الحساب" : "Account Status"}
+              </span>
+              <span className="block text-[10px] text-neutral-400 mt-0.5">
+                {lang === "ar"
+                  ? "تفعيل أو تعطيل حساب المستخدم"
+                  : "Activate or deactivate the user account"}
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={modalForm.isActive}
+                onChange={(e) => setModalForm({ ...modalForm, isActive: e.target.checked })}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          {/* Modal Footer Controls */}
+          <div className="flex gap-2 justify-end pt-3 border-t border-[#FAF1EA] mt-4" dir="ltr">
+            <Button variant="outline" onClick={() => setUserModalOpen(false)}>
+              {lang === "ar" ? "إلغاء" : "Cancel"}
+            </Button>
+            <Button type="submit" variant="primary" isLoading={modalSubmitting}>
+              {lang === "ar" ? "حفظ الحساب" : "Save User"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* ── Invitation Editor Overlay Modal (Admin Edit Popup) ───── */}
       {isEditorOpen && editingPurchase && (
-        <div className="fixed inset-0 bg-[#2D3142]/45 backdrop-blur-sm z-50 overflow-y-auto p-4 flex items-center justify-center">
+        <div
+          className="fixed inset-0 bg-[#2D3142]/45 backdrop-blur-sm z-50 overflow-y-auto p-4 flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-xl w-full p-8 shadow-2xl relative my-8 mx-auto text-neutral-800">
             {/* Close Button */}
             <button
@@ -1068,9 +1033,16 @@ export default function AdminDashboardPage() {
                 setIsEditorOpen(false);
                 setEditingPurchase(null);
               }}
-              className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors cursor-pointer"
+              className="absolute top-6 right-6 text-neutral-450 hover:text-black transition-colors cursor-pointer"
+              aria-label="Close editor"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                aria-hidden="true"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -1083,7 +1055,7 @@ export default function AdminDashboardPage() {
               onSaved={() => {
                 setIsEditorOpen(false);
                 setEditingPurchase(null);
-                fetchDashboardData(); // Refresh admin dashboard tables
+                fetchDashboardData();
               }}
             />
           </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import type { RsvpListResponse } from '@/types/invitation';
+import type { RsvpListResponse, RsvpResponse } from '@/types/invitation';
 import { useLanguage } from '@/components/LanguageContext';
 
 interface RsvpTrackerProps {
@@ -119,9 +119,9 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#FAF1EA]">
-                {rsvps.map((rsvp: any) => {
-                  const willAttend = rsvp.willAttend ?? (rsvp.attendance === 'YES');
-                  const count = rsvp.companionsCount ?? rsvp.guestsCount ?? 0;
+                {rsvps.map((rsvp: RsvpResponse) => {
+                  const willAttend = rsvp.willAttend;
+                  const count = rsvp.companionsCount;
 
                   return (
                     <tr
@@ -129,7 +129,7 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
                       className="transition-colors hover:bg-[#FAF8F5] text-neutral-700"
                     >
                       <td className="px-5 py-3.5 font-semibold text-neutral-800">
-                        {rsvp.name}
+                        {rsvp.guestName}
                       </td>
                       <td className="px-5 py-3.5">
                         {willAttend ? (

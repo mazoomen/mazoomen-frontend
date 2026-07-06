@@ -1,0 +1,113 @@
+"use client";
+
+import { useLanguage } from "@/components/LanguageContext";
+
+export interface TestimonialItem {
+  id: string;
+  rating: number;
+  comment: string;
+  clientInitials: string;
+  clientName: string;
+  eventTitle: string;
+}
+
+interface TestimonialsSectionProps {
+  testimonials: TestimonialItem[];
+}
+
+export default function TestimonialsSection({
+  testimonials,
+}: TestimonialsSectionProps) {
+  const { t, lang } = useLanguage();
+
+  if (!testimonials || testimonials.length === 0) return null;
+
+  return (
+    <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
+      <div className="max-w-[1700px] mx-auto flex flex-col gap-10 relative">
+        <div className="text-center flex flex-col gap-1">
+          <h2 className="text-[26px] font-serif font-medium text-neutral-800">
+            {t("Testimonials")}
+          </h2>
+        </div>
+
+        <div className="relative w-full">
+          {/* Testimonial grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pr-12">
+            {testimonials.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all"
+              >
+                <div className="flex flex-col gap-2">
+                  {/* Rating stars display */}
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <span
+                        key={idx}
+                        className={
+                          idx < item.rating
+                            ? "text-amber-400 text-xs animate-pulse"
+                            : "text-neutral-200 text-xs"
+                        }
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <p className={`text-[12px] italic text-[#7F8487] leading-relaxed ${lang === "ar" ? "text-right" : "text-left"}`}>
+                    {item.comment}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#FAF9F6] border border-[#EBE7DF] overflow-hidden flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-bold text-neutral-600">
+                      {item.clientInitials}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="text-[12px] font-bold text-[#2D3142]">
+                      {item.clientName}
+                    </h4>
+                    <span className="text-[10px] text-[#7F8487] block -mt-0.5">
+                      {item.eventTitle}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right navigation arrow */}
+          <button
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer"
+            aria-label="Next testimonials"
+          >
+            <svg
+              className="w-4 h-4 text-black"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Pagination dots */}
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#2D3142] transition-all" />
+          <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer" />
+          <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer" />
+          <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer" />
+        </div>
+      </div>
+    </section>
+  );
+}
