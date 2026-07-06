@@ -332,13 +332,24 @@ export default function ClientOrdersPage() {
                         <span>{t("Create Invitation")}</span>
                       </Link>
                       {request.purchase && (
-                        <Button
-                          variant="outline"
-                          onClick={() => handleOpenReviewModal(request)}
-                          className="flex-grow"
-                        >
-                          {request.purchase.testimonial ? t("Update Review") : t("Rate Service")}
-                        </Button>
+                        request.purchase.testimonial?.isDeleted ? (
+                          <div className="flex-grow py-2.5 text-center text-xs font-semibold text-rose-500 bg-rose-50 rounded-xl border border-rose-100 flex items-center justify-center gap-1.5 px-3 select-none">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0 text-rose-500">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>
+                              {lang === "ar" ? "تم حذف تقييمك بواسطة المشرف" : "Your review has been deleted by an admin"}
+                            </span>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleOpenReviewModal(request)}
+                            className="flex-grow"
+                          >
+                            {request.purchase.testimonial ? t("Update Review") : t("Rate Service")}
+                          </Button>
+                        )
                       )}
                     </div>
                   ) : status === "CANCELLED" ? (
