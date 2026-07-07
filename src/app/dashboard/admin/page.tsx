@@ -99,10 +99,15 @@ export default function AdminDashboardPage() {
   }, [fetchDashboardData]);
 
   // ── Logout ───────────────────────────────────────────────────────────
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    router.replace("/?auth=login");
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout failed", err);
+    } finally {
+      localStorage.removeItem("user");
+      router.replace("/?auth=login");
+    }
   };
 
   // ── Requests approval status updates ───────────────────────────────────

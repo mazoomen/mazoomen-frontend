@@ -32,8 +32,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
+      const user = localStorage.getItem("user");
+      if (!user) {
         router.replace("/?auth=login");
         return;
       }

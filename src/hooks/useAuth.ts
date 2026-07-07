@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { AuthUser } from "@/types/invitation";
+import api from "@/lib/api";
 
 interface UseAuthReturn {
   /** Whether the user is authenticated */
@@ -9,7 +10,7 @@ interface UseAuthReturn {
   /** The currently authenticated user, or null */
   user: AuthUser | null;
   /** Store auth credentials after login/register */
-  login: (accessToken: string, user: AuthUser) => void;
+  login: (user: AuthUser) => void;
   /** Clear auth credentials and redirect to home */
   logout: () => void;
   /** Whether auth state has been initialized from localStorage */
@@ -29,10 +30,9 @@ export function useAuth(): UseAuthReturn {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const token = localStorage.getItem("access_token");
     const storedUser = localStorage.getItem("user");
 
-    if (token && storedUser) {
+    if (storedUser) {
       try {
         const parsed: AuthUser = JSON.parse(storedUser);
         setIsLoggedIn(true);
@@ -45,19 +45,21 @@ export function useAuth(): UseAuthReturn {
     setIsReady(true);
   }, []);
 
-  const login = useCallback((accessToken: string, userData: AuthUser) => {
-    localStorage.setItem("access_token", accessToken);
+  const login = useCallback((userData: AuthUser) => {
     localStorage.setItem("user", JSON.stringify(userData));
     setIsLoggedIn(true);
     setUser(userData);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUser(null);
-    window.location.href = "/";
+    api.post("/auth/logout").catch((err) => {
+      console.error("Backend logout failed:", err);
+    }).finally(() => {
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      setUser(null);
+      window.location.href = "/";
+    });
   }, []);
 
   return { isLoggedIn, user, login, logout, isReady };

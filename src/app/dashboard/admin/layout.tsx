@@ -14,13 +14,7 @@ export default function AdminLayout({
 
   // ── Auth guard — redirect non-ADMIN users ───────────────────────────
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
     const storedUser = localStorage.getItem("user");
-
-    if (!token) {
-      router.replace("/?auth=login");
-      return;
-    }
 
     if (storedUser) {
       try {

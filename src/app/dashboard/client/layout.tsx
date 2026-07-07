@@ -12,8 +12,8 @@ export default function ClientLayout({
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    const user = localStorage.getItem("user");
+    if (!user) {
       router.replace("/?auth=login");
     }
   }, [router]);

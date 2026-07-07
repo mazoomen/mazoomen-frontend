@@ -125,8 +125,7 @@ export default function AuthModal({
   };
 
   // ── Auth Handlers ────────────────────────────────────────────────────
-  const handleAuthSuccess = (accessToken: string, user: LoginResponse["user"]) => {
-    localStorage.setItem("access_token", accessToken);
+  const handleAuthSuccess = (user: LoginResponse["user"]) => {
     localStorage.setItem("user", JSON.stringify(user));
     onClose();
     window.location.href =
@@ -141,8 +140,8 @@ export default function AuthModal({
     setAuthError("");
     try {
       const res = await api.post("/auth/google", { token });
-      const { accessToken, user } = res.data;
-      handleAuthSuccess(accessToken, user);
+      const { user } = res.data;
+      handleAuthSuccess(user);
     } catch (err) {
       logger.error("Google Sign-In failed", err);
       setAuthError(t("Google Sign-In failed. Please try again."));
@@ -172,8 +171,8 @@ export default function AuthModal({
     try {
       const mockToken = `mock_${emailInput.trim()}_${firstName}_${lastName}`;
       const res = await api.post("/auth/google", { token: mockToken });
-      const { accessToken, user } = res.data;
-      handleAuthSuccess(accessToken, user);
+      const { user } = res.data;
+      handleAuthSuccess(user);
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
       logger.error("Google simulation failed", err);
@@ -203,7 +202,7 @@ export default function AuthModal({
         email: loginEmail.trim(),
         password: loginPassword,
       });
-      handleAuthSuccess(res.data.accessToken, res.data.user);
+      handleAuthSuccess(res.data.user);
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
       const msg = error.response?.data?.message;
@@ -252,7 +251,7 @@ export default function AuthModal({
         password: regPassword,
         phoneNumber: regPhone.trim(),
       });
-      handleAuthSuccess(res.data.accessToken, res.data.user);
+      handleAuthSuccess(res.data.user);
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
       if (error.response?.data?.message) {
