@@ -11,6 +11,7 @@ interface InvitationEditorProps {
   invitation: InvitationData | PurchaseInvitation | null; // Supports both data models
   templateTitle: string;
   onSaved: () => void;
+  editableFields?: any;
 }
 
 type SaveStatus = "idle" | "saving" | "success" | "error";
@@ -32,10 +33,33 @@ export default function InvitationEditor({
   invitation,
   templateTitle,
   onSaved,
+  editableFields,
 }: InvitationEditorProps) {
   const { lang, t } = useLanguage();
   const isRtl = lang === "ar";
   const isEditing = !!invitation;
+
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          if (user && user.role === "ADMIN") {
+            setIsAdmin(true);
+          }
+        } catch {}
+      }
+    }
+  }, []);
+
+  const isFieldEditable = (fieldKey: string) => {
+    if (isAdmin) return true;
+    if (!editableFields) return true;
+    return !!editableFields[fieldKey];
+  };
 
   // ── Parse initial Groom & Bride names from eventTitle ───────────────
   const parseCoupleNames = (title: string) => {
@@ -370,7 +394,7 @@ export default function InvitationEditor({
             onChange={(e) => editingLang === "ar" ? setGroomNameAr(e.target.value) : setGroomNameEn(e.target.value)}
             placeholder={editingLang === "ar" ? "مثال: أحمد" : "e.g. Ahmed"}
             required
-            disabled={status === "saving"}
+            disabled={status === "saving" || !isFieldEditable("groomName")}
             className={inputClass}
           />
         </div>
@@ -384,7 +408,7 @@ export default function InvitationEditor({
             onChange={(e) => editingLang === "ar" ? setBrideNameAr(e.target.value) : setBrideNameEn(e.target.value)}
             placeholder={editingLang === "ar" ? "مثال: سارة" : "e.g. Sarah"}
             required
-            disabled={status === "saving"}
+            disabled={status === "saving" || !isFieldEditable("brideName")}
             className={inputClass}
           />
         </div>
@@ -426,7 +450,7 @@ export default function InvitationEditor({
           value={eventDate}
           onChange={(e) => setEventDate(e.target.value)}
           required
-          disabled={status === "saving"}
+          disabled={status === "saving" || !isFieldEditable("eventDate")}
           className={inputClass}
           dir="ltr"
         />
@@ -443,7 +467,7 @@ export default function InvitationEditor({
           onChange={(e) => editingLang === "ar" ? setEventLocationAr(e.target.value) : setEventLocationEn(e.target.value)}
           placeholder={editingLang === "ar" ? "مثال: قاعة السمو، الرياض" : "e.g. Royal Hall, Riyadh"}
           required
-          disabled={status === "saving"}
+          disabled={status === "saving" || !isFieldEditable("eventLocation")}
           className={inputClass}
         />
       </div>
@@ -457,7 +481,7 @@ export default function InvitationEditor({
           onChange={(e) => setLocationUrl(e.target.value)}
           placeholder="https://maps.google.com/?q=..."
           required
-          disabled={status === "saving"}
+          disabled={status === "saving" || !isFieldEditable("locationUrl")}
           className={inputClass}
           dir="ltr"
         />
@@ -474,7 +498,7 @@ export default function InvitationEditor({
           placeholder={editingLang === "ar" ? "اكتب رسالة الترحيب والبطاقة باللغة العربية..." : "Write your welcome message in English..."}
           required
           rows={3}
-          disabled={status === "saving"}
+          disabled={status === "saving" || !isFieldEditable("welcomeText")}
           className="w-full bg-white border border-[#E6E2DA] rounded-2xl px-5 py-3 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all text-neutral-800 placeholder-neutral-400 resize-none"
         />
       </div>
@@ -488,18 +512,22 @@ export default function InvitationEditor({
             value={musicUrl}
             onChange={(e) => setMusicUrl(e.target.value)}
             placeholder={isRtl ? "رابط يوتيوب أو ملف صوتي" : "https://youtube.com/watch?v=... or audio URL"}
-            disabled={status === "saving" || isAudioUploading}
+            disabled={status === "saving" || isAudioUploading || !isFieldEditable("musicUrl")}
             className={inputClass}
             dir="ltr"
           />
-          <label className="flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#E6E2DA] bg-[#FAF8F5] hover:bg-neutral-50 cursor-pointer text-xs shrink-0 select-none text-neutral-600 font-sans font-semibold transition-colors">
+          <label className={`flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#E6E2DA] bg-[#FAF8F5] text-xs shrink-0 select-none text-neutral-600 font-sans font-semibold transition-colors ${
+            (status === "saving" || isAudioUploading || !isFieldEditable("musicUrl"))
+              ? "opacity-50 pointer-events-none cursor-not-allowed"
+              : "hover:bg-neutral-50 cursor-pointer"
+          }`}>
             <span>{isAudioUploading ? (isRtl ? "جاري الرفع..." : "Uploading...") : (isRtl ? "رفع ملف" : "Upload File")}</span>
             <input
               type="file"
               accept="audio/*"
               onChange={handleAudioUpload}
               className="hidden"
-              disabled={status === "saving" || isAudioUploading}
+              disabled={status === "saving" || isAudioUploading || !isFieldEditable("musicUrl")}
             />
           </label>
         </div>
@@ -512,18 +540,24 @@ export default function InvitationEditor({
           {images.filter(url => url.trim() !== "").map((url, i) => (
             <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-neutral-200 relative group bg-white flex items-center justify-center">
               <img src={url.startsWith('/public') ? baseUrl + url : url} alt="Gallery thumbnail" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={() => removeImageField(i)}
-                className="absolute top-2 right-2 bg-black/60 hover:bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
+              {isFieldEditable("images") && (
+                <button
+                  type="button"
+                  onClick={() => removeImageField(i)}
+                  className="absolute top-2 right-2 bg-black/60 hover:bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
           
           {/* Upload Card button */}
-          <label className="aspect-square rounded-2xl border border-dashed border-neutral-300 hover:border-black flex flex-col items-center justify-center cursor-pointer transition-colors bg-[#FAF8F5] text-neutral-400 select-none">
+          <label className={`aspect-square rounded-2xl border border-dashed border-neutral-300 flex flex-col items-center justify-center transition-colors bg-[#FAF8F5] text-neutral-400 select-none ${
+            (status === "saving" || isImageUploading || !isFieldEditable("images"))
+              ? "opacity-50 pointer-events-none cursor-not-allowed"
+              : "hover:border-black cursor-pointer"
+          }`}>
             <span className="text-xl font-light">{isImageUploading ? "..." : "+"}</span>
             <span className="text-[10px] mt-1 font-semibold font-sans">{isImageUploading ? (isRtl ? "رفع..." : "Uploading...") : (isRtl ? "رفع صورة" : "Upload Photo")}</span>
             <input
@@ -531,7 +565,7 @@ export default function InvitationEditor({
               accept="image/*"
               onChange={handleImageUpload}
               className="hidden"
-              disabled={status === "saving" || isImageUploading}
+              disabled={status === "saving" || isImageUploading || !isFieldEditable("images")}
             />
           </label>
         </div>
@@ -601,7 +635,7 @@ export default function InvitationEditor({
                   type="time"
                   value={item.time}
                   onChange={(e) => updateProgramItem(i, "time", e.target.value)}
-                  disabled={status === "saving"}
+                  disabled={status === "saving" || !isFieldEditable("eventProgram")}
                   className={`${inputClass} text-center`}
                   dir="ltr"
                 />
@@ -611,10 +645,10 @@ export default function InvitationEditor({
                 value={editingLang === "ar" ? item.titleAr : item.titleEn}
                 onChange={(e) => updateProgramItem(i, editingLang === "ar" ? "titleAr" : "titleEn", e.target.value)}
                 placeholder={editingLang === "ar" ? "مثال: استقبال الضيوف" : "e.g. Reception"}
-                disabled={status === "saving"}
+                disabled={status === "saving" || !isFieldEditable("eventProgram")}
                 className={inputClass}
               />
-              {eventProgram.length > 1 && (
+              {isFieldEditable("eventProgram") && eventProgram.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeProgramItem(i)}
@@ -627,14 +661,16 @@ export default function InvitationEditor({
             </div>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={addProgramItem}
-          disabled={status === "saving"}
-          className={addBtnClass}
-        >
-          {t("+ Add another item")}
-        </button>
+        {isFieldEditable("eventProgram") && (
+          <button
+            type="button"
+            onClick={addProgramItem}
+            disabled={status === "saving"}
+            className={addBtnClass}
+          >
+            {t("+ Add another item")}
+          </button>
+        )}
       </div>
 
       {/* Event Details / Guidelines */}
@@ -651,10 +687,10 @@ export default function InvitationEditor({
                 value={editingLang === "ar" ? item.textAr : item.textEn}
                 onChange={(e) => updateDetailItem(i, editingLang === "ar" ? "textAr" : "textEn", e.target.value)}
                 placeholder={editingLang === "ar" ? "مثال: الدخول عبر رمز QR" : "e.g. QR entry only"}
-                disabled={status === "saving"}
+                disabled={status === "saving" || !isFieldEditable("eventDetails")}
                 className={inputClass}
               />
-              {eventDetails.length > 1 && (
+              {isFieldEditable("eventDetails") && eventDetails.length > 1 && (
                 <button
                   type="button"
                   onClick={() => removeDetailItem(i)}
@@ -667,14 +703,16 @@ export default function InvitationEditor({
             </div>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={addDetailItem}
-          disabled={status === "saving"}
-          className={addBtnClass}
-        >
-          {t("+ Add another detail")}
-        </button>
+        {isFieldEditable("eventDetails") && (
+          <button
+            type="button"
+            onClick={addDetailItem}
+            disabled={status === "saving"}
+            className={addBtnClass}
+          >
+            {t("+ Add another detail")}
+          </button>
+        )}
       </div>
 
       {/* Save Status & Error Messages */}

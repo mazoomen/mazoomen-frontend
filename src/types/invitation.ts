@@ -32,6 +32,7 @@ export interface InvitationTemplate {
   titleEn?: string | null;
   thumbnailUrl: string;
   demoLink?: string;
+  editableFields?: any;
 }
 
 export interface InvitationData {

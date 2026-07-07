@@ -8,6 +8,7 @@ export interface PurchaseTemplate {
   title: string;
   previewImage: string;
   price: string | number;
+  editableFields?: any;
 }
 
 export interface PurchaseInvitation {

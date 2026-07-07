@@ -408,6 +408,7 @@ export default function ClientDashboardPage() {
               invitation={editingPurchase.invitation}
               templateTitle={editingPurchase.template.title}
               onSaved={handleInvitationSaved}
+              editableFields={editingPurchase.template?.editableFields}
             />
           </div>
         </div>

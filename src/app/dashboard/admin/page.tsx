@@ -1066,6 +1066,7 @@ export default function AdminDashboardPage() {
                 setEditingPurchase(null);
                 fetchDashboardData();
               }}
+              editableFields={editingPurchase.template?.editableFields}
             />
           </div>
         </div>
