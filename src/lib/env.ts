@@ -7,7 +7,7 @@ function getEnvVar(key: string, fallback?: string): string {
   if (value === undefined) {
     throw new Error(
       `Missing required environment variable: ${key}. ` +
-        `Please add it to your .env.local file.`,
+      `Please add it to your .env.local file.`,
     );
   }
   return value;
@@ -16,7 +16,7 @@ function getEnvVar(key: string, fallback?: string): string {
 /** Public API base URL (used by Axios client) */
 export const API_BASE_URL = getEnvVar(
   "NEXT_PUBLIC_API_URL",
-  "http://localhost:3000",
+  "https://mazoom-backend.onrender.com",
 );
 
 /** Public site URL (used for constructing shareable links) */

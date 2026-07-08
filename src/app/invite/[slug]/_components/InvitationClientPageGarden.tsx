@@ -115,7 +115,7 @@ export default function InvitationClientPageGarden({
           if (user && user.id === invitation.userId) {
             setIsOwner(true);
           }
-        } catch {}
+        } catch { }
       }
     }
   }, [invitation.userId]);
@@ -883,17 +883,17 @@ export default function InvitationClientPageGarden({
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-6">
             <h3 className="text-center text-lg font-bold text-[#1B3222] font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
-            
+
             {invitation.moments && invitation.moments.length > 0 ? (
               <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
                 <div className="grid grid-cols-2 gap-3">
                   {invitation.moments.map((src, index) => {
-                    const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000') + src : src;
+                    const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com') + src : src;
                     return (
-                      <div 
-                        key={index} 
+                      <div
+                        key={index}
                         onClick={() => setSelectedImage(fullUrl)}
-                        className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform" 
+                        className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform"
                         style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
                       >
                         <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -1015,8 +1015,8 @@ export default function InvitationClientPageGarden({
                         type="button"
                         onClick={() => setAttendance('YES')}
                         className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${attendance === 'YES'
-                            ? 'bg-[#1B3222] text-white border-[#1B3222]'
-                            : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
+                          ? 'bg-[#1B3222] text-white border-[#1B3222]'
+                          : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
                           }`}
                       >
                         {isEn ? "Yes, gladly" : "نعم، بكل سرور"}
@@ -1025,8 +1025,8 @@ export default function InvitationClientPageGarden({
                         type="button"
                         onClick={() => setAttendance('NO')}
                         className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${attendance === 'NO'
-                            ? 'bg-red-700/10 text-red-900 border-red-200'
-                            : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
+                          ? 'bg-red-700/10 text-red-900 border-red-200'
+                          : 'bg-white/60 border-gray-200 text-[#1B3222] hover:bg-white/80'
                           }`}
                       >
                         {isEn ? "Apologize, wishing you happiness" : "أعتذر، متمنياً لكم السعادة"}
@@ -1142,86 +1142,86 @@ export default function InvitationClientPageGarden({
             <div className="h-24" />
           </div>
         </section>
-      {/* WhatsApp Custom Contact Modal Popup */}
-      {showContactModal && (
-        <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
-          <div 
-            className="bg-[#FAF8F5] border border-[#2E5A36]/15 rounded-[28px] max-w-sm w-full p-6 shadow-2xl relative text-center"
-            dir={isEn ? "ltr" : "rtl"}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setShowContactModal(false)}
-              className="absolute top-4 right-4 text-neutral-400 hover:text-black transition-colors cursor-pointer"
+        {/* WhatsApp Custom Contact Modal Popup */}
+        {showContactModal && (
+          <div className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+            <div
+              className="bg-[#FAF8F5] border border-[#2E5A36]/15 rounded-[28px] max-w-sm w-full p-6 shadow-2xl relative text-center"
+              dir={isEn ? "ltr" : "rtl"}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            <div className="w-12 h-12 rounded-full bg-[#128C7E]/10 flex items-center justify-center mx-auto mb-4 text-[#128C7E]">
-              <Phone className="w-6 h-6" />
-            </div>
-
-            <h3 className="text-lg font-bold text-[#1B3222] mb-1 font-sans">
-              {invitation.contactName || (isEn ? "WhatsApp Contact" : "للتواصل والاستفسار")}
-            </h3>
-            <p className="text-sm text-[#2E5A36] font-semibold mb-6 font-sans">
-              {invitation.contactPhone || "+966 50 000 0001"}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3">
-              <a
-                href={`tel:${invitation.contactPhone || "+966500000001"}`}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-[#EBE7DF] hover:bg-neutral-50 text-black text-xs font-bold transition-all shadow-xs cursor-pointer font-sans"
+              {/* Close Button */}
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="absolute top-4 right-4 text-neutral-400 hover:text-black transition-colors cursor-pointer"
               >
-                <Phone className="w-4 h-4 text-[#2E5A36]" />
-                {isEn ? "Call" : "اتصال"}
-              </a>
-              <a
-                href={`https://wa.me/${(invitation.contactPhone || "+966500000001").replace(/[^0-9]/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#128C7E] text-white hover:bg-[#075e54] text-xs font-bold transition-all shadow-md cursor-pointer font-sans"
-              >
-                <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.725 1.451 5.485.002 9.948-4.463 9.95-9.953.002-2.66-1.033-5.16-2.907-7.037C16.542 1.737 14.045.7 11.4.7 5.922.7 1.458 5.163 1.456 10.648c-.001 1.638.428 3.235 1.242 4.636l-.994 3.63 3.72-.975z" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                {isEn ? "WhatsApp" : "واتساب"}
-              </a>
+              </button>
+
+              <div className="w-12 h-12 rounded-full bg-[#128C7E]/10 flex items-center justify-center mx-auto mb-4 text-[#128C7E]">
+                <Phone className="w-6 h-6" />
+              </div>
+
+              <h3 className="text-lg font-bold text-[#1B3222] mb-1 font-sans">
+                {invitation.contactName || (isEn ? "WhatsApp Contact" : "للتواصل والاستفسار")}
+              </h3>
+              <p className="text-sm text-[#2E5A36] font-semibold mb-6 font-sans">
+                {invitation.contactPhone || "+966 50 000 0001"}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href={`tel:${invitation.contactPhone || "+966500000001"}`}
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white border border-[#EBE7DF] hover:bg-neutral-50 text-black text-xs font-bold transition-all shadow-xs cursor-pointer font-sans"
+                >
+                  <Phone className="w-4 h-4 text-[#2E5A36]" />
+                  {isEn ? "Call" : "اتصال"}
+                </a>
+                <a
+                  href={`https://wa.me/${(invitation.contactPhone || "+966500000001").replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#128C7E] text-white hover:bg-[#075e54] text-xs font-bold transition-all shadow-md cursor-pointer font-sans"
+                >
+                  <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.725 1.451 5.485.002 9.948-4.463 9.95-9.953.002-2.66-1.033-5.16-2.907-7.037C16.542 1.737 14.045.7 11.4.7 5.922.7 1.458 5.163 1.456 10.648c-.001 1.638.428 3.235 1.242 4.636l-.994 3.63 3.72-.975z" />
+                  </svg>
+                  {isEn ? "WhatsApp" : "واتساب"}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Lightbox Modal */}
-      {selectedImage && (
-        <div 
-          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity duration-300"
-          onClick={() => setSelectedImage(null)}
-        >
-          {/* Close button */}
-          <button 
-            className="absolute top-6 right-6 z-[100000] p-2 rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        {/* Lightbox Modal */}
+        {selectedImage && (
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity duration-300"
             onClick={() => setSelectedImage(null)}
-            aria-label="Close image viewer"
           >
-            <X className="w-6 h-6" />
-          </button>
-          
-          {/* Image Container */}
-          <div 
-            className="relative max-w-[90%] max-h-[85%] flex items-center justify-center animate-fade-in"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
-          >
-            <img 
-              src={selectedImage} 
-              alt="Zoomed preview" 
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10 select-none animate-scale-up"
-            />
-          </div>
+            {/* Close button */}
+            <button
+              className="absolute top-6 right-6 z-[100000] p-2 rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+              onClick={() => setSelectedImage(null)}
+              aria-label="Close image viewer"
+            >
+              <X className="w-6 h-6" />
+            </button>
 
-          <style jsx>{`
+            {/* Image Container */}
+            <div
+              className="relative max-w-[90%] max-h-[85%] flex items-center justify-center animate-fade-in"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+            >
+              <img
+                src={selectedImage}
+                alt="Zoomed preview"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10 select-none animate-scale-up"
+              />
+            </div>
+
+            <style jsx>{`
             @keyframes fadeIn {
               from { opacity: 0; }
               to { opacity: 1; }
@@ -1240,8 +1240,8 @@ export default function InvitationClientPageGarden({
               display: none;
             }
           `}</style>
-        </div>
-      )}
+          </div>
+        )}
       </div>
     </main>
   );

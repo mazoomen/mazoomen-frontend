@@ -323,7 +323,7 @@ export default function InvitationEditor({
     else if (val === "en") setEditingLang("en");
   };
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" dir={isRtl ? "rtl" : "ltr"}>
