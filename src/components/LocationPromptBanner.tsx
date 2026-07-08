@@ -10,12 +10,25 @@ export default function LocationPromptBanner() {
   const { permissionStatus, requestLocationPermission, setDefaultCurrency, changeCurrencyManually, availableRates } = useCurrency();
   const [mounted, setMounted] = useState(false);
   const [showManualPicker, setShowManualPicker] = useState(false);
+  const [cookieConsentCompleted, setCookieConsentCompleted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkConsent = () => {
+      const consent = localStorage.getItem("cookie_consent");
+      setCookieConsentCompleted(!!consent);
+    };
+
+    checkConsent();
+
+    window.addEventListener("cookie-consent-changed", checkConsent);
+    return () => {
+      window.removeEventListener("cookie-consent-changed", checkConsent);
+    };
   }, []);
 
   if (!mounted) return null;
+  if (!cookieConsentCompleted) return null;
   if (permissionStatus !== "prompt") return null;
 
   const handleAllow = async () => {
