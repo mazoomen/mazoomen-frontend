@@ -8,6 +8,9 @@
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  --font-aref-ruqaa: var(--font-aref-ruqaa), var(--font-amiri), serif;
+  --font-amiri: var(--font-amiri), serif;
+  --font-cinzel: var(--font-cinzel), serif;
 }
 
 body {
@@ -15,4 +18,62 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* Premium Scroll Animations CSS */
+.fade-up {
+  opacity: 0 !important;
+  transform: translateY(30px) !important;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.fade-up.visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Timeline Items styling */
+.timeline-time, .timeline-title {
+  opacity: 0 !important;
+  transform: translateY(15px) !important;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.timeline-time.active, .timeline-title.active {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+.timeline-dot {
+  background: rgba(172, 140, 96, 0.25) !important;
+  box-shadow: none !important;
+  transform: scale(1) !important;
+  transition: background 0.5s ease, box-shadow 0.5s ease, transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+.timeline-dot.active {
+  background: rgb(172, 140, 96) !important;
+  transform: scale(1.4) !important;
+  box-shadow: rgba(172, 140, 96, 0.19) 0px 0px 0px 4px, rgba(172, 140, 96, 0.314) 0px 0px 14px 6px !important;
+}
+
+/* Details Cards styling */
+.detail-item-row .rounded-xl {
+  opacity: 0 !important;
+  transform: translateX(20px) !important;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.detail-item-row.visible .rounded-xl {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+}
+
+/* Details dots transitions */
+.detail-item-row .absolute.rounded-full {
+  transform: scale(0.6) !important;
+  background: rgba(172, 140, 96, 0.19) !important;
+  box-shadow: none !important;
+  transition: background 0.6s, box-shadow 0.6s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.detail-item-row.visible .absolute.rounded-full {
+  transform: scale(1.2) !important;
+  background: rgb(172, 140, 96) !important;
+  box-shadow: rgba(172, 140, 96, 0.19) 0px 0px 0px 4px, rgba(172, 140, 96, 0.314) 0px 0px 14px 6px !important;
+}
+
 

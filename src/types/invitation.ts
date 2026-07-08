@@ -1,53 +1,79 @@
-// ── Auth / User ────────────────────────────────────────────────────────
+// ── Re-exports from split type files ───────────────────────────────────
+// Kept for backward compatibility — new code should import directly
+// from @/types/auth, @/types/template, or @/types/purchase.
+export type { AuthUser, LoginResponse, UserProfile } from "./auth";
+export type { Template, TemplateCategory } from "./template";
+export type {
+  PurchaseData,
+  PurchaseInvitation,
+  PurchaseTemplate,
+  PurchaseRequestData,
+} from "./purchase";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  role: "ADMIN" | "CLIENT";
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
+// ── Invitation-Specific Types ──────────────────────────────────────────
+
+export interface EventProgramItem {
+  time: string;
+  title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
 }
 
-export interface LoginResponse {
-  accessToken: string;
-  user: AuthUser;
+export interface EventDetailItem {
+  text: string;
+  textAr?: string | null;
+  textEn?: string | null;
 }
-
-// ── Invitation data shape (matches backend GET /invitations/slug/:slug) ──
 
 export interface InvitationTemplate {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   thumbnailUrl: string;
   demoLink?: string;
+  editableFields?: any;
 }
 
 export interface InvitationData {
   id: string;
   templateId: string;
+  userId?: string | null;
+  purchaseId?: string | null;
   slug: string;
+  languageMode?: string | null;
+  eventTitle: string;
+  eventTitleAr?: string | null;
+  eventTitleEn?: string | null;
   eventDate: string; // ISO 8601
-  locationUrl: string;
-  welcomeText: string;
+  eventLocation: string;
+  eventLocationAr?: string | null;
+  eventLocationEn?: string | null;
+  locationUrl?: string | null;
+  welcomeText?: string | null;
+  welcomeTextAr?: string | null;
+  welcomeTextEn?: string | null;
   images: string[];
   musicUrl: string | null;
+  eventProgram?: EventProgramItem[];
+  eventDetails?: EventDetailItem[];
+  contactName?: string | null;
+  contactPhone?: string | null;
+  allowGuestUploads?: boolean;
+  moments?: string[];
   createdAt: string;
   template: InvitationTemplate;
+  wishes?: { name: string; text: string }[];
 }
 
-/** Full invitation response including userId (returned on create/update) */
-export interface InvitationFull extends InvitationData {
-  userId: string;
-}
-
-// ── RSVP ───────────────────────────────────────────────────────────────
+// ── RSVP Types ─────────────────────────────────────────────────────────
 
 export interface CreateRsvpPayload {
   invitationId: string;
-  guestName: string;
-  willAttend: boolean;
-  companionsCount: number;
+  name: string;
+  attendance: "YES" | "NO";
+  guestsCount: number;
+  message?: string;
 }
 
 export interface RsvpResponse {
@@ -71,17 +97,3 @@ export interface RsvpListResponse {
   statistics: RsvpStatistics;
   rsvps: RsvpResponse[];
 }
-
-export interface Template {
-  id: string;
-  title: string;
-  description: string;
-  previewImage: string;
-  price: string | number;
-  editableFields: any;
-  demoLink?: string | null;
-  isPremium: boolean;
-  category?: string;
-  createdAt: string;
-}
-

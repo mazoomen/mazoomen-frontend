@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 export default function InviteNotFound() {
   return (
@@ -11,7 +10,12 @@ export default function InviteNotFound() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
       >
-        <div className="mb-6 text-6xl">💌</div>
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-md overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/favicon.ico" alt="Logo" className="w-10 h-10 object-contain" />
+          </div>
+        </div>
         <h1 className="mb-3 font-serif text-3xl text-[#2C2C2C]">
           Invitation Not Found
         </h1>
@@ -19,12 +23,12 @@ export default function InviteNotFound() {
           This invitation link may be incorrect or has been removed. Please
           check with the person who shared it with you.
         </p>
-        <Link
+        <a
           href="/"
-          className="inline-block rounded-full border border-[#D4AF37]/30 px-6 py-3 text-sm font-medium text-[#2C2C2C] transition-all hover:border-[#D4AF37] hover:bg-[#D4AF37]/10"
+          className="inline-block rounded-full border border-[#D4AF37]/30 px-6 py-3 text-sm font-medium text-[#2C2C2C] transition-all hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 cursor-pointer"
         >
           Go Home
-        </Link>
+        </a>
       </motion.div>
     </main>
   );
