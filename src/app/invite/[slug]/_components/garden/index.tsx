@@ -5,7 +5,7 @@ import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
 import type { CreateRsvpPayload } from '@/types/invitation';
-import { EnvelopeOverlay, BottomNavbar } from './index';
+import { EnvelopeOverlay, BottomNavbar } from '../index';
 
 interface InvitationClientPageGardenProps {
   invitation: InvitationData;

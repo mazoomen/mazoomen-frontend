@@ -11,8 +11,8 @@ import {
   EventDetails,
   WishesSection,
   BottomNavbar
-} from './index';
-import "../invitation.css";
+} from '../index';
+import "../../invitation.css";
 
 interface InvitationClientPageRoyalGoldProps {
   invitation: InvitationData;

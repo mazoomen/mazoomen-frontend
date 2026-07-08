@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { InvitationData } from '@/types/invitation';
 import api from '@/lib/api';
-import InvitationClientPageGarden from './InvitationClientPageGarden';
-import InvitationClientPageEmerald from './InvitationClientPageEmerald';
-import InvitationClientPageRoyalGold from './InvitationClientPageRoyalGold';
+import InvitationClientPageGarden from './garden';
+import InvitationClientPageEmerald from './emerald';
+import InvitationClientPageRoyalGold from './royal-gold';
 import InvitationEditor from '@/app/dashboard/client/_components/InvitationEditor';
 import "../invitation.css";
 
