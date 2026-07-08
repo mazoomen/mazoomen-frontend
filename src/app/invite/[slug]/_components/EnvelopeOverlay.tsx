@@ -153,66 +153,20 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
               padding: '24px 28px',
             }}
           >
-            <div
-              style={{
-                fontFamily: 'var(--font-aref-ruqaa), var(--font-amiri), serif',
-                fontSize: bride ? '1.5rem' : '1.35rem',
-                fontWeight: 700,
-                color: '#5c4625',
-                textAlign: 'center',
-                lineHeight: 1.2,
-                textShadow: '0px 1px 2px rgba(255, 255, 255, 0.65)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-              }}
-            >
-              <span style={{ display: 'block', width: '100%', textAlign: 'center' }}>
-                {groom}
-              </span>
-              {bride && (
-                <>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%',
-                    gap: '10px',
-                    margin: '4px 0'
-                  }}>
-                    <div style={{ height: '1.2px', width: '22px', backgroundColor: 'rgba(92, 70, 37, 0.25)' }} />
-                    <span style={{
-                      fontSize: '0.9rem',
-                      fontFamily: 'var(--font-cinzel), serif',
-                      fontStyle: 'italic',
-                      opacity: 0.85,
-                      color: '#5c4625',
-                      lineHeight: 1,
-                    }}>&amp;</span>
-                    <div style={{ height: '1.2px', width: '22px', backgroundColor: 'rgba(92, 70, 37, 0.25)' }} />
-                  </div>
-                  <span style={{ display: 'block', width: '100%', textAlign: 'center' }}>
-                    {bride}
-                  </span>
-                </>
-              )}
-            </div>
             <span
               style={{
-                fontFamily: 'var(--font-cinzel), serif',
-                fontSize: '0.65rem',
-                textTransform: 'uppercase',
+                fontFamily: isEn 
+                  ? 'var(--font-cinzel), var(--font-pinyon-script), cursive, serif' 
+                  : 'var(--font-aref-ruqaa), var(--font-amiri), serif',
+                fontSize: isEn ? '1.5rem' : '2.2rem',
                 fontWeight: 700,
-                letterSpacing: '0.35em',
+                letterSpacing: isEn ? '0.25em' : 'normal',
                 color: '#5c4625',
-                marginTop: '10px',
-                opacity: 0.85,
-                borderTop: '1px solid rgba(92, 70, 37, 0.18)',
-                paddingTop: '6px',
-                width: '50%',
+                textShadow: '0px 1px 2px rgba(255, 255, 255, 0.65)',
                 textAlign: 'center',
+                display: 'block',
+                width: '100%',
+                opacity: 0.95,
               }}
             >
               {isEn ? 'OPEN' : 'افتح'}

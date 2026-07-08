@@ -43,6 +43,27 @@ export default function InvitationClientPageEmerald({
   const [showContactModal, setShowContactModal] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [goldParticles, setGoldParticles] = useState<{
+    id: number;
+    size: number;
+    left: number;
+    delay: string;
+    duration: number;
+    opacity: number;
+  }[]>([]);
+
+  useEffect(() => {
+    // Generate luxury gold dust particles on client side to avoid hydration mismatch
+    const list = Array.from({ length: 32 }).map((_, idx) => ({
+      id: idx,
+      size: Math.floor(Math.random() * 4) + 2, // 2px to 5px
+      left: Math.random() * 100,
+      delay: (Math.random() * 10).toFixed(1),
+      duration: Math.floor(Math.random() * 10) + 8, // 8s to 18s
+      opacity: Math.random() * 0.45 + 0.25,
+    }));
+    setGoldParticles(list);
+  }, []);
 
   const renderDecorativeNames = (title: string) => {
     const delimiters = [' & ', ' and ', ' و ', ' مع '];
@@ -385,17 +406,36 @@ export default function InvitationClientPageEmerald({
   const sealImage = "/images/emerald-seal.png";
 
   return (
-    <main className="min-h-screen bg-[#06182c] relative flex flex-col justify-center overflow-x-hidden font-serif" dir={isEn ? "ltr" : "rtl"}>
+    <main className="min-h-screen bg-[#030f23] relative flex flex-col justify-center overflow-x-hidden font-serif" dir={isEn ? "ltr" : "rtl"}>
+      {/* Luxury Gold Dust Animation overlay */}
+      <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+        {goldParticles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full"
+            style={{
+              left: `${p.left}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              background: 'radial-gradient(circle, #ffe4a0 0%, #d4af37 60%, #b39369 100%)',
+              boxShadow: '0 0 8px #ffe4a0, 0 0 15px #d4af37',
+              opacity: p.opacity,
+              animation: `goldDust-${p.id % 3} ${p.duration}s linear ${p.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* Floating Language Switcher */}
       {invitation.languageMode === "both" && (
         <button
           onClick={() => setViewingLangProp && setViewingLangProp(isEn ? 'ar' : 'en')}
           className="fixed top-6 right-6 z-[99999] w-12 h-12 rounded-full border flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-xs font-bold backdrop-blur-md cursor-pointer"
           style={{
-            background: 'rgba(12, 35, 64, 0.45)',
-            borderColor: 'rgba(197, 168, 128, 0.35)',
-            color: '#c5a880',
-            boxShadow: 'rgba(197, 168, 128, 0.15) 0px 4px 20px',
+            background: 'rgba(8, 26, 54, 0.45)',
+            borderColor: 'rgba(223, 186, 115, 0.35)',
+            color: '#dfba73',
+            boxShadow: 'rgba(223, 186, 115, 0.15) 0px 4px 20px',
           }}
         >
           {isEn ? 'AR' : 'EN'}
@@ -427,7 +467,7 @@ export default function InvitationClientPageEmerald({
       />
 
       {/* Content Container */}
-      <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-[#0d233a]/90 shadow-2xl rounded-none md:rounded-[32px] md:my-8 border border-[#c5a880]/20" dir={isEn ? "ltr" : "rtl"}>
+      <div className="relative w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto overflow-hidden bg-[#0a1c36]/90 shadow-2xl rounded-none md:rounded-[32px] md:my-8 border border-[#dfba73]/30" dir={isEn ? "ltr" : "rtl"}>
         
         {/* Section 1: Hero Banner */}
         <section className="relative min-h-[760px] flex flex-col justify-between py-12 px-6 overflow-hidden">
@@ -443,7 +483,7 @@ export default function InvitationClientPageEmerald({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#06182c]/10 via-transparent to-[#0d233a]/30" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#030f23]/15 via-transparent to-[#0a1c36]/35" />
           </div>
 
           {/* Top text placeholder: Larger and prominent */}
@@ -482,26 +522,26 @@ export default function InvitationClientPageEmerald({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
             />
-            <div className="absolute inset-0 bg-[#0d233a]/80 backdrop-blur-xs" />
+            <div className="absolute inset-0 bg-[#0a1c36]/85 backdrop-blur-xs" />
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-10">
             {/* Calligraphy header */}
             <div className="text-center animate-on-scroll">
-              <span className="text-2xl text-[#c5a880] block font-cairo">🌿</span>
+              <span className="text-2xl text-[#dfba73] block font-cairo">🌿</span>
             </div>
 
             {/* Invitation welcome text */}
             <div
               className="p-8 text-center space-y-6"
               style={{
-                background: 'rgba(13, 35, 58, 0.55)',
-                border: '1.5px solid rgba(197, 168, 128, 0.25)',
+                background: 'rgba(8, 26, 54, 0.75)',
+                border: '1.5px solid rgba(223, 186, 115, 0.35)',
                 borderRadius: '24px',
-                boxShadow: 'rgba(0, 0, 0, 0.3) 0px 8px 32px',
+                boxShadow: 'rgba(0, 0, 0, 0.4) 0px 8px 32px',
               }}
             >
-              <p className="text-xs uppercase tracking-widest text-[#c5a880] font-bold">
+              <p className="text-xs uppercase tracking-widest text-[#dfba73] font-bold">
                 {isEn ? "In the Name of Allah" : "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"}
               </p>
               <p className="text-base text-white/95 leading-relaxed font-sans font-medium whitespace-pre-line px-2">
@@ -511,7 +551,7 @@ export default function InvitationClientPageEmerald({
 
             {/* Countdown Widget */}
             <div className="animate-on-scroll">
-              <p className="text-center text-xs tracking-widest uppercase text-[#c5a880] font-bold mb-4">
+              <p className="text-center text-xs tracking-widest uppercase text-[#dfba73] font-bold mb-4">
                 {isEn ? "Time Remaining" : "الوقت المتبقي لليلة العمر"}
               </p>
               <div className="grid grid-cols-4 gap-2.5 max-w-sm mx-auto text-white">
@@ -523,16 +563,16 @@ export default function InvitationClientPageEmerald({
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-[#c5a880]/15"
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl border border-[#dfba73]/15"
                     style={{
-                      background: 'rgba(13, 35, 58, 0.65)',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                      background: 'rgba(8, 26, 54, 0.8)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
                     }}
                   >
                     <span className="text-xl md:text-2xl font-bold font-sans tracking-tight text-[#ffffff]">
                       {String(item.val).padStart(2, '0')}
                     </span>
-                    <span className="text-[10px] text-[#c5a880] font-semibold mt-1 font-sans">{item.label}</span>
+                    <span className="text-[10px] text-[#dfba73] font-semibold mt-1 font-sans">{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -544,7 +584,7 @@ export default function InvitationClientPageEmerald({
                 href={getGoogleCalendarLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#c5a880] text-[#0d233a] hover:bg-[#b39369] transition-all text-xs font-bold shadow-md cursor-pointer font-sans"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-[#dfba73] to-[#c5a880] text-[#030f23] hover:brightness-105 transition-all duration-300 text-xs font-bold shadow-md cursor-pointer font-sans"
               >
                 <Calendar className="w-4 h-4" />
                 {isEn ? "Add to Google Calendar" : "حفظ الموعد في تقويم جوجل"}
@@ -565,17 +605,17 @@ export default function InvitationClientPageEmerald({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
             />
-            <div className="absolute inset-0 bg-[#0d233a]/80 backdrop-blur-xs" />
+            <div className="absolute inset-0 bg-[#0a1c36]/85 backdrop-blur-xs" />
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-12">
             {/* Header Title */}
             <div className="text-center animate-on-scroll">
-              <span className="text-xs tracking-widest uppercase text-[#c5a880] font-bold block mb-1">
+              <span className="text-xs tracking-widest uppercase text-[#dfba73] font-bold block mb-1">
                 {isEn ? "Event Timeline" : "برنامج حفل الزفاف"}
               </span>
               <h2 className="text-xl font-bold text-white">{isEn ? "Celebration Schedule" : "مخطط اليوم المبارك"}</h2>
-              <div className="h-0.5 w-12 bg-[#c5a880]/30 mx-auto mt-2" />
+              <div className="h-0.5 w-12 bg-[#dfba73]/30 mx-auto mt-2" />
             </div>
 
             {/* Timeline component */}
@@ -592,7 +632,7 @@ export default function InvitationClientPageEmerald({
                     left: isEn ? '24px' : 'auto',
                     right: isEn ? 'auto' : '24px',
                     height: '0px',
-                    background: 'linear-gradient(to bottom, #c5a880, #ffffff)',
+                    background: 'linear-gradient(to bottom, #dfba73, #ffffff)',
                   }}
                 />
 
@@ -605,17 +645,17 @@ export default function InvitationClientPageEmerald({
                     >
                       {/* Round timeline dot anchor indicator */}
                       <div
-                        className="timeline-dot w-4 h-4 rounded-full border border-[#c5a880]/50 absolute transition-all duration-300 flex items-center justify-center bg-[#0d233a]"
+                        className="timeline-dot w-4 h-4 rounded-full border border-[#dfba73]/50 absolute transition-all duration-300 flex items-center justify-center bg-[#0a1c36]"
                         style={{
                           left: isEn ? '-23px' : 'auto',
                           right: isEn ? 'auto' : '-23px',
                         }}
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#c5a880]" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#dfba73]" />
                       </div>
 
                       <div className={`flex flex-col gap-1 w-full ${isEn ? 'text-left pl-4' : 'text-right pr-4'}`}>
-                        <span className="timeline-time text-[11px] font-sans font-bold tracking-wider text-[#c5a880]">
+                        <span className="timeline-time text-[11px] font-sans font-bold tracking-wider text-[#dfba73]">
                           {event.time}
                         </span>
                         <span className="timeline-title text-sm text-white font-sans font-semibold">
@@ -630,8 +670,8 @@ export default function InvitationClientPageEmerald({
               <div
                 className="p-6 text-center text-white/70"
                 style={{
-                  background: 'rgba(13, 35, 58, 0.45)',
-                  border: '1px dashed rgba(197, 168, 128, 0.25)',
+                  background: 'rgba(8, 26, 54, 0.75)',
+                  border: '1px dashed rgba(223, 186, 115, 0.3)',
                   borderRadius: '20px',
                 }}
               >
@@ -645,12 +685,12 @@ export default function InvitationClientPageEmerald({
             <div
               className="p-6 space-y-4 text-center animate-on-scroll"
               style={{
-                background: 'rgba(13, 35, 58, 0.55)',
-                border: '1.5px solid rgba(197, 168, 128, 0.25)',
+                background: 'rgba(8, 26, 54, 0.75)',
+                border: '1.5px solid rgba(223, 186, 115, 0.3)',
                 borderRadius: '24px',
               }}
             >
-              <h4 className="text-xs uppercase tracking-widest text-[#c5a880] font-bold">
+              <h4 className="text-xs uppercase tracking-widest text-[#dfba73] font-bold">
                 {isEn ? "Wedding Venue" : "موقع الحفل"}
               </h4>
               <p className="text-sm font-sans font-bold text-white leading-relaxed">
@@ -662,7 +702,7 @@ export default function InvitationClientPageEmerald({
                     href={invitation.locationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-sans font-bold text-[#c5a880] hover:text-[#b39369] underline cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-sans font-bold text-[#dfba73] hover:text-[#e2d2bd] underline cursor-pointer"
                   >
                     {isEn ? "View on Google Maps" : "عرض الموقع الجغرافي بالخريطة"}
                   </a>
@@ -673,7 +713,7 @@ export default function InvitationClientPageEmerald({
             {/* Event Guidelines Section */}
             {detailRules.length > 0 && (
               <div className="space-y-4 animate-on-scroll">
-                <p className="text-center text-xs tracking-widest uppercase text-[#c5a880] font-bold">
+                <p className="text-center text-xs tracking-widest uppercase text-[#dfba73] font-bold">
                   {isEn ? "Important Details" : "تنويهات وإرشادات هامة"}
                 </p>
                 <div className="space-y-3 max-w-sm mx-auto">
@@ -682,12 +722,12 @@ export default function InvitationClientPageEmerald({
                       key={idx}
                       className="p-4 flex gap-3 items-start text-white/90"
                       style={{
-                        background: 'rgba(13, 35, 58, 0.45)',
-                        border: '1px solid rgba(197, 168, 128, 0.15)',
+                        background: 'rgba(8, 26, 54, 0.7)',
+                        border: '1px solid rgba(223, 186, 115, 0.2)',
                         borderRadius: '16px',
                       }}
                     >
-                      <Info className="w-4 h-4 text-[#c5a880] shrink-0 mt-0.5" />
+                      <Info className="w-4 h-4 text-[#dfba73] shrink-0 mt-0.5" />
                       <p className="text-xs leading-relaxed font-sans font-semibold">
                         {rule.text}
                       </p>
@@ -712,16 +752,16 @@ export default function InvitationClientPageEmerald({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
             />
-            <div className="absolute inset-0 bg-[#0d233a]/80 backdrop-blur-xs" />
+            <div className="absolute inset-0 bg-[#0a1c36]/85 backdrop-blur-xs" />
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-8">
             <div className="text-center animate-on-scroll">
-              <span className="text-xs tracking-widest uppercase text-[#c5a880] font-bold block mb-1">
+              <span className="text-xs tracking-widest uppercase text-[#dfba73] font-bold block mb-1">
                 {isEn ? "Wedding Moments" : "مشاركة لحظاتنا السعيدة"}
               </span>
               <h2 className="text-xl font-bold text-white">{isEn ? "Photo Moments" : "معرض صور الحاضرين"}</h2>
-              <div className="h-0.5 w-12 bg-[#c5a880]/30 mx-auto mt-2" />
+              <div className="h-0.5 w-12 bg-[#dfba73]/30 mx-auto mt-2" />
             </div>
 
             {/* Moments Grid list */}
@@ -733,7 +773,7 @@ export default function InvitationClientPageEmerald({
                       <div
                         key={index}
                         onClick={() => setSelectedImage(momentUrl)}
-                        className="relative aspect-square rounded-xl overflow-hidden shadow-md group cursor-pointer border border-[#c5a880]/15"
+                        className="relative aspect-square rounded-xl overflow-hidden shadow-md group cursor-pointer border border-[#dfba73]/15"
                       >
                         <img
                           src={momentUrl}
@@ -748,7 +788,7 @@ export default function InvitationClientPageEmerald({
               </div>
             ) : (
               <div
-                className="text-center py-10 text-white/60 font-sans text-xs bg-[#0d233a]/65 border border-dashed border-[#c5a880]/20 rounded-[22px]"
+                className="text-center py-10 text-white/60 font-sans text-xs bg-[#030f23]/75 border border-dashed border-[#dfba73]/30 rounded-[22px]"
               >
                 {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته الجميلة!"}
               </div>
@@ -757,8 +797,8 @@ export default function InvitationClientPageEmerald({
             {/* Camera photo upload trigger button */}
             {invitation.allowGuestUploads !== false && (
               <div className="flex justify-center mt-4">
-                <label className="flex items-center gap-2 px-6 py-3 text-xs font-semibold rounded-full border border-[#c5a880]/35 shadow-md backdrop-blur-md hover:bg-white/5 cursor-pointer bg-[#c5a880] text-[#0d233a]">
-                  <Camera className="w-4 h-4 text-[#0d233a]" />
+                <label className="flex items-center gap-2 px-6 py-3 text-xs font-semibold rounded-full border border-[#dfba73]/35 shadow-md backdrop-blur-md hover:bg-white/5 cursor-pointer bg-gradient-to-r from-[#dfba73] to-[#c5a880] text-[#030f23] hover:brightness-105 transition-all duration-300">
+                  <Camera className="w-4 h-4 text-[#030f23]" />
                   {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Upload Photo" : "شاركنا لحظة بالصورة")}
                   <input
                     type="file"
@@ -787,13 +827,13 @@ export default function InvitationClientPageEmerald({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
             />
-            <div className="absolute inset-0 bg-[#0d233a]/85 backdrop-blur-xs" />
+            <div className="absolute inset-0 bg-[#0a1c36]/90 backdrop-blur-xs" />
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-8">
             {/* Host message */}
             <div className="text-center animate-on-scroll">
-              <span className="text-xs tracking-widest uppercase text-[#c5a880] font-bold block mb-1">
+              <span className="text-xs tracking-widest uppercase text-[#dfba73] font-bold block mb-1">
                 {isEn ? "Message from the family" : "بطاقة الترحيب والتهنئة"}
               </span>
               <p className="text-[14px] text-white/90 leading-relaxed whitespace-pre-line px-4 font-sans font-medium">
@@ -807,21 +847,21 @@ export default function InvitationClientPageEmerald({
             <div
               className="p-6 animate-on-scroll"
               style={{
-                background: 'rgba(13, 35, 58, 0.65)',
-                border: '1.5px solid rgba(197, 168, 128, 0.25)',
+                background: 'rgba(8, 26, 54, 0.8)',
+                border: '1.5px solid rgba(223, 186, 115, 0.35)',
                 borderRadius: '24px',
-                boxShadow: '0 8px 32px 0 rgba(0,0,0,0.3)',
+                boxShadow: '0 8px 32px 0 rgba(0,0,0,0.4)',
               }}
             >
               <h3 className="text-center text-base font-bold text-white mb-6 flex items-center justify-center gap-2">
-                <Heart className="w-4 h-4 text-[#c5a880] fill-[#c5a880]" />
+                <Heart className="w-4 h-4 text-[#dfba73] fill-[#dfba73]" />
                 {isEn ? "Confirm RSVP" : "تأكيد الحضور (RSVP)"}
               </h3>
 
               {status === 'success' ? (
                 <div className="text-center py-6 space-y-4">
                   <div className="flex justify-center">
-                    <CheckCircle2 className="w-12 h-12 text-[#c5a880]" />
+                    <CheckCircle2 className="w-12 h-12 text-[#dfba73]" />
                   </div>
                   <h4 className="text-sm font-bold text-white">
                     {isEn ? "Response Submitted!" : "تم تسجيل حضوركم بنجاح!"}
@@ -833,7 +873,7 @@ export default function InvitationClientPageEmerald({
                   </p>
                   <button
                     onClick={() => setStatus('idle')}
-                    className="mt-4 px-6 py-2 text-xs font-semibold rounded-full border border-[#c5a880]/30 hover:bg-white/5 text-[#c5a880] cursor-pointer font-sans"
+                    className="mt-4 px-6 py-2 text-xs font-semibold rounded-full border border-[#dfba73]/30 hover:bg-white/5 text-[#dfba73] cursor-pointer font-sans"
                   >
                     {isEn ? "Submit another RSVP" : "تأكيد حضور ضيف آخر"}
                   </button>
@@ -842,7 +882,7 @@ export default function InvitationClientPageEmerald({
                 <form onSubmit={handleRsvpSubmit} className={`space-y-4 ${isEn ? "text-left" : "text-right"}`}>
                   {/* Name field */}
                   <div>
-                    <label htmlFor="guest-name" className="block text-xs font-semibold text-[#c5a880] mb-1">
+                    <label htmlFor="guest-name" className="block text-xs font-semibold text-[#dfba73] mb-1">
                       {isEn ? "Full Name" : "الاسم الكريم"}
                     </label>
                     <input
@@ -852,13 +892,13 @@ export default function InvitationClientPageEmerald({
                       onChange={(e) => setGuestName(e.target.value)}
                       placeholder={isEn ? "Your name" : "يرجى كتابة الاسم"}
                       required
-                      className={`w-full px-4 py-2.5 rounded-xl border border-[#c5a880]/20 bg-[#0d233a]/55 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#c5a880] text-xs font-sans ${isEn ? "text-left" : "text-right"}`}
+                      className={`w-full px-4 py-2.5 rounded-xl border border-[#dfba73]/30 bg-[#030f23]/75 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#dfba73] focus:border-[#dfba73] text-xs font-sans ${isEn ? "text-left" : "text-right"}`}
                     />
                   </div>
 
                   {/* Attendance buttons */}
                   <div>
-                    <label className="block text-xs font-semibold text-[#c5a880] mb-1">
+                    <label className="block text-xs font-semibold text-[#dfba73] mb-1">
                       {isEn ? "Will you attend?" : "هل ستشرفنا بحضورك؟"}
                     </label>
                     <div className="grid grid-cols-2 gap-3 font-sans">
@@ -866,8 +906,8 @@ export default function InvitationClientPageEmerald({
                         type="button"
                         onClick={() => setAttendance('YES')}
                         className={`py-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${attendance === 'YES'
-                          ? 'bg-[#c5a880] text-[#0d233a] border-[#c5a880]'
-                          : 'bg-[#0d233a]/30 border-white/10 text-white hover:bg-[#0d233a]/65'
+                          ? 'bg-gradient-to-r from-[#dfba73] to-[#c5a880] text-[#030f23] border-[#dfba73]'
+                          : 'bg-[#030f23]/40 border-white/10 text-white hover:bg-[#030f23]/70'
                         }`}
                       >
                         {isEn ? "Yes, I will attend" : "نعم، بكل سرور"}
@@ -877,7 +917,7 @@ export default function InvitationClientPageEmerald({
                         onClick={() => setAttendance('NO')}
                         className={`py-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${attendance === 'NO'
                           ? 'bg-red-700/20 text-red-300 border-red-800/40'
-                          : 'bg-[#0d233a]/30 border-white/10 text-white hover:bg-[#0d233a]/65'
+                          : 'bg-[#030f23]/40 border-white/10 text-white hover:bg-[#030f23]/70'
                         }`}
                       >
                         {isEn ? "Sorry, cannot attend" : "أعتذر عن الحضور"}
@@ -888,14 +928,14 @@ export default function InvitationClientPageEmerald({
                   {/* Companions slider/count */}
                   {attendance === 'YES' && (
                     <div className="animate-fade-in font-sans">
-                      <label htmlFor="companions-count" className="block text-xs font-semibold text-[#c5a880] mb-1">
+                      <label htmlFor="companions-count" className="block text-xs font-semibold text-[#dfba73] mb-1">
                         {isEn ? "Number of Companions" : "عدد المرافقين"}
                       </label>
                       <select
                         id="companions-count"
                         value={companionsCount}
                         onChange={(e) => setCompanionsCount(Number(e.target.value))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-[#c5a880]/20 bg-[#0d233a]/65 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#c5a880]"
+                        className="w-full px-4 py-2.5 rounded-xl border border-[#dfba73]/30 bg-[#030f23]/80 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#dfba73] focus:border-[#dfba73]"
                       >
                         <option value={0}>{isEn ? "Just me (no companions)" : "أنا فقط (بدون مرافقين)"}</option>
                         <option value={1}>{isEn ? "1 Companion (+1)" : "مرافق واحد (+1)"}</option>
@@ -909,7 +949,7 @@ export default function InvitationClientPageEmerald({
 
                   {/* Custom wishes congrats input */}
                   <div>
-                    <label htmlFor="wish-text" className="block text-xs font-semibold text-[#c5a880] mb-1">
+                    <label htmlFor="wish-text" className="block text-xs font-semibold text-[#dfba73] mb-1">
                       {isEn ? "Special Wish for Couple (Optional)" : "تهنئة وتبريك للعروسين (اختياري)"}
                     </label>
                     <textarea
@@ -918,7 +958,7 @@ export default function InvitationClientPageEmerald({
                       value={newWish}
                       onChange={(e) => setNewWish(e.target.value)}
                       placeholder={isEn ? "Write your beautiful wishes..." : "اكتب أمنياتك وتبريكاتك الطيبة هنا..."}
-                      className={`w-full px-4 py-2.5 rounded-xl border border-[#c5a880]/20 bg-[#0d233a]/55 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#c5a880] resize-none text-xs font-sans ${isEn ? "text-left" : "text-right"}`}
+                      className={`w-full px-4 py-2.5 rounded-xl border border-[#dfba73]/30 bg-[#030f23]/75 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#dfba73] focus:border-[#dfba73] resize-none text-xs font-sans ${isEn ? "text-left" : "text-right"}`}
                     />
                   </div>
 
@@ -931,7 +971,7 @@ export default function InvitationClientPageEmerald({
                   <button
                     type="submit"
                     disabled={status === 'submitting' || !guestName.trim() || attendance === null}
-                    className="w-full py-3 font-bold text-[#0d233a] rounded-xl shadow-md transition-opacity hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs bg-[#c5a880] font-sans"
+                    className="w-full py-3 font-bold text-[#030f23] rounded-xl shadow-lg transition-opacity hover:opacity-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-xs bg-gradient-to-r from-[#dfba73] to-[#c5a880] font-sans"
                   >
                     {status === 'submitting' ? (isEn ? 'Submitting...' : 'جاري الإرسال...') : (isEn ? 'Confirm RSVP' : 'إرسال تأكيد الحضور')}
                   </button>
@@ -942,8 +982,8 @@ export default function InvitationClientPageEmerald({
             {/* Wishes guestbook lists */}
             <div className="space-y-4 animate-on-scroll">
               <div className="flex items-center gap-2 justify-center mb-2">
-                <MessageCircle className="w-3.5 h-3.5 text-[#c5a880]" />
-                <p className="text-xs tracking-wider uppercase text-[#c5a880] font-bold">
+                <MessageCircle className="w-3.5 h-3.5 text-[#dfba73]" />
+                <p className="text-xs tracking-wider uppercase text-[#dfba73] font-bold">
                   {isEn ? "Guests Congratulations" : "تبريكات وتهاني المهنئين"}
                 </p>
               </div>
@@ -954,14 +994,14 @@ export default function InvitationClientPageEmerald({
                     key={idx}
                     className="p-4"
                     style={{
-                      background: 'rgba(13, 35, 58, 0.45)',
-                      border: '1px solid rgba(197, 168, 128, 0.15)',
+                      background: 'rgba(8, 26, 54, 0.7)',
+                      border: '1px solid rgba(223, 186, 115, 0.2)',
                       borderRadius: '16px',
                     }}
                   >
                     <div className="flex justify-between items-center mb-1 font-sans text-xs">
                       <span className="font-bold text-white">{w.name}</span>
-                      <span className="text-[10px] text-[#c5a880]/60">✨</span>
+                      <span className="text-[10px] text-[#dfba73]">✨</span>
                     </div>
                     <p className="text-xs text-white/80 leading-relaxed font-sans whitespace-pre-line">
                       {w.text}
@@ -986,16 +1026,16 @@ export default function InvitationClientPageEmerald({
               className="absolute inset-0 w-full h-full object-cover"
               style={{ objectPosition: 'center center', transform: 'scale(1.02)' }}
             />
-            <div className="absolute inset-0 bg-[#0d233a]/90 backdrop-blur-xs" />
+            <div className="absolute inset-0 bg-[#0a1c36]/95 backdrop-blur-xs" />
           </div>
 
           <div className="relative z-10 space-y-6">
-            <div className="mx-10 h-px bg-[#c5a880]/20" />
+            <div className="mx-10 h-px bg-[#dfba73]/20" />
             <div className="text-white">
               <div className="text-xl font-bold tracking-wide mb-2 text-[#ffffff]">
                 {renderDecorativeNames(eventTitle)}
               </div>
-              <div className="text-xs text-[#c5a880] font-sans font-semibold mb-6">
+              <div className="text-xs text-[#dfba73] font-sans font-semibold mb-6">
                 {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-sans">
@@ -1010,8 +1050,8 @@ export default function InvitationClientPageEmerald({
 
       {/* WhatsApp Custom Contact Modal Popup */}
       {showContactModal && (
-        <div className="fixed inset-0 bg-[#06182c]/65 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
-          <div className="bg-[#0d233a] border border-[#c5a880]/20 rounded-[28px] max-w-sm w-full p-6 shadow-2xl relative text-center text-white font-sans">
+        <div className="fixed inset-0 bg-[#030f23]/65 backdrop-blur-sm z-[999999] flex items-center justify-center p-4">
+          <div className="bg-[#0a1c36] border border-[#dfba73]/35 rounded-[28px] max-w-sm w-full p-6 shadow-2xl relative text-center text-white font-sans">
             {/* Close Button */}
             <button
               onClick={() => setShowContactModal(false)}
@@ -1027,16 +1067,16 @@ export default function InvitationClientPageEmerald({
             <h3 className="text-lg font-bold text-white mb-1">
               {invitation.contactName || (isEn ? "WhatsApp Contact" : "للتواصل والاستفسار")}
             </h3>
-            <p className="text-sm text-[#c5a880] font-semibold mb-6">
+            <p className="text-sm text-[#dfba73] font-semibold mb-6">
               {invitation.contactPhone || "+966 50 000 0001"}
             </p>
 
             <div className="grid grid-cols-2 gap-3">
               <a
                 href={`tel:${invitation.contactPhone || "+966500000001"}`}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#0d233a] border border-[#c5a880]/20 hover:bg-white/5 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-[#030f23] border border-[#dfba73]/30 hover:bg-white/5 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
               >
-                <Phone className="w-4 h-4 text-[#c5a880]" />
+                <Phone className="w-4 h-4 text-[#dfba73]" />
                 {isEn ? "Call" : "اتصال"}
               </a>
               <a
@@ -1057,18 +1097,18 @@ export default function InvitationClientPageEmerald({
 
       {/* Lightbox for moments gallery images */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-[#06182c]/85 backdrop-blur-md z-[999999] flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
+        <div className="fixed inset-0 bg-[#030f23]/85 backdrop-blur-md z-[999999] flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
           <div className="relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center">
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-12 right-0 text-white hover:text-[#c5a880] transition-colors cursor-pointer"
+              className="absolute -top-12 right-0 text-white hover:text-[#dfba73] transition-colors cursor-pointer"
             >
               <X className="w-8 h-8" />
             </button>
             <img
               src={selectedImage}
               alt="Moment Lightbox"
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-[#c5a880]/10 shadow-2xl"
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl border border-[#dfba73]/10 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
@@ -1082,6 +1122,72 @@ export default function InvitationClientPageEmerald({
         }
         .pinyon-font {
           font-family: 'Pinyon Script', cursive;
+        }
+        .font-aref-ruqaa {
+          font-family: var(--font-aref-ruqaa), var(--font-amiri), serif !important;
+        }
+        .font-cinzel {
+          font-family: var(--font-cinzel), serif !important;
+        }
+        @keyframes goldDust-0 {
+          0% {
+            transform: translateY(-20px) translateX(0) scale(0.8) rotate(0deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.7;
+          }
+          50% {
+            transform: translateY(50vh) translateX(25px) scale(1.2) rotate(180deg);
+            opacity: 0.9;
+          }
+          90% {
+            opacity: 0.4;
+          }
+          100% {
+            transform: translateY(105vh) translateX(-10px) scale(0.6) rotate(360deg);
+            opacity: 0;
+          }
+        }
+        @keyframes goldDust-1 {
+          0% {
+            transform: translateY(-20px) translateX(0) scale(0.6) rotate(0deg);
+            opacity: 0;
+          }
+          15% {
+            opacity: 0.8;
+          }
+          60% {
+            transform: translateY(55vh) translateX(-30px) scale(1.1) rotate(-180deg);
+            opacity: 0.6;
+          }
+          85% {
+            opacity: 0.5;
+          }
+          100% {
+            transform: translateY(105vh) translateX(15px) scale(0.7) rotate(-360deg);
+            opacity: 0;
+          }
+        }
+        @keyframes goldDust-2 {
+          0% {
+            transform: translateY(-20px) translateX(0) scale(0.9) rotate(0deg);
+            opacity: 0;
+          }
+          8% {
+            opacity: 0.6;
+          }
+          45% {
+            transform: translateY(45vh) translateX(15px) scale(1.3) rotate(120deg);
+            opacity: 0.85;
+          }
+          92% {
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateY(105vh) translateX(-20px) scale(0.5) rotate(240deg);
+            opacity: 0;
+          }
         }
       `}</style>
     </main>

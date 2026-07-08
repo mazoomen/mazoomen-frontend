@@ -168,7 +168,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   // Custom theme colors configuration
   const colors = {
     bg: isEmerald
-      ? 'rgba(13, 35, 58, 0.85)'
+      ? 'rgba(8, 26, 54, 0.85)'
       : isGreen
       ? 'rgba(253, 251, 246, 0.75)'
       : 'rgba(253, 251, 246, 0.75)',
@@ -178,7 +178,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '1px solid rgba(46, 90, 54, 0.22)'
       : '1px solid rgba(172, 140, 96, 0.28)',
     shadow: isEmerald
-      ? '0 10px 30px -10px rgba(13, 35, 58, 0.5), 0 1px 3px rgba(197, 168, 128, 0.1)'
+      ? '0 10px 30px -10px rgba(8, 26, 54, 0.5), 0 1px 3px rgba(197, 168, 128, 0.1)'
       : isGreen
       ? '0 10px 30px -10px rgba(27, 50, 34, 0.12), 0 1px 3px rgba(27, 50, 34, 0.05)'
       : '0 10px 30px -10px rgba(172, 140, 96, 0.15), 0 1px 3px rgba(172, 140, 96, 0.05)',

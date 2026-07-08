@@ -8,6 +8,9 @@
 @theme {
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  --font-aref-ruqaa: var(--font-aref-ruqaa), var(--font-amiri), serif;
+  --font-amiri: var(--font-amiri), serif;
+  --font-cinzel: var(--font-cinzel), serif;
 }
 
 body {
