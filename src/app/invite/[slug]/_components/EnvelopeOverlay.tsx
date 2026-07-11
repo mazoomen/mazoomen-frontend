@@ -264,28 +264,28 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
         }
         .envelope-name-left {
           position: absolute;
-          right: 180px;
+          right: 140px;
           top: 50%;
           transform: translateY(-50%);
-          font-size: 2.8rem;
+          font-size: 2.6rem;
           white-space: nowrap;
         }
         .envelope-name-right {
           position: absolute;
-          left: 180px;
+          left: 140px;
           top: 50%;
           transform: translateY(-50%);
-          font-size: 2.8rem;
+          font-size: 2.6rem;
           white-space: nowrap;
         }
         @media (max-width: 768px) {
           .envelope-name-left {
-            right: 140px;
-            font-size: 2rem;
+            right: 115px;
+            font-size: 1.8rem;
           }
           .envelope-name-right {
-            left: 140px;
-            font-size: 2rem;
+            left: 115px;
+            font-size: 1.8rem;
           }
         }
         @media (max-width: 640px) {
@@ -298,12 +298,12 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
             height: 280px;
           }
           .envelope-name-left {
-            right: 120px;
-            font-size: 1.4rem;
+            right: 92px;
+            font-size: 1.2rem;
           }
           .envelope-name-right {
-            left: 120px;
-            font-size: 1.4rem;
+            left: 92px;
+            font-size: 1.2rem;
           }
         }
       `}</style>
