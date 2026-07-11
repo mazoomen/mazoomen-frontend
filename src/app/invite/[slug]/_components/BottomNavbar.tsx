@@ -7,7 +7,7 @@ interface BottomNavbarProps {
   musicUrl: string | null;
   musicPlaying: boolean;
   setMusicPlaying: (playing: boolean) => void;
-  theme?: 'gold' | 'green' | 'emerald' | 'terracotta' | 'lavender';
+  theme?: 'gold' | 'green' | 'emerald' | 'terracotta' | 'lavender' | 'white';
   viewingLang?: string;
   locationUrl?: string | null;
   onContactClick?: () => void;
@@ -165,6 +165,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   const isEmerald = theme === 'emerald';
   const isTerracotta = theme === 'terracotta';
   const isLavender = theme === 'lavender';
+  const isWhite = theme === 'white';
   const isEn = viewingLang === "en";
   
   // Custom theme colors configuration
@@ -177,6 +178,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'rgba(254, 250, 246, 0.75)'
       : isLavender
       ? 'rgba(253, 248, 253, 0.75)'
+      : isWhite
+      ? 'rgba(255, 255, 255, 0.75)'
       : 'rgba(253, 251, 246, 0.75)',
     border: isEmerald
       ? '1px solid rgba(197, 168, 128, 0.35)'
@@ -186,6 +189,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '1px solid rgba(138, 78, 53, 0.22)'
       : isLavender
       ? '1px solid rgba(150, 96, 141, 0.22)'
+      : isWhite
+      ? '1px solid rgba(148, 163, 184, 0.35)'
       : '1px solid rgba(172, 140, 96, 0.28)',
     shadow: isEmerald
       ? '0 10px 30px -10px rgba(8, 26, 54, 0.5), 0 1px 3px rgba(197, 168, 128, 0.1)'
@@ -195,6 +200,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '0 10px 30px -10px rgba(138, 78, 53, 0.12), 0 1px 3px rgba(138, 78, 53, 0.05)'
       : isLavender
       ? '0 10px 30px -10px rgba(150, 96, 141, 0.12), 0 1px 3px rgba(150, 96, 141, 0.05)'
+      : isWhite
+      ? '0 10px 30px -10px rgba(148, 163, 184, 0.1), 0 1px 3px rgba(148, 163, 184, 0.03)'
       : '0 10px 30px -10px rgba(172, 140, 96, 0.15), 0 1px 3px rgba(172, 140, 96, 0.05)',
     
     textInactive: isEmerald
@@ -205,6 +212,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '#A26B54'
       : isLavender
       ? '#6E4D68'
+      : isWhite
+      ? '#64748B'
       : '#7D6A53',
     textActive: isEmerald
       ? '#c5a880'
@@ -214,6 +223,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '#8A4E35'
       : isLavender
       ? '#4A2E4B'
+      : isWhite
+      ? '#334155'
       : '#ac8c60',
     
     btnActiveBg: isEmerald
@@ -224,6 +235,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'rgba(138, 78, 53, 0.12)'
       : isLavender
       ? 'rgba(150, 96, 141, 0.12)'
+      : isWhite
+      ? 'rgba(100, 116, 139, 0.15)'
       : 'rgba(172, 140, 96, 0.15)',
     btnInactiveBg: isEmerald
       ? 'rgba(255, 255, 255, 0.06)'
@@ -233,6 +246,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'rgba(138, 78, 53, 0.04)'
       : isLavender
       ? 'rgba(150, 96, 141, 0.04)'
+      : isWhite
+      ? 'rgba(100, 116, 139, 0.04)'
       : 'rgba(172, 140, 96, 0.04)',
     
     centerBtnBg: isEmerald
@@ -243,6 +258,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'linear-gradient(135deg, #8A4E35 0%, #A26B54 50%, #8A4E35 100%)'
       : isLavender
       ? 'linear-gradient(135deg, #4A2E4B 0%, #6E4D68 50%, #4A2E4B 100%)'
+      : isWhite
+      ? 'linear-gradient(135deg, #334155 0%, #64748B 50%, #334155 100%)'
       : 'linear-gradient(135deg, rgb(172, 140, 96) 0%, rgb(210, 180, 140) 50%, rgb(172, 140, 96) 100%)',
     centerBtnShadow: isEmerald
       ? '0 6px 20px rgba(197, 168, 128, 0.45)'
@@ -252,6 +269,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '0 6px 20px rgba(138, 78, 53, 0.35)'
       : isLavender
       ? '0 6px 20px rgba(150, 96, 141, 0.35)'
+      : isWhite
+      ? '0 6px 20px rgba(100, 116, 139, 0.3)'
       : '0 6px 20px rgba(172, 140, 96, 0.35)'
   };
 

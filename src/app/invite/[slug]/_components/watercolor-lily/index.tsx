@@ -1135,9 +1135,9 @@ export default function InvitationClientPageWatercolorLily({
             <p className="text-xs text-[#96608D] font-semibold mb-4">
               {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
-            <p className="text-[9px] uppercase tracking-[0.25em] text-[#4A2E4B]/50 font-bold">
+            <a href="/" className="text-[9px] uppercase tracking-[0.25em] text-[#4A2E4B]/50 font-bold hover:underline transition-all cursor-pointer block">
               {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
-            </p>
+            </a>
             {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
             <div className="h-24" />
           </div>

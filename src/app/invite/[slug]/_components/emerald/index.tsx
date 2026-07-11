@@ -1038,9 +1038,9 @@ export default function InvitationClientPageEmerald({
               <div className="text-xs text-[#dfba73] font-sans font-semibold mb-6">
                 {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-sans">
+              <a href="/" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-sans hover:underline transition-all cursor-pointer block">
                 {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
-              </p>
+              </a>
               {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
               <div className="h-24" />
             </div>
