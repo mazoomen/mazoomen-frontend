@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface EnvelopeOverlayProps {
   eventTitle: string;
@@ -8,6 +8,7 @@ interface EnvelopeOverlayProps {
   sealImage?: string;
   viewingLang?: string;
   customSealStyle?: React.CSSProperties;
+  textColor?: string;
 }
 
 export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({ 
@@ -15,7 +16,8 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
   onOpen,
   sealImage = "/base44.app/api/apps/6966e1f30fa9fbe508239391/files/mp/public/6966e1f30fa9fbe508239391/941a523da_1000046659.png",
   viewingLang,
-  customSealStyle
+  customSealStyle,
+  textColor
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -48,6 +50,13 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
 
   const { groom, bride } = getCoupleNames(eventTitle);
 
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const pathPrefix = isClient ? window.location.pathname : '';
+
   if (isDone) return null;
 
   return (
@@ -73,7 +82,27 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
           background: 'rgba(253, 251, 245, 0.35)',
           transform: isOpen ? 'translateX(-100%)' : 'translateX(0)',
         }}
-      />
+      >
+        {/* Groom Name straight */}
+        <div
+          className="envelope-name-left"
+          style={{
+            fontFamily: isEn 
+              ? 'var(--font-cinzel), serif' 
+              : 'var(--font-aref-ruqaa), var(--font-amiri), serif',
+            fontWeight: 700,
+            color: textColor || '#5c4625',
+            textShadow: '0px 1px 2px rgba(255, 255, 255, 0.65)',
+            textAlign: 'right',
+            userSelect: 'none',
+            opacity: isOpen ? 0 : 0.85,
+            transition: 'opacity 0.6s ease',
+          }}
+        >
+          {groom}
+        </div>
+      </div>
+
       {/* Right panel of the envelope split */}
       <div
         id="right-panel"
@@ -90,7 +119,26 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
           background: 'rgba(253, 251, 245, 0.35)',
           transform: isOpen ? 'translateX(100%)' : 'translateX(0)',
         }}
-      />
+      >
+        {/* Bride Name straight */}
+        <div
+          className="envelope-name-right"
+          style={{
+            fontFamily: isEn 
+              ? 'var(--font-cinzel), serif' 
+              : 'var(--font-aref-ruqaa), var(--font-amiri), serif',
+            fontWeight: 700,
+            color: textColor || '#5c4625',
+            textShadow: '0px 1px 2px rgba(255, 255, 255, 0.65)',
+            textAlign: 'left',
+            userSelect: 'none',
+            opacity: isOpen ? 0 : 0.85,
+            transition: 'opacity 0.6s ease',
+          }}
+        >
+          {bride}
+        </div>
+      </div>
 
       {/* Central interactive button content */}
       <div
@@ -107,14 +155,63 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
           transform: isOpen ? 'scale(0.85)' : 'scale(1)',
         }}
       >
+        {/* Curved Circular Text around the seal */}
+        <svg
+          key={isClient ? `center-svg-client-${pathPrefix}` : 'center-svg-ssr'}
+          className="envelope-svg-center"
+          viewBox="0 0 340 340"
+          style={{
+            position: 'absolute',
+            pointerEvents: 'none',
+            zIndex: 20,
+          }}
+        >
+          <defs>
+            {/* Top arc path: clockwise left-to-right, closer to seal (radius 125) */}
+            <path id="topArcPath" d="M 45,170 A 125,125 0 0,1 295,170" fill="none" />
+            {/* Bottom arc path: counter-clockwise left-to-right (keeps bottom text right-side up, radius 125) */}
+            <path id="bottomArcPath" d="M 45,170 A 125,125 0 0,0 295,170" fill="none" />
+          </defs>
+
+          {/* Top Text: OPEN / افتح */}
+          <text 
+            style={{ 
+              fill: textColor || '#5c4625',
+              fontFamily: isEn 
+                ? 'var(--font-cinzel), serif' 
+                : 'var(--font-aref-ruqaa), var(--font-amiri), serif',
+              fontSize: isEn ? '16px' : '26px',
+              fontWeight: 700,
+              letterSpacing: isEn ? '0.35em' : 'normal',
+            }}
+          >
+            <textPath href="#topArcPath" xlinkHref="#topArcPath" startOffset="50%" textAnchor="middle">
+              {isEn ? 'OPEN' : 'افتح'}
+            </textPath>
+          </text>
+
+          {/* Bottom Text: Press to open / اضغط للفتح */}
+          <text 
+            style={{ 
+              fill: textColor || '#5c4625',
+              fontFamily: 'Cairo, sans-serif',
+              fontSize: isEn ? '11px' : '12px',
+              fontWeight: 700,
+              letterSpacing: isEn ? '0.2em' : 'normal',
+            }}
+          >
+            <textPath href="#bottomArcPath" xlinkHref="#bottomArcPath" startOffset="50%" textAnchor="middle">
+              {isEn ? 'PRESS TO OPEN' : 'اضغط للفتح'}
+            </textPath>
+          </text>
+        </svg>
+
         {/* Wax Seal Open Button */}
         <button
           onClick={handleOpen}
           id="open-invitation-btn"
-          className="relative rounded-full overflow-hidden cursor-pointer active:scale-[0.96] transition-transform duration-300 hover:scale-[1.04]"
+          className="envelope-seal-btn relative rounded-full overflow-hidden cursor-pointer active:scale-[0.96] transition-transform duration-300 hover:scale-[1.04]"
           style={{
-            width: '220px',
-            height: '220px',
             boxShadow: 'rgba(0, 0, 0, 0.25) 0px 15px 45px, rgba(200, 162, 74, 0.3) 0px 0px 30px',
             border: 'none',
             outline: 'none',
@@ -139,39 +236,6 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
             }}
             loading="eager"
           />
-          {/* Golden Text Overlay */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxSizing: 'border-box',
-              padding: '24px 28px',
-            }}
-          >
-            <span
-              style={{
-                fontFamily: isEn 
-                  ? 'var(--font-cinzel), var(--font-pinyon-script), cursive, serif' 
-                  : 'var(--font-aref-ruqaa), var(--font-amiri), serif',
-                fontSize: isEn ? '1.5rem' : '2.2rem',
-                fontWeight: 700,
-                letterSpacing: isEn ? '0.25em' : 'normal',
-                color: '#5c4625',
-                textShadow: '0px 1px 2px rgba(255, 255, 255, 0.65)',
-                textAlign: 'center',
-                display: 'block',
-                width: '100%',
-                opacity: 0.95,
-              }}
-            >
-              {isEn ? 'OPEN' : 'افتح'}
-            </span>
-          </div>
         </button>
       </div>
 
@@ -189,6 +253,58 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
         }
         #open-invitation-btn {
           animation: pulse-ripple 2s infinite ease-in-out;
+        }
+        .envelope-seal-btn {
+          width: 220px;
+          height: 220px;
+        }
+        .envelope-svg-center {
+          width: 340px;
+          height: 340px;
+        }
+        .envelope-name-left {
+          position: absolute;
+          right: 180px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 2.8rem;
+          white-space: nowrap;
+        }
+        .envelope-name-right {
+          position: absolute;
+          left: 180px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 2.8rem;
+          white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+          .envelope-name-left {
+            right: 140px;
+            font-size: 2rem;
+          }
+          .envelope-name-right {
+            left: 140px;
+            font-size: 2rem;
+          }
+        }
+        @media (max-width: 640px) {
+          .envelope-seal-btn {
+            width: 170px;
+            height: 170px;
+          }
+          .envelope-svg-center {
+            width: 280px;
+            height: 280px;
+          }
+          .envelope-name-left {
+            right: 120px;
+            font-size: 1.4rem;
+          }
+          .envelope-name-right {
+            left: 120px;
+            font-size: 1.4rem;
+          }
         }
       `}</style>
     </div>

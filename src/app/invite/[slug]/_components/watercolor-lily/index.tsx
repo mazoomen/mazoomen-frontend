@@ -572,7 +572,7 @@ export default function InvitationClientPageWatercolorLily({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled lavender seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/lavender-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.60)' }} />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/lavender-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.60)' }} textColor="#96608D" />
 
       {/* Falling Leaves and Petals Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">

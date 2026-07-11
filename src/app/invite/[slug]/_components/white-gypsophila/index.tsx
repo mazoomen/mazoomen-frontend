@@ -572,7 +572,7 @@ export default function InvitationClientPageWhiteGypsophila({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled white/silver seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/white-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.40)' }} />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/white-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.40)' }} textColor="#64748B" />
 
       {/* Falling Flowers Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">

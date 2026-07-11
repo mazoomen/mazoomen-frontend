@@ -148,7 +148,7 @@ export default function InvitationClientPageBohoTerracotta({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled terracotta seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/terracotta-seal.png" viewingLang={viewingLang} customSealStyle={{ transform: 'translate(0px, -1px) scale(2.55)' }} />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/terracotta-seal.png" viewingLang={viewingLang} customSealStyle={{ transform: 'translate(0px, -1px) scale(2.55)' }} textColor="#8A4E35" />
 
       {/* Snowfall/Leafy Animation overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">

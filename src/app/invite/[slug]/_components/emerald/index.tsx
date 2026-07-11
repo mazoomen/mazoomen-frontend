@@ -464,6 +464,7 @@ export default function InvitationClientPageEmerald({
           transform: 'translate(-9px, 10px) scale(1.5)',
           objectPosition: 'center',
         }}
+        textColor="#c5a880"
       />
 
       {/* Content Container */}
