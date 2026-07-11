@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import InvitationClientPageGarden from './garden';
 import InvitationClientPageEmerald from './emerald';
 import InvitationClientPageRoyalGold from './royal-gold';
+import InvitationClientPageBohoTerracotta from './boho-terracotta';
+import InvitationClientPageWatercolorLily from './watercolor-lily';
 import InvitationEditor from '@/app/dashboard/client/_components/InvitationEditor';
 import "../invitation.css";
 
@@ -146,6 +148,32 @@ export default function InvitationClientPage({
   ) {
     pageContent = (
       <InvitationClientPageEmerald
+        invitation={localInvitation}
+        slug={slug}
+        isDeactivatedInitial={isDeactivatedInitial}
+        viewingLangProp={viewingLang}
+        setViewingLangProp={setViewingLang}
+      />
+    );
+  } else if (
+    localInvitation.template?.title === 'Boho Terracotta Wedding' ||
+    localInvitation.template?.titleEn === 'Boho Terracotta Wedding'
+  ) {
+    pageContent = (
+      <InvitationClientPageBohoTerracotta
+        invitation={localInvitation}
+        slug={slug}
+        isDeactivatedInitial={isDeactivatedInitial}
+        viewingLangProp={viewingLang}
+        setViewingLangProp={setViewingLang}
+      />
+    );
+  } else if (
+    localInvitation.template?.title === 'Watercolor Lily Wedding' ||
+    localInvitation.template?.titleEn === 'Watercolor Lily Wedding'
+  ) {
+    pageContent = (
+      <InvitationClientPageWatercolorLily
         invitation={localInvitation}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
