@@ -145,7 +145,7 @@ export default function InvitationClientPageRoyalGold({
       )}
 
       {/* Wax seal cover splitting envelope */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} viewingLang={viewingLang} textColor="#ac8c60" />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/royal-gold-seal.png" viewingLang={viewingLang} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.20)' }} textColor="#ac8c60" />
 
       {/* Snowfall Animation overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
