@@ -461,8 +461,7 @@ export default function InvitationClientPageEmerald({
         sealImage={sealImage}
         viewingLang={isEn ? 'en' : 'ar'}
         customSealStyle={{
-          transform: 'translate(-9px, 10px) scale(1.5)',
-          objectPosition: 'center',
+          transform: 'translate(0px, -1px) scale(1.85)',
         }}
         textColor="#c5a880"
       />

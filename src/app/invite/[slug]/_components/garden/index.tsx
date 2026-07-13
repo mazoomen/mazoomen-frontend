@@ -572,7 +572,7 @@ export default function InvitationClientPageGarden({
       )}
 
       {/* Wax seal cover splitting envelope */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/98a4144b-74ef-45c4-8066-8c6cbb1e8a0e.png" viewingLang={isEn ? "en" : "ar"} textColor="#1B3222" />
+      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/garden-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(2.45)' }} textColor="#1B3222" />
 
       {/* Falling Leaves and Petals Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
