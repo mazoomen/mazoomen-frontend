@@ -9,6 +9,7 @@ import InvitationClientPageRoyalGold from './royal-gold';
 import InvitationClientPageBohoTerracotta from './boho-terracotta';
 import InvitationClientPageWatercolorLily from './watercolor-lily';
 import InvitationClientPageWhiteGypsophila from './white-gypsophila';
+import InvitationClientPageFlow from './flow';
 import InvitationEditor from '@/app/dashboard/client/_components/InvitationEditor';
 import "../invitation.css";
 
@@ -188,6 +189,19 @@ export default function InvitationClientPage({
   ) {
     pageContent = (
       <InvitationClientPageWhiteGypsophila
+        invitation={localInvitation}
+        slug={slug}
+        isDeactivatedInitial={isDeactivatedInitial}
+        viewingLangProp={viewingLang}
+        setViewingLangProp={setViewingLang}
+      />
+    );
+  } else if (
+    localInvitation.template?.title === 'Flow Wedding' ||
+    localInvitation.template?.titleEn === 'Flow Wedding'
+  ) {
+    pageContent = (
+      <InvitationClientPageFlow
         invitation={localInvitation}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}

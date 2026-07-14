@@ -7,7 +7,7 @@ interface BottomNavbarProps {
   musicUrl: string | null;
   musicPlaying: boolean;
   setMusicPlaying: (playing: boolean) => void;
-  theme?: 'gold' | 'green' | 'emerald' | 'terracotta' | 'lavender' | 'white';
+  theme?: 'gold' | 'green' | 'emerald' | 'terracotta' | 'lavender' | 'white' | 'burgundy';
   viewingLang?: string;
   locationUrl?: string | null;
   onContactClick?: () => void;
@@ -166,6 +166,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
   const isTerracotta = theme === 'terracotta';
   const isLavender = theme === 'lavender';
   const isWhite = theme === 'white';
+  const isBurgundy = theme === 'burgundy';
   const isEn = viewingLang === "en";
   
   // Custom theme colors configuration
@@ -180,6 +181,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'rgba(253, 248, 253, 0.75)'
       : isWhite
       ? 'rgba(255, 255, 255, 0.75)'
+      : isBurgundy
+      ? 'rgba(255, 240, 242, 0.85)'
       : 'rgba(253, 251, 246, 0.75)',
     border: isEmerald
       ? '1px solid rgba(197, 168, 128, 0.35)'
@@ -191,6 +194,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '1px solid rgba(150, 96, 141, 0.22)'
       : isWhite
       ? '1px solid rgba(148, 163, 184, 0.35)'
+      : isBurgundy
+      ? '1px solid rgba(112, 16, 32, 0.22)'
       : '1px solid rgba(172, 140, 96, 0.28)',
     shadow: isEmerald
       ? '0 10px 30px -10px rgba(8, 26, 54, 0.5), 0 1px 3px rgba(197, 168, 128, 0.1)'
@@ -202,6 +207,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '0 10px 30px -10px rgba(150, 96, 141, 0.12), 0 1px 3px rgba(150, 96, 141, 0.05)'
       : isWhite
       ? '0 10px 30px -10px rgba(148, 163, 184, 0.1), 0 1px 3px rgba(148, 163, 184, 0.03)'
+      : isBurgundy
+      ? '0 10px 30px -10px rgba(112, 16, 32, 0.12), 0 1px 3px rgba(112, 16, 32, 0.05)'
       : '0 10px 30px -10px rgba(172, 140, 96, 0.15), 0 1px 3px rgba(172, 140, 96, 0.05)',
     
     textInactive: isEmerald
@@ -214,6 +221,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '#6E4D68'
       : isWhite
       ? '#64748B'
+      : isBurgundy
+      ? '#B07070'
       : '#7D6A53',
     textActive: isEmerald
       ? '#c5a880'
@@ -225,6 +234,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? '#4A2E4B'
       : isWhite
       ? '#334155'
+      : isBurgundy
+      ? '#701020'
       : '#ac8c60',
     
     btnActiveBg: isEmerald
@@ -237,6 +248,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'rgba(150, 96, 141, 0.12)'
       : isWhite
       ? 'rgba(100, 116, 139, 0.15)'
+      : isBurgundy
+      ? 'rgba(112, 16, 32, 0.12)'
       : 'rgba(172, 140, 96, 0.15)',
     btnInactiveBg: isEmerald
       ? 'rgba(255, 255, 255, 0.06)'
@@ -248,6 +261,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'rgba(150, 96, 141, 0.04)'
       : isWhite
       ? 'rgba(100, 116, 139, 0.04)'
+      : isBurgundy
+      ? 'rgba(112, 16, 32, 0.04)'
       : 'rgba(172, 140, 96, 0.04)',
     
     centerBtnBg: isEmerald
@@ -260,6 +275,8 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
       ? 'linear-gradient(135deg, #4A2E4B 0%, #6E4D68 50%, #4A2E4B 100%)'
       : isWhite
       ? 'linear-gradient(135deg, #334155 0%, #64748B 50%, #334155 100%)'
+      : isBurgundy
+      ? 'linear-gradient(135deg, #701020 0%, #B07070 50%, #701020 100%)'
       : 'linear-gradient(135deg, rgb(172, 140, 96) 0%, rgb(210, 180, 140) 50%, rgb(172, 140, 96) 100%)',
     centerBtnShadow: isEmerald
       ? '0 6px 20px rgba(197, 168, 128, 0.45)'
@@ -316,7 +333,7 @@ export const BottomNavbar: React.FC<BottomNavbarProps> = ({
           className="w-8.5 h-8.5 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300"
           style={{ 
             backgroundColor: musicPlaying ? colors.btnActiveBg : colors.btnInactiveBg,
-            boxShadow: musicPlaying ? `0 0 12px ${isGreen ? 'rgba(46, 90, 54, 0.15)' : 'rgba(172, 140, 96, 0.15)'}` : 'none'
+            boxShadow: musicPlaying ? `0 0 12px ${isGreen ? 'rgba(46, 90, 54, 0.15)' : isBurgundy ? 'rgba(112, 16, 32, 0.15)' : 'rgba(172, 140, 96, 0.15)'}` : 'none'
           }}
         >
           <Music className="w-4 h-4" style={{ color: musicPlaying ? colors.textActive : colors.textInactive }} />
