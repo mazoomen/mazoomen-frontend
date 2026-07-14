@@ -570,8 +570,10 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
           style={{
             position: 'absolute',
             bottom: '-50px',
-            left: 0,
-            right: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '100%',
+            textAlign: 'center',
             fontFamily: isEn ? "'Cinzel', serif" : "'Aref Ruqaa', serif",
             fontSize: '11.5px',
             color: textColor || '#8a6d2e',
