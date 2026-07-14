@@ -50,7 +50,7 @@ export default function InvitationEditor({
           if (user && user.role === "ADMIN") {
             setIsAdmin(true);
           }
-        } catch {}
+        } catch { }
       }
     }
   }, []);
@@ -361,22 +361,20 @@ export default function InvitationEditor({
             <button
               type="button"
               onClick={() => setEditingLang("ar")}
-              className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
-                editingLang === "ar"
+              className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${editingLang === "ar"
                   ? "bg-[#0B1528] text-[#E5C38B]"
                   : "text-neutral-500 hover:text-black"
-              }`}
+                }`}
             >
               AR
             </button>
             <button
               type="button"
               onClick={() => setEditingLang("en")}
-              className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
-                editingLang === "en"
+              className={`w-9 h-9 rounded-full text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${editingLang === "en"
                   ? "bg-[#0B1528] text-[#E5C38B]"
                   : "text-neutral-500 hover:text-black"
-              }`}
+                }`}
             >
               EN
             </button>
@@ -518,11 +516,10 @@ export default function InvitationEditor({
             className={inputClass}
             dir="ltr"
           />
-          <label className={`flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#E6E2DA] bg-[#FAF8F5] text-xs shrink-0 select-none text-neutral-600 font-sans font-semibold transition-colors ${
-            (status === "saving" || isAudioUploading || !isFieldEditable("musicUrl"))
+          <label className={`flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#E6E2DA] bg-[#FAF8F5] text-xs shrink-0 select-none text-neutral-600 font-sans font-semibold transition-colors ${(status === "saving" || isAudioUploading || !isFieldEditable("musicUrl"))
               ? "opacity-50 pointer-events-none cursor-not-allowed"
               : "hover:bg-neutral-50 cursor-pointer"
-          }`}>
+            }`}>
             <span>{isAudioUploading ? (isRtl ? "جاري الرفع..." : "Uploading...") : (isRtl ? "رفع ملف" : "Upload File")}</span>
             <input
               type="file"
@@ -553,13 +550,12 @@ export default function InvitationEditor({
               )}
             </div>
           ))}
-          
+
           {/* Upload Card button */}
-          <label className={`aspect-square rounded-2xl border border-dashed border-neutral-300 flex flex-col items-center justify-center transition-colors bg-[#FAF8F5] text-neutral-400 select-none ${
-            (status === "saving" || isImageUploading || !isFieldEditable("images"))
+          <label className={`aspect-square rounded-2xl border border-dashed border-neutral-300 flex flex-col items-center justify-center transition-colors bg-[#FAF8F5] text-neutral-400 select-none ${(status === "saving" || isImageUploading || !isFieldEditable("images"))
               ? "opacity-50 pointer-events-none cursor-not-allowed"
               : "hover:border-black cursor-pointer"
-          }`}>
+            }`}>
             <span className="text-xl font-light">{isImageUploading ? "..." : "+"}</span>
             <span className="text-[10px] mt-1 font-semibold font-sans">{isImageUploading ? (isRtl ? "رفع..." : "Uploading...") : (isRtl ? "رفع صورة" : "Upload Photo")}</span>
             <input
@@ -578,7 +574,7 @@ export default function InvitationEditor({
         <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-800 font-sans">
           {isRtl ? "إعدادات التواصل وصور الضيوف" : "WhatsApp Contact & Guest Permissions"}
         </h4>
-        
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
@@ -632,7 +628,7 @@ export default function InvitationEditor({
             className="w-4.5 h-4.5 rounded border-neutral-300 text-black focus:ring-black accent-black cursor-pointer"
           />
           <label htmlFor="allow-companions" className="text-xs font-semibold text-neutral-700 cursor-pointer select-none font-sans">
-            {isRtl ? "تفعيل خيار تحديد عدد المرافقين للضيوف" : "Allow guests to select the number of companions in RSVP"}
+            {isRtl ? "إظهار دفتر التهاني والتبريكات للضيوف" : "Show Congratulations Album to guests"}
           </label>
         </div>
       </div>

@@ -957,19 +957,21 @@ export default function InvitationClientPageEmerald({
                   )}
 
                   {/* Custom wishes congrats input */}
-                  <div>
-                    <label htmlFor="wish-text" className="block text-xs font-semibold text-[#dfba73] mb-1">
-                      {isEn ? "Special Wish for Couple (Optional)" : "تهنئة وتبريك للعروسين (اختياري)"}
-                    </label>
-                    <textarea
-                      id="wish-text"
-                      rows={2}
-                      value={newWish}
-                      onChange={(e) => setNewWish(e.target.value)}
-                      placeholder={isEn ? "Write your beautiful wishes..." : "اكتب أمنياتك وتبريكاتك الطيبة هنا..."}
-                      className={`w-full px-4 py-2.5 rounded-xl border border-[#dfba73]/30 bg-[#030f23]/75 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#dfba73] focus:border-[#dfba73] resize-none text-xs font-sans ${isEn ? "text-left" : "text-right"}`}
-                    />
-                  </div>
+                  {invitation.allowCompanions !== false && (
+                    <div>
+                      <label htmlFor="wish-text" className="block text-xs font-semibold text-[#dfba73] mb-1">
+                        {isEn ? "Special Wish for Couple (Optional)" : "تهنئة وتبريك للعروسين (اختياري)"}
+                      </label>
+                      <textarea
+                        id="wish-text"
+                        rows={2}
+                        value={newWish}
+                        onChange={(e) => setNewWish(e.target.value)}
+                        placeholder={isEn ? "Write your beautiful wishes..." : "اكتب أمنياتك وتبريكاتك الطيبة هنا..."}
+                        className={`w-full px-4 py-2.5 rounded-xl border border-[#dfba73]/30 bg-[#030f23]/75 text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-[#dfba73] focus:border-[#dfba73] resize-none text-xs font-sans ${isEn ? "text-left" : "text-right"}`}
+                      />
+                    </div>
+                  )}
 
                   {errorMsg && (
                     <div className="text-center text-xs text-red-300 bg-red-900/20 p-2.5 rounded-xl border border-red-900/40 font-sans">
@@ -989,36 +991,38 @@ export default function InvitationClientPageEmerald({
             </div>
 
             {/* Wishes guestbook lists */}
-            <div className="space-y-4 animate-on-scroll">
-              <div className="flex items-center gap-2 justify-center mb-2">
-                <MessageCircle className="w-3.5 h-3.5 text-[#dfba73]" />
-                <p className="text-xs tracking-wider uppercase text-[#dfba73] font-bold">
-                  {isEn ? "Guests Congratulations" : "تبريكات وتهاني المهنئين"}
-                </p>
-              </div>
+            {invitation.allowCompanions !== false && (
+              <div className="space-y-4 animate-on-scroll">
+                <div className="flex items-center gap-2 justify-center mb-2">
+                  <MessageCircle className="w-3.5 h-3.5 text-[#dfba73]" />
+                  <p className="text-xs tracking-wider uppercase text-[#dfba73] font-bold">
+                    {isEn ? "Guests Congratulations" : "تبريكات وتهاني المهنئين"}
+                  </p>
+                </div>
 
-              <div className="space-y-3 overflow-y-auto px-1 max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
-                {wishes.map((w, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4"
-                    style={{
-                      background: 'rgba(8, 26, 54, 0.7)',
-                      border: '1px solid rgba(223, 186, 115, 0.2)',
-                      borderRadius: '16px',
-                    }}
-                  >
-                    <div className="flex justify-between items-center mb-1 font-sans text-xs">
-                      <span className="font-bold text-white">{w.name}</span>
-                      <span className="text-[10px] text-[#dfba73]">✨</span>
+                <div className="space-y-3 overflow-y-auto px-1 max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
+                  {wishes.map((w, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4"
+                      style={{
+                        background: 'rgba(8, 26, 54, 0.7)',
+                        border: '1px solid rgba(223, 186, 115, 0.2)',
+                        borderRadius: '16px',
+                      }}
+                    >
+                      <div className="flex justify-between items-center mb-1 font-sans text-xs">
+                        <span className="font-bold text-white">{w.name}</span>
+                        <span className="text-[10px] text-[#dfba73]">✨</span>
+                      </div>
+                      <p className="text-xs text-white/80 leading-relaxed font-sans whitespace-pre-line">
+                        {w.text}
+                      </p>
                     </div>
-                    <p className="text-xs text-white/80 leading-relaxed font-sans whitespace-pre-line">
-                      {w.text}
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
 

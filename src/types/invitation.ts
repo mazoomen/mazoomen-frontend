@@ -80,9 +80,10 @@ export interface CreateRsvpPayload {
 export interface RsvpResponse {
   id: string;
   invitationId: string;
-  guestName: string;
-  willAttend: boolean;
-  companionsCount: number;
+  name: string;
+  attendance: "YES" | "NO";
+  guestsCount: number;
+  message?: string;
   createdAt: string;
 }
 

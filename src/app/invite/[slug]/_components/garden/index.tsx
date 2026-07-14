@@ -1064,17 +1064,19 @@ export default function InvitationClientPageGarden({
                   )}
 
                   {/* Message */}
-                  <div>
-                    <label htmlFor="wish-text" className="block text-xs font-semibold text-[#1B3222] mb-1">{isEn ? "Special message to the newlyweds (Optional)" : "تهنئة خاصة للعروسين (اختياري)"}</label>
-                    <textarea
-                      id="wish-text"
-                      rows={2}
-                      value={newWish}
-                      onChange={(e) => setNewWish(e.target.value)}
-                      placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب كلماتك العذبة وتهانيك للعروسين هنا..."}
-                      className={`w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 focus:bg-white text-[#1B3222] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#AC8C60] resize-none text-xs ${isEn ? "text-left" : "text-right"}`}
-                    />
-                  </div>
+                  {invitation.allowCompanions !== false && (
+                    <div>
+                      <label htmlFor="wish-text" className="block text-xs font-semibold text-[#1B3222] mb-1">{isEn ? "Special message to the newlyweds (Optional)" : "تهنئة خاصة للعروسين (اختياري)"}</label>
+                      <textarea
+                        id="wish-text"
+                        rows={2}
+                        value={newWish}
+                        onChange={(e) => setNewWish(e.target.value)}
+                        placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب كلماتك العذبة وتهانيك للعروسين هنا..."}
+                        className={`w-full px-4 py-2.5 rounded-xl border border-[#1B3222]/15 bg-white/70 focus:bg-white text-[#1B3222] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#AC8C60] resize-none text-xs ${isEn ? "text-left" : "text-right"}`}
+                      />
+                    </div>
+                  )}
 
                   {errorMsg && (
                     <div className="text-center text-xs text-red-700 bg-red-50 p-2.5 rounded-xl border border-red-100">
@@ -1095,31 +1097,33 @@ export default function InvitationClientPageGarden({
             </div>
 
             {/* Wishes guestbook list */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 justify-center mb-2">
-                <MessageCircle className="w-3.5 h-3.5 text-[#1B3222]/80" />
-                <p className="text-xs tracking-wider uppercase text-[#1B3222]/80 font-bold">{isEn ? "Guests wishes & congratulations" : "تبريكات وتهاني المهنئين"}</p>
-              </div>
+            {invitation.allowCompanions !== false && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 justify-center mb-2">
+                  <MessageCircle className="w-3.5 h-3.5 text-[#1B3222]/80" />
+                  <p className="text-xs tracking-wider uppercase text-[#1B3222]/80 font-bold">{isEn ? "Guests wishes & congratulations" : "تبريكات وتهاني المهنئين"}</p>
+                </div>
 
-              <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
-                {wishes.map((wish, index) => (
-                  <div
-                    key={index}
-                    className="p-4"
-                    style={{
-                      background: 'rgba(253, 251, 246, 0.65)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.45)',
-                      borderRadius: '20px',
-                      boxShadow: '0 4px 16px 0 rgba(27, 50, 34, 0.03)'
-                    }}
-                  >
-                    <p className="text-xs text-center leading-relaxed text-[#1B3222] font-semibold mb-1">"{wish.text}"</p>
-                    <p className="text-[9px] text-center text-[#2E5A36] font-bold">— {wish.name}</p>
-                  </div>
-                ))}
+                <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
+                  {wishes.map((wish, index) => (
+                    <div
+                      key={index}
+                      className="p-4"
+                      style={{
+                        background: 'rgba(253, 251, 246, 0.65)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.45)',
+                        borderRadius: '20px',
+                        boxShadow: '0 4px 16px 0 rgba(27, 50, 34, 0.03)'
+                      }}
+                    >
+                      <p className="text-xs text-center leading-relaxed text-[#1B3222] font-semibold mb-1">"{wish.text}"</p>
+                      <p className="text-[9px] text-center text-[#2E5A36] font-bold">— {wish.name}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </section>
 
