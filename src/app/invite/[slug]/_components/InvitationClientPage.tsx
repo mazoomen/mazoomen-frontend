@@ -10,6 +10,7 @@ import InvitationClientPageBohoTerracotta from './boho-terracotta';
 import InvitationClientPageWatercolorLily from './watercolor-lily';
 import InvitationClientPageWhiteGypsophila from './white-gypsophila';
 import InvitationClientPageFlow from './flow';
+import InvitationClientPageForestFoliage from './forest-foliage';
 import InvitationEditor from '@/app/dashboard/client/_components/InvitationEditor';
 import "../invitation.css";
 
@@ -202,6 +203,19 @@ export default function InvitationClientPage({
   ) {
     pageContent = (
       <InvitationClientPageFlow
+        invitation={localInvitation}
+        slug={slug}
+        isDeactivatedInitial={isDeactivatedInitial}
+        viewingLangProp={viewingLang}
+        setViewingLangProp={setViewingLang}
+      />
+    );
+  } else if (
+    localInvitation.template?.title === 'Forest Foliage Wedding' ||
+    localInvitation.template?.titleEn === 'Forest Foliage Wedding'
+  ) {
+    pageContent = (
+      <InvitationClientPageForestFoliage
         invitation={localInvitation}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
