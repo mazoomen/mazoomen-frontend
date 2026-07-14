@@ -33,6 +33,7 @@ export interface PurchaseInvitation {
   contactName?: string | null;
   contactPhone?: string | null;
   allowGuestUploads?: boolean;
+  allowCompanions?: boolean;
   isActive: boolean;
 }
 

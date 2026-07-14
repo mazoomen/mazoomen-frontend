@@ -241,6 +241,7 @@ export default function InvitationClientPageRoyalGold({
               welcomeText={welcomeText}
               viewingLang={viewingLang}
               allowGuestUploads={invitation.allowGuestUploads !== false}
+              allowCompanions={invitation.allowCompanions !== false}
               moments={invitation.moments || []}
               ownerId={invitation.userId || undefined}
               onMomentUploaded={(updated: InvitationData) => setInvitation(updated)}

@@ -83,7 +83,7 @@ export default function InvitationClientPageWhiteGypsophila({
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
-  const [companionsCount, setCompanionsCount] = useState(0);
+  const [companionsCount, setCompanionsCount] = useState(1);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -988,7 +988,10 @@ export default function InvitationClientPageWhiteGypsophila({
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setAttendance('YES')}
+                        onClick={() => {
+                          setAttendance('YES');
+                          setCompanionsCount(1);
+                        }}
                         className={`py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                           attendance === 'YES'
                             ? 'bg-slate-700 border-slate-700 text-white shadow-md'
@@ -1011,13 +1014,13 @@ export default function InvitationClientPageWhiteGypsophila({
                     </div>
                   </div>
 
-                  {attendance === 'YES' && (
+                  {invitation.allowCompanions !== false && attendance === 'YES' && (
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-500">{isEn ? "Number of Companions" : "عدد المرافقين"}</label>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() => setCompanionsCount(prev => Math.max(0, prev - 1))}
+                          onClick={() => setCompanionsCount(prev => Math.max(1, prev - 1))}
                           className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-sm font-bold text-[#334155] cursor-pointer hover:bg-slate-50"
                         >
                           -
@@ -1027,7 +1030,7 @@ export default function InvitationClientPageWhiteGypsophila({
                         </div>
                         <button
                           type="button"
-                          onClick={() => setCompanionsCount(prev => prev + 1)}
+                          onClick={() => setCompanionsCount(prev => Math.min(20, prev + 1))}
                           className="w-10 h-10 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-sm font-bold text-[#334155] cursor-pointer hover:bg-slate-50"
                         >
                           +

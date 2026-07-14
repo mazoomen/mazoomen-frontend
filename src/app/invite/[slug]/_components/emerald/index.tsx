@@ -137,7 +137,7 @@ export default function InvitationClientPageEmerald({
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
-  const [companionsCount, setCompanionsCount] = useState(0);
+  const [companionsCount, setCompanionsCount] = useState(1);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -904,7 +904,10 @@ export default function InvitationClientPageEmerald({
                     <div className="grid grid-cols-2 gap-3 font-sans">
                       <button
                         type="button"
-                        onClick={() => setAttendance('YES')}
+                        onClick={() => {
+                          setAttendance('YES');
+                          setCompanionsCount(1);
+                        }}
                         className={`py-2.5 rounded-xl border font-bold text-xs transition-all cursor-pointer ${attendance === 'YES'
                           ? 'bg-gradient-to-r from-[#dfba73] to-[#c5a880] text-[#030f23] border-[#dfba73]'
                           : 'bg-[#030f23]/40 border-white/10 text-white hover:bg-[#030f23]/70'
@@ -926,24 +929,30 @@ export default function InvitationClientPageEmerald({
                   </div>
 
                   {/* Companions slider/count */}
-                  {attendance === 'YES' && (
-                    <div className="animate-fade-in font-sans">
-                      <label htmlFor="companions-count" className="block text-xs font-semibold text-[#dfba73] mb-1">
+                  {invitation.allowCompanions !== false && attendance === 'YES' && (
+                    <div className="animate-fade-in font-sans space-y-2">
+                      <label className="block text-xs font-semibold text-[#dfba73] mb-1">
                         {isEn ? "Number of Companions" : "عدد المرافقين"}
                       </label>
-                      <select
-                        id="companions-count"
-                        value={companionsCount}
-                        onChange={(e) => setCompanionsCount(Number(e.target.value))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-[#dfba73]/30 bg-[#030f23]/80 text-white text-xs focus:outline-none focus:ring-1 focus:ring-[#dfba73] focus:border-[#dfba73]"
-                      >
-                        <option value={0}>{isEn ? "Just me (no companions)" : "أنا فقط (بدون مرافقين)"}</option>
-                        <option value={1}>{isEn ? "1 Companion (+1)" : "مرافق واحد (+1)"}</option>
-                        <option value={2}>{isEn ? "2 Companions (+2)" : "مرافقين اثنين (+2)"}</option>
-                        <option value={3}>{isEn ? "3 Companions (+3)" : "ثلاثة مرافقين (+3)"}</option>
-                        <option value={4}>{isEn ? "4 Companions (+4)" : "أربعة مرافقين (+4)"}</option>
-                        <option value={5}>{isEn ? "5 Companions (+5)" : "خمسة مرافقين (+5)"}</option>
-                      </select>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setCompanionsCount(prev => Math.max(1, prev - 1))}
+                          className="w-10 h-10 rounded-lg border border-[#dfba73]/30 bg-[#030f23]/80 flex items-center justify-center text-sm font-bold text-white cursor-pointer hover:bg-[#030f23]/60"
+                        >
+                          -
+                        </button>
+                        <div className="flex-grow text-center py-2.5 rounded-lg border border-[#dfba73]/20 bg-[#030f23]/60 text-xs font-bold text-white">
+                          {companionsCount}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCompanionsCount(prev => Math.min(20, prev + 1))}
+                          className="w-10 h-10 rounded-lg border border-[#dfba73]/30 bg-[#030f23]/80 flex items-center justify-center text-sm font-bold text-white cursor-pointer hover:bg-[#030f23]/60"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   )}
 

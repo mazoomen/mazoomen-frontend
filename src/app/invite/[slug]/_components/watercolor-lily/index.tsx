@@ -83,7 +83,7 @@ export default function InvitationClientPageWatercolorLily({
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
-  const [companionsCount, setCompanionsCount] = useState(0);
+  const [companionsCount, setCompanionsCount] = useState(1);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -1013,7 +1013,10 @@ export default function InvitationClientPageWatercolorLily({
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setAttendance('YES')}
+                        onClick={() => {
+                          setAttendance('YES');
+                          setCompanionsCount(1);
+                        }}
                         className={`py-2.5 rounded-xl border font-bold text-xs transition-all duration-300 cursor-pointer ${attendance === 'YES'
                           ? 'bg-[#4A2E4B] text-white border-[#4A2E4B]'
                           : 'bg-white/60 border-gray-200 text-[#4A2E4B] hover:bg-white/80'
@@ -1035,22 +1038,28 @@ export default function InvitationClientPageWatercolorLily({
                   </div>
 
                   {/* Companions */}
-                  {attendance === 'YES' && (
-                    <div className="animate-fade-in">
-                      <label htmlFor="companions-count" className="block text-xs font-semibold text-[#4A2E4B] mb-1">{isEn ? "Number of companions" : "عدد المرافقين"}</label>
-                      <select
-                        id="companions-count"
-                        value={companionsCount}
-                        onChange={(e) => setCompanionsCount(Number(e.target.value))}
-                        className="w-full px-4 py-2.5 rounded-xl border border-[#4A2E4B]/15 bg-white/70 text-[#4A2E4B] text-xs focus:outline-none focus:ring-1 focus:ring-[#96608D]"
-                      >
-                        <option value={0}>{isEn ? "Just me (no companions)" : "أنا فقط (بدون مرافقين)"}</option>
-                        <option value={1}>{isEn ? "1 Companion (+1)" : "مرافق واحد (+1)"}</option>
-                        <option value={2}>{isEn ? "2 Companions (+2)" : "مرافقين اثنين (+2)"}</option>
-                        <option value={3}>{isEn ? "3 Companions (+3)" : "ثلاثة مرافقين (+3)"}</option>
-                        <option value={4}>{isEn ? "4 Companions (+4)" : "أربعة مرافقين (+4)"}</option>
-                        <option value={5}>{isEn ? "5 Companions (+5)" : "خمسة مرافقين (+5)"}</option>
-                      </select>
+                  {invitation.allowCompanions !== false && attendance === 'YES' && (
+                    <div className="animate-fade-in space-y-2">
+                      <label className="block text-xs font-semibold text-[#4A2E4B] mb-1">{isEn ? "Number of companions" : "عدد المرافقين"}</label>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setCompanionsCount(prev => Math.max(1, prev - 1))}
+                          className="w-10 h-10 rounded-lg border border-[#4A2E4B]/15 bg-white flex items-center justify-center text-sm font-bold text-[#4A2E4B] cursor-pointer hover:bg-white/80"
+                        >
+                          -
+                        </button>
+                        <div className="flex-grow text-center py-2.5 rounded-lg border border-[#4A2E4B]/10 bg-white/60 text-xs font-bold text-[#4A2E4B]">
+                          {companionsCount}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCompanionsCount(prev => Math.min(20, prev + 1))}
+                          className="w-10 h-10 rounded-lg border border-[#4A2E4B]/15 bg-white flex items-center justify-center text-sm font-bold text-[#4A2E4B] cursor-pointer hover:bg-white/80"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   )}
 

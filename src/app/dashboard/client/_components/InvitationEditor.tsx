@@ -128,6 +128,7 @@ export default function InvitationEditor({
   const [contactName, setContactName] = useState(invitation?.contactName || "");
   const [contactPhone, setContactPhone] = useState(invitation?.contactPhone || "");
   const [allowGuestUploads, setAllowGuestUploads] = useState(invitation?.allowGuestUploads !== false);
+  const [allowCompanions, setAllowCompanions] = useState(invitation?.allowCompanions !== false);
 
   // Upload loaders
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -278,6 +279,7 @@ export default function InvitationEditor({
       contactName: contactName.trim() || undefined,
       contactPhone: contactPhone.trim() || undefined,
       allowGuestUploads,
+      allowCompanions,
     };
 
     try {
@@ -617,6 +619,20 @@ export default function InvitationEditor({
           />
           <label htmlFor="allow-guest-uploads" className="text-xs font-semibold text-neutral-700 cursor-pointer select-none font-sans">
             {isRtl ? "السماح للضيوف بالتقاط ورفع الصور في قسم اللحظات" : "Allow guests to capture and upload photos in the Moments section"}
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <input
+            id="allow-companions"
+            type="checkbox"
+            checked={allowCompanions}
+            onChange={(e) => setAllowCompanions(e.target.checked)}
+            disabled={status === "saving"}
+            className="w-4.5 h-4.5 rounded border-neutral-300 text-black focus:ring-black accent-black cursor-pointer"
+          />
+          <label htmlFor="allow-companions" className="text-xs font-semibold text-neutral-700 cursor-pointer select-none font-sans">
+            {isRtl ? "تفعيل خيار تحديد عدد المرافقين للضيوف" : "Allow guests to select the number of companions in RSVP"}
           </label>
         </div>
       </div>

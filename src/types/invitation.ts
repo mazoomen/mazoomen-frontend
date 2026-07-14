@@ -60,6 +60,7 @@ export interface InvitationData {
   contactName?: string | null;
   contactPhone?: string | null;
   allowGuestUploads?: boolean;
+  allowCompanions?: boolean;
   moments?: string[];
   createdAt: string;
   template: InvitationTemplate;

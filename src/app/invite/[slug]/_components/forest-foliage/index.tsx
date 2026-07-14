@@ -83,7 +83,7 @@ export default function InvitationClientPageForestFoliage({
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
-  const [companionsCount, setCompanionsCount] = useState(0);
+  const [companionsCount, setCompanionsCount] = useState(1);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -993,7 +993,10 @@ export default function InvitationClientPageForestFoliage({
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setAttendance('YES')}
+                        onClick={() => {
+                          setAttendance('YES');
+                          setCompanionsCount(1);
+                        }}
                         className={`py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                           attendance === 'YES' ? 'shadow-md' : 'hover:bg-[#FAF9F5]/50'
                         }`}
@@ -1022,13 +1025,13 @@ export default function InvitationClientPageForestFoliage({
                     </div>
                   </div>
 
-                  {attendance === 'YES' && (
+                  {invitation.allowCompanions !== false && attendance === 'YES' && (
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-[#103020]/75">{isEn ? "Number of Companions" : "عدد المرافقين"}</label>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
-                          onClick={() => setCompanionsCount(prev => Math.max(0, prev - 1))}
+                          onClick={() => setCompanionsCount(prev => Math.max(1, prev - 1))}
                           className="w-10 h-10 rounded-lg border flex items-center justify-center text-sm font-bold cursor-pointer transition-all"
                           style={{
                             borderColor: 'rgba(184, 156, 114, 0.3)',
@@ -1050,7 +1053,7 @@ export default function InvitationClientPageForestFoliage({
                         </div>
                         <button
                           type="button"
-                          onClick={() => setCompanionsCount(prev => prev + 1)}
+                          onClick={() => setCompanionsCount(prev => Math.min(20, prev + 1))}
                           className="w-10 h-10 rounded-lg border flex items-center justify-center text-sm font-bold cursor-pointer transition-all"
                           style={{
                             borderColor: 'rgba(184, 156, 114, 0.3)',
