@@ -52,10 +52,13 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const logout = useCallback(() => {
-    api.post("/auth/logout").catch((err) => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    api.post("/auth/logout", { refreshToken }).catch((err) => {
       console.error("Backend logout failed:", err);
     }).finally(() => {
       localStorage.removeItem("user");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       setIsLoggedIn(false);
       setUser(null);
       window.location.href = "/";

@@ -17,6 +17,7 @@ interface WishesSectionProps {
   welcomeText?: string | null;
   viewingLang?: string;
   allowGuestUploads: boolean;
+  allowCompanions?: boolean;
   moments: string[];
   ownerId?: string;
   onMomentUploaded?: (updatedInvitation: any) => void;
@@ -30,6 +31,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   welcomeText,
   viewingLang,
   allowGuestUploads,
+  allowCompanions,
   moments: initialMoments = [],
   ownerId,
   onMomentUploaded,
@@ -75,7 +77,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
           if (user && user.id === ownerId) {
             setIsOwner(true);
           }
-        } catch {}
+        } catch { }
       }
     }
   }, [ownerId]);
@@ -83,7 +85,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   const [newWish, setNewWish] = useState('');
   const [guestName, setGuestName] = useState('');
   const [attendance, setAttendance] = useState<'YES' | 'NO' | null>(null);
-  const [companionsCount, setCompanionsCount] = useState(0);
+  const [companionsCount, setCompanionsCount] = useState(1);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -105,8 +107,8 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   const { groom, bride } = getCoupleNames(eventTitle);
 
   // Fallbacks for images
-  const featuredImage = images && images.length > 0 
-    ? images[0] 
+  const featuredImage = images && images.length > 0
+    ? images[0]
     : '/base44.app/api/apps/6966e1f30fa9fbe508239391/files/public/6966e1f30fa9fbe508239391/eedced598_IMG_2319.jpeg';
 
   const handleRsvpSubmit = async (e: React.FormEvent) => {
@@ -126,12 +128,12 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
 
     try {
       await api.post('/rsvp', payload);
-      
+
       // If they left a wish message, prepend it to the scroll list locally
       if (newWish.trim()) {
         setWishes([{ name: guestName.trim(), text: newWish.trim() }, ...wishes]);
       }
-      
+
       setStatus('success');
       setGuestName('');
       setNewWish('');
@@ -141,7 +143,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       console.error(err);
       setStatus('error');
       setErrorMsg(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         (isEn ? 'An error occurred while sending your response. Please try again.' : 'حدث خطأ أثناء إرسال ردك. يرجى المحاولة مرة أخرى.')
       );
     }
@@ -160,11 +162,11 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       const uploadRes = await api.post<{ url: string }>('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
+
       // 2. Append URL to invitation moments
       const momentUrl = uploadRes.data.url;
       const saveRes = await api.post(`/invitations/${invitationId}/moments`, { url: momentUrl });
-      
+
       // 3. Update local state
       if (saveRes.data && saveRes.data.moments) {
         setMoments(saveRes.data.moments);
@@ -184,7 +186,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   };
 
   const canUpload = allowGuestUploads;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com';
 
   return (
     <div id="rsvp-section" className="space-y-8" dir={isEn ? "ltr" : "rtl"}>
@@ -203,9 +205,9 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
 
       {/* Featured Image */}
       <div className="mb-8">
-        <div 
+        <div
           onClick={() => setSelectedImage(featuredImage.startsWith('/public') ? baseUrl + featuredImage : featuredImage)}
-          className="w-full aspect-video rounded-xl bg-cover bg-center shadow-lg transition-all duration-700 cursor-zoom-in hover:opacity-90 active:scale-[0.99] transition-transform" 
+          className="w-full aspect-video rounded-xl bg-cover bg-center shadow-lg transition-all duration-700 cursor-zoom-in hover:opacity-90 active:scale-[0.99] transition-transform"
           style={{ backgroundImage: `url("${featuredImage.startsWith('/public') ? baseUrl + featuredImage : featuredImage}")` }}
         />
       </div>
@@ -213,7 +215,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       {/* Moments Gallery */}
       <div id="moments-section" className="mb-8">
         <h3 className="text-center text-xl mb-4 font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
-        
+
         {moments.length === 0 ? (
           <div className="text-center py-8 text-neutral-400 border border-dashed border-neutral-300 rounded-[22px] mb-4 font-sans text-xs bg-white/30 backdrop-blur-md">
             {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته!"}
@@ -224,10 +226,10 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
               {moments.map((src, index) => {
                 const fullUrl = src.startsWith('/public') ? baseUrl + src : src;
                 return (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     onClick={() => setSelectedImage(fullUrl)}
-                    className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform" 
+                    className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform"
                     style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
                   >
                     <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
@@ -267,14 +269,14 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       </div>
 
       {/* Elegant RSVP Form Card */}
-      <div 
-        className="p-6 mb-8" 
-        style={{ 
-          backdropFilter: 'blur(16px)', 
-          background: 'rgba(255, 255, 255, 0.12)', 
-          border: '1px solid rgba(255, 255, 255, 0.2)', 
-          boxShadow: 'rgba(0, 0, 0, 0.15) 0px 8px 32px', 
-          borderRadius: '24px' 
+      <div
+        className="p-6 mb-8"
+        style={{
+          backdropFilter: 'blur(16px)',
+          background: 'rgba(255, 255, 255, 0.12)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: 'rgba(0, 0, 0, 0.15) 0px 8px 32px',
+          borderRadius: '24px'
         }}
       >
         <h3 className="text-center text-xl mb-4 font-semibold text-black flex items-center justify-center gap-2">
@@ -293,7 +295,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
                 ? "We are honored and delighted to share our joy with you. Looking forward to seeing you!"
                 : "يسعدنا ويشرفنا حضوركم الكريم لمشاركتنا فرحتنا. نتطلع للقائكم في الحفل 🤍"}
             </p>
-            <button 
+            <button
               onClick={() => setStatus('idle')}
               className="mt-4 px-6 py-2 text-xs font-semibold rounded-full border border-black/15 hover:bg-black/5 text-black cursor-pointer font-sans"
             >
@@ -322,23 +324,24 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setAttendance('YES')}
-                  className={`py-2.5 rounded-xl border font-semibold text-sm transition-all duration-300 cursor-pointer ${
-                    attendance === 'YES'
-                      ? 'bg-[#ac8c60] text-white border-[#ac8c60]'
+                  onClick={() => {
+                    setAttendance('YES');
+                    setCompanionsCount(1);
+                  }}
+                  className={`py-2.5 rounded-xl border font-semibold text-sm transition-all duration-300 cursor-pointer ${attendance === 'YES'
+                      ? 'bg-black text-white border-black shadow-md'
                       : 'bg-white/40 border-gray-200 text-black hover:bg-white/60'
-                  }`}
+                    }`}
                 >
                   {isEn ? "Yes, gladly" : "نعم، بكل سرور"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setAttendance('NO')}
-                  className={`py-2.5 rounded-xl border font-semibold text-sm transition-all duration-300 cursor-pointer ${
-                    attendance === 'NO'
+                  className={`py-2.5 rounded-xl border font-semibold text-sm transition-all duration-300 cursor-pointer ${attendance === 'NO'
                       ? 'bg-red-700/20 text-red-900 border-red-300'
                       : 'bg-white/40 border-gray-200 text-black hover:bg-white/60'
-                  }`}
+                    }`}
                 >
                   {isEn ? "Apologize, wishing you all the best" : "أعتذر، متمنياً لكم التوفيق"}
                 </button>
@@ -346,22 +349,28 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
             </div>
 
             {/* Companions Count */}
-            {attendance === 'YES' && (
-              <div className="animate-fade-in">
-                <label htmlFor="companions-count" className="block text-sm font-medium text-black mb-1">{isEn ? "Number of companions" : "عدد المرافقين"}</label>
-                <select
-                  id="companions-count"
-                  value={companionsCount}
-                  onChange={(e) => setCompanionsCount(Number(e.target.value))}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#ac8c60]"
-                >
-                  <option value={0}>{isEn ? "Just me (no companions)" : "أنا فقط (بدون مرافقين)"}</option>
-                  <option value={1}>{isEn ? "1 Companion (+1)" : "مرافق واحد (+1)"}</option>
-                  <option value={2}>{isEn ? "2 Companions (+2)" : "مرافقين اثنين (+2)"}</option>
-                  <option value={3}>{isEn ? "3 Companions (+3)" : "ثلاثة مرافقين (+3)"}</option>
-                  <option value={4}>{isEn ? "4 Companions (+4)" : "أربعة مرافقين (+4)"}</option>
-                  <option value={5}>{isEn ? "5 Companions (+5)" : "خمسة مرافقين (+5)"}</option>
-                </select>
+            {allowCompanions !== false && attendance === 'YES' && (
+              <div className="animate-fade-in space-y-2">
+                <label className="block text-sm font-medium text-black mb-1">{isEn ? "Number of companions" : "عدد المرافقين"}</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCompanionsCount(prev => Math.max(1, prev - 1))}
+                    className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-sm font-bold text-gray-800 cursor-pointer hover:bg-gray-50"
+                  >
+                    -
+                  </button>
+                  <div className="flex-grow text-center py-2.5 rounded-lg border border-gray-100 bg-white/60 text-xs font-bold text-gray-800">
+                    {companionsCount}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCompanionsCount(prev => Math.min(20, prev + 1))}
+                    className="w-10 h-10 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-sm font-bold text-gray-800 cursor-pointer hover:bg-gray-50"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             )}
 
@@ -408,15 +417,15 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
         {/* Wish entry list container */}
         <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
           {wishes.map((wish, index) => (
-            <div 
-              key={index} 
-              className="p-4" 
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.12)', 
-                backdropFilter: 'blur(12px)', 
-                border: '1px solid rgba(255, 255, 255, 0.2)', 
-                borderRadius: '22px', 
-                boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px' 
+            <div
+              key={index}
+              className="p-4"
+              style={{
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '22px',
+                boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px'
               }}
             >
               <p className="text-sm text-center leading-relaxed text-[#ac8c60] font-semibold mb-1">"{wish.text}"</p>
@@ -428,27 +437,27 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
 
       {/* Lightbox Modal */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md transition-opacity duration-300"
           onClick={() => setSelectedImage(null)}
         >
           {/* Close button */}
-          <button 
+          <button
             className="absolute top-6 right-6 z-[100000] p-2 rounded-full bg-white/10 text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             onClick={() => setSelectedImage(null)}
             aria-label="Close image viewer"
           >
             <X className="w-6 h-6" />
           </button>
-          
+
           {/* Image Container */}
-          <div 
+          <div
             className="relative max-w-[90%] max-h-[85%] flex items-center justify-center animate-fade-in"
             onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
           >
-            <img 
-              src={selectedImage} 
-              alt="Zoomed preview" 
+            <img
+              src={selectedImage}
+              alt="Zoomed preview"
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10 select-none animate-scale-up"
             />
           </div>

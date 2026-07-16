@@ -4,6 +4,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageContext";
 import { CurrencyProvider } from "@/components/CurrencyContext";
 import LocationPromptBanner from "@/components/LocationPromptBanner";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
 
 const playfair = Playfair_Display({
   variable: "--font-serif",
@@ -58,6 +59,7 @@ export default function RootLayout({
           <CurrencyProvider>
             {children}
             <LocationPromptBanner />
+            <CookieConsentBanner />
           </CurrencyProvider>
         </LanguageProvider>
       </body>

@@ -60,6 +60,7 @@ export interface InvitationData {
   contactName?: string | null;
   contactPhone?: string | null;
   allowGuestUploads?: boolean;
+  allowCompanions?: boolean;
   moments?: string[];
   createdAt: string;
   template: InvitationTemplate;
@@ -79,9 +80,10 @@ export interface CreateRsvpPayload {
 export interface RsvpResponse {
   id: string;
   invitationId: string;
-  guestName: string;
-  willAttend: boolean;
-  companionsCount: number;
+  name: string;
+  attendance: "YES" | "NO";
+  guestsCount: number;
+  message?: string;
   createdAt: string;
 }
 

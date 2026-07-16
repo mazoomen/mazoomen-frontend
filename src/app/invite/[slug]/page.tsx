@@ -15,7 +15,7 @@ interface InvitePageProps {
 // ── Data Fetching (Server-Side) ────────────────────────────────────────
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_API_URL || "https://mazoom-backend.onrender.com";
 
 async function getInvitation(slug: string): Promise<InvitationData | null> {
   try {
@@ -44,8 +44,8 @@ export async function generateMetadata({
     return { title: "Invitation Not Found" };
   }
 
-  const desc = invitation.welcomeText 
-    ? invitation.welcomeText.slice(0, 160) 
+  const desc = invitation.welcomeText
+    ? invitation.welcomeText.slice(0, 160)
     : `تشرف دعوتكم لحضور حفل زفاف: ${invitation.eventTitle}`;
 
   return {
