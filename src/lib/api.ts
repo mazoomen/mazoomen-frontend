@@ -20,12 +20,17 @@ const api = axios.create({
 console.log("Axios defaults baseURL:", api.defaults.baseURL);
 
 // ── Request Interceptor ────────────────────────────────────────────────
-// Attach default headers (like accept language) to outgoing requests.
+// Attach default headers (like accept language) and Authorization header to outgoing requests.
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
       const lang = localStorage.getItem("lang") || "ar";
       config.headers["Accept-Language"] = lang;
+
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -33,8 +38,9 @@ api.interceptors.request.use(
 );
 
 // ── Response Interceptor ───────────────────────────────────────────────
-// Global handler for 401 responses — handles silent JWT access token refresh 
-// via HTTP-only refresh token, or redirects to login if refresh fails.
+// Global handler for successful responses (to capture tokens) and 401 responses 
+// — handles silent JWT access token refresh via body-based refresh token fallback 
+// if cookies are blocked, or redirects to login if refresh fails.
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
@@ -50,7 +56,17 @@ const processQueue = (error: any) => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data && typeof window !== "undefined") {
+      if (response.data.accessToken) {
+        localStorage.setItem("accessToken", response.data.accessToken);
+      }
+      if (response.data.refreshToken) {
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+      }
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -76,7 +92,8 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await api.post("/auth/refresh");
+        const refreshToken = localStorage.getItem("refreshToken");
+        await api.post("/auth/refresh", { refreshToken });
         isRefreshing = false;
         processQueue(null);
         return api(originalRequest);
@@ -89,6 +106,8 @@ api.interceptors.response.use(
         );
 
         localStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
 
         const path = window.location.pathname;
         if (path !== "/") {
