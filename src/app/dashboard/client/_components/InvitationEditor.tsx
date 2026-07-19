@@ -10,7 +10,7 @@ interface InvitationEditorProps {
   purchaseId: string;
   invitation: InvitationData | PurchaseInvitation | null; // Supports both data models
   templateTitle: string;
-  onSaved: () => void;
+  onSaved: (updatedInv?: any) => void;
   editableFields?: any;
 }
 
@@ -157,9 +157,25 @@ export default function InvitationEditor({
   // ── New Fields for WhatsApp & Moments settings ──
   const [contactName, setContactName] = useState(invitation?.contactName || "");
   const [contactPhone, setContactPhone] = useState(invitation?.contactPhone || "");
-  const [allowGuestUploads, setAllowGuestUploads] = useState(invitation?.allowGuestUploads !== false);
-  const [showMoments, setShowMoments] = useState(invitation?.showMoments !== false);
-  const [allowCompanions, setAllowCompanions] = useState(invitation?.allowCompanions !== false);
+  const [allowGuestUploads, setAllowGuestUploads] = useState<boolean>(
+    invitation?.allowGuestUploads !== false
+  );
+  const [showMoments, setShowMoments] = useState<boolean>(
+    invitation?.showMoments !== false
+  );
+  const [allowCompanions, setAllowCompanions] = useState<boolean>(
+    invitation?.allowCompanions !== false
+  );
+
+  useEffect(() => {
+    if (invitation) {
+      setAllowGuestUploads(invitation.allowGuestUploads !== false);
+      setShowMoments(invitation.showMoments !== false);
+      setAllowCompanions(invitation.allowCompanions !== false);
+      setContactName(invitation.contactName || "");
+      setContactPhone(invitation.contactPhone || "");
+    }
+  }, [invitation]);
 
   // Upload loaders
   const [isImageUploading, setIsImageUploading] = useState(false);
@@ -317,19 +333,22 @@ export default function InvitationEditor({
     };
 
     try {
+      let savedData: any = null;
       if (isEditing) {
-        await api.put(`/invitations/${invitation.id}`, payload);
+        const res = await api.put(`/invitations/${invitation.id}`, payload);
+        savedData = res.data;
       } else {
-        await api.post("/invitations", {
+        const res = await api.post("/invitations", {
           ...payload,
           purchaseId,
         });
+        savedData = res.data;
       }
 
       setStatus("success");
       setTimeout(() => {
         setStatus("idle");
-        onSaved();
+        onSaved(savedData);
       }, 1000);
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;

@@ -934,7 +934,7 @@ export default function InvitationClientPageForestFoliage({
             )}
 
             {/* Moments Slideshow/Showcase */}
-            {invitation.showMoments !== false && invitation.moments && invitation.moments.length > 0 && (
+            {invitation.showMoments !== false && (
               <div
                 className="p-6 animate-on-scroll fade-up"
                 style={{
@@ -946,17 +946,23 @@ export default function InvitationClientPageForestFoliage({
                 }}
               >
                 <h4 className="text-center text-xs tracking-widest font-bold text-[#B89C72] mb-4 uppercase">{isEn ? "GUEST PHOTO FEED" : "صور ضيوفنا الكرام"}</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  {invitation.moments.map((momentUrl, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setSelectedImage(momentUrl)}
-                      className="aspect-square rounded-lg overflow-hidden border border-slate-100 cursor-pointer shadow-xs hover:scale-[1.03] transition-all"
-                    >
-                      <img src={momentUrl} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
+                {invitation.moments && invitation.moments.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {invitation.moments.map((momentUrl, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setSelectedImage(momentUrl)}
+                        className="aspect-square rounded-lg overflow-hidden border border-slate-100 cursor-pointer shadow-xs hover:scale-[1.03] transition-all"
+                      >
+                        <img src={momentUrl} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-400 text-xs font-medium">
+                    {isEn ? "No guest photos yet. Be the first to share!" : "لا توجد صور في المعرض بعد. كن أول من يشاركنا صورته!"}
+                  </div>
+                )}
               </div>
             )}
 

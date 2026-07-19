@@ -76,7 +76,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       if (stored && ownerId) {
         try {
           const user = JSON.parse(stored);
-          if (user && user.id === ownerId) {
+          if (user && (user.id === ownerId || user.role === "ADMIN")) {
             setIsOwner(true);
           }
         } catch { }
