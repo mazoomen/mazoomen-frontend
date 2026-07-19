@@ -198,14 +198,11 @@ export default function InvitationClientPageEmerald({
     formData.append('file', file);
 
     try {
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      const uploadRes = await api.post<any>(`/invitations/${invitation.id}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const momentUrl = uploadRes.data.url;
-
-      const saveRes = await api.post(`/invitations/${invitation.id}/moments`, { url: momentUrl });
-      if (saveRes.data) {
-        setInvitation(saveRes.data);
+      if (uploadRes.data) {
+        setInvitation(uploadRes.data);
       }
     } catch (err) {
       console.error("Camera upload failed:", err);

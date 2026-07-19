@@ -178,24 +178,19 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
     formData.append('file', file);
 
     try {
-      // 1. Upload file to static folder
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      // 1. Upload file directly to S3 and save moments in one step
+      const uploadRes = await api.post<any>(`/invitations/${invitationId}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // 2. Append URL to invitation moments
-      const momentUrl = uploadRes.data.url;
-      const saveRes = await api.post(`/invitations/${invitationId}/moments`, { url: momentUrl });
+      const updatedInvitation = uploadRes.data;
+      const momentsList = updatedInvitation.moments || [];
 
-      // 3. Update local state
-      if (saveRes.data && saveRes.data.moments) {
-        setMoments(saveRes.data.moments);
-      } else {
-        setMoments(prev => [...prev, momentUrl]);
-      }
+      // 2. Update local state
+      setMoments(momentsList);
 
-      if (onMomentUploaded && saveRes.data) {
-        onMomentUploaded(saveRes.data);
+      if (onMomentUploaded && updatedInvitation) {
+        onMomentUploaded(updatedInvitation);
       }
     } catch (err) {
       console.error("Camera upload failed:", err);
