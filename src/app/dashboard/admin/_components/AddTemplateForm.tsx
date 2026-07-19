@@ -176,12 +176,31 @@ export default function AddTemplateForm({
     });
 
     const editableFields = initialTemplateData.editableFields || {};
+    const hasNewFields = Object.keys(editableFields).some((key) =>
+      [
+        "groomName",
+        "brideName",
+        "locationUrl",
+        "welcomeText",
+        "musicUrl",
+        "images",
+        "eventProgram",
+        "eventDetails",
+      ].includes(key)
+    );
+
     setFields((prev) =>
       prev.map((f) => {
-        const customField = editableFields[f.key];
-        if (customField) {
-          let defEn = customField.defaultEn !== undefined ? customField.defaultEn : customField.default;
-          let defAr = customField.defaultAr !== undefined ? customField.defaultAr : customField.default;
+        // Map groomName/brideName to eventTitle if we are loading a legacy template
+        const isLegacyTitle = !hasNewFields && (f.key === "groomName" || f.key === "brideName") && !!editableFields.eventTitle;
+        const customField = isLegacyTitle ? editableFields.eventTitle : editableFields[f.key];
+
+        // If legacy/seeded template, default all other fields to enabled: true
+        const isLegacyOther = !hasNewFields && !isLegacyTitle;
+
+        if (customField || isLegacyOther) {
+          let defEn = customField?.defaultEn !== undefined ? customField.defaultEn : (customField?.default !== undefined ? customField.default : f.defaultEn);
+          let defAr = customField?.defaultAr !== undefined ? customField.defaultAr : (customField?.default !== undefined ? customField.default : f.defaultAr);
 
           // Normalize array fields to ensure they are arrays and have at least 1 element
           if (f.key === "images") {
@@ -204,8 +223,8 @@ export default function AddTemplateForm({
           return {
             ...f,
             enabled: true,
-            labelEn: customField.labelEn !== undefined ? customField.labelEn : (customField.label || f.labelEn),
-            labelAr: customField.labelAr !== undefined ? customField.labelAr : (customField.label || f.labelAr),
+            labelEn: customField?.labelEn !== undefined ? customField.labelEn : (customField?.label || f.labelEn),
+            labelAr: customField?.labelAr !== undefined ? customField.labelAr : (customField?.label || f.labelAr),
             defaultEn: defEn,
             defaultAr: defAr,
           };

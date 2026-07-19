@@ -57,7 +57,37 @@ export default function InvitationEditor({
 
   const isFieldEditable = (fieldKey: string) => {
     if (isAdmin) return true;
+
+    // Core fields should ALWAYS be editable by the client
+    if (
+      fieldKey === "groomName" ||
+      fieldKey === "brideName" ||
+      fieldKey === "eventDate" ||
+      fieldKey === "eventLocation"
+    ) {
+      return true;
+    }
+
     if (!editableFields) return true;
+
+    // Check if the template has any of the newer customizable fields configured
+    const hasNewFields = Object.keys(editableFields).some((key) =>
+      [
+        "locationUrl",
+        "welcomeText",
+        "musicUrl",
+        "images",
+        "eventProgram",
+        "eventDetails",
+      ].includes(key)
+    );
+
+    // If it's a legacy or seeded template that doesn't have any of the newer fields defined,
+    // default all new customizable fields to true so they are editable.
+    if (!hasNewFields) {
+      return true;
+    }
+
     return !!editableFields[fieldKey];
   };
 
