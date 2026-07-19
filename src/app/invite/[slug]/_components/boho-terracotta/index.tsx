@@ -181,7 +181,7 @@ export default function InvitationClientPageBohoTerracotta({
 
         {/* Invitation Text Card, Location details & Countdown widgets */}
         <section className="relative min-h-[700px] py-8 px-4">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
@@ -207,7 +207,7 @@ export default function InvitationClientPageBohoTerracotta({
 
         {/* Interactive Event Timeline & Event Guidelines/Details Section */}
         <section className="relative min-h-[700px] py-8 px-4">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
@@ -227,7 +227,7 @@ export default function InvitationClientPageBohoTerracotta({
 
         {/* Gallery moments & Guest wishes timeline */}
         <section className="relative min-h-[763px] py-8 px-4">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
@@ -259,7 +259,7 @@ export default function InvitationClientPageBohoTerracotta({
 
         {/* Footer info details */}
         <section className="relative min-h-[302px] py-8 px-4">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay

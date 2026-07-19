@@ -254,6 +254,29 @@ export default function AddTemplateForm({
     );
   }, [initialTemplateData]);
 
+  const [isUploadingPreview, setIsUploadingPreview] = useState(false);
+
+  const handlePreviewFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingPreview(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await api.post<{ url: string }>("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setForm((prev) => ({ ...prev, previewImage: res.data.url }));
+    } catch (err) {
+      console.error(err);
+      alert(lang === "ar" ? "فشل رفع صورة المعاينة" : "Preview image upload failed");
+    } finally {
+      setIsUploadingPreview(false);
+    }
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -550,18 +573,30 @@ export default function AddTemplateForm({
           htmlFor="template-preview"
           className="mb-1.5 block text-xs font-semibold text-gray-700 font-sans"
         >
-          {lang === "ar" ? "اسم أو رابط صورة المعاينة" : "Preview Image name or url"} <span className="text-red-400">*</span>
+          {lang === "ar" ? "صورة المعاينة" : "Preview Image"} <span className="text-red-400">*</span>
         </label>
-        <input
-          id="template-preview"
-          type="text"
-          name="previewImage"
-          value={form.previewImage}
-          onChange={handleChange}
-          placeholder={lang === "ar" ? "مثال: preview.jpg أو /images/preview.jpg" : "e.g. preview.jpg or /images/preview.jpg"}
-          disabled={submitting}
-          className="w-full rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50"
-        />
+        <div className="flex gap-2 items-center">
+          <input
+            id="template-preview"
+            type="text"
+            name="previewImage"
+            value={form.previewImage}
+            onChange={handleChange}
+            placeholder={lang === "ar" ? "رابط الصورة أو ارفع ملف..." : "Image URL or upload file..."}
+            disabled={submitting || isUploadingPreview}
+            className="flex-1 rounded-lg border border-[#EBE7DF] bg-[#FAF9F6] px-4 py-2.5 text-xs text-neutral-800 placeholder-gray-400 outline-none transition-colors focus:border-[#B89C72] disabled:opacity-50 font-sans"
+          />
+          <label className="cursor-pointer bg-[#B89C72] hover:bg-[#a38860] text-white px-4 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 shrink-0 font-sans">
+            {isUploadingPreview ? (lang === "ar" ? "جاري الرفع..." : "Uploading...") : (lang === "ar" ? "رفع صورة" : "Upload File")}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePreviewFileUpload}
+              className="hidden"
+              disabled={submitting || isUploadingPreview}
+            />
+          </label>
+        </div>
       </div>
 
       {/* ── Demo Link ────────────────────────────────────────── */}

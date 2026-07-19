@@ -155,20 +155,10 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
+    if (file.size > 20 * 1024 * 1024) {
       alert(isEn 
-        ? "The image is too large. Maximum size is 5MB." 
-        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت."
-      );
-      return;
-    }
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
-    if (!allowedTypes.includes(file.type)) {
-      alert(isEn 
-        ? "Invalid file type. Please upload an image (JPG, PNG, WEBP, GIF)." 
-        : "نوع الملف غير صالح. يرجى رفع صورة (JPG, PNG, WEBP, GIF)."
+        ? "The image is too large. Maximum size is 20MB." 
+        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 20 ميجابايت."
       );
       return;
     }
@@ -192,9 +182,10 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       if (onMomentUploaded && updatedInvitation) {
         onMomentUploaded(updatedInvitation);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Camera upload failed:", err);
-      alert(isEn ? "Failed to upload photo. Please try again." : "فشل رفع الصورة. يرجى المحاولة مرة أخرى.");
+      const serverMsg = err?.response?.data?.message || err?.message;
+      alert(serverMsg || (isEn ? "Failed to upload photo. Please try again." : "فشل رفع الصورة. يرجى المحاولة مرة أخرى."));
     } finally {
       setIsUploading(false);
     }

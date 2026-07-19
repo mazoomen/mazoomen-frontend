@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { getS3Url } from "@/lib/s3";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/lib/api";
@@ -219,7 +220,7 @@ export default function ClientOrdersPage() {
                   {/* Template Preview Thumbnail */}
                   <div className="w-24 h-24 rounded-xl bg-[#FAF8F5] border border-[#F0ECE3] overflow-hidden shrink-0 shadow-sm relative">
                     <Image
-                      src={request.template.previewImage}
+                      src={getS3Url(request.template.previewImage)}
                       alt={request.template.title}
                       fill
                       unoptimized

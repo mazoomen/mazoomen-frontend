@@ -85,19 +85,22 @@ export default function Home() {
   };
 
   const filteredTemplates = templates.filter((template) => {
-    // Search text query
+    // Search text query (check title & description in both Arabic and English)
+    const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
-      template.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchQuery.toLowerCase());
+      !q ||
+      (template.title || "").toLowerCase().includes(q) ||
+      ((template as any).titleEn || "").toLowerCase().includes(q) ||
+      (template.description || "").toLowerCase().includes(q) ||
+      ((template as any).descriptionEn || "").toLowerCase().includes(q);
 
     // Category selection
     const matchesCategory = selectedCategory
-      ? template.category === selectedCategory
+      ? (template.category || "").toLowerCase() === selectedCategory.toLowerCase()
       : true;
 
-    // Tab selection (Mockup Tab Filter: 'الكل' or 'جاهزة للتعديل')
-    // 'ready' corresponds to non-premium (standard) templates, 'all' is all
-    const matchesTab = selectedTab === "ready" ? !template.isPremium : true;
+    // Tab selection: both 'all' and 'ready' show active templates
+    const matchesTab = true;
 
     return template.isActive && matchesSearch && matchesCategory && matchesTab;
   });

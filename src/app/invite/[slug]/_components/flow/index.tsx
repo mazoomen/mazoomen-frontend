@@ -615,7 +615,7 @@ export default function InvitationClientPageFlow({
 
         {/* HERO SECTION */}
         <section className="relative min-h-[700px] flex flex-col items-center justify-start text-center pt-24">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={videoRef}
               src={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
@@ -657,7 +657,7 @@ export default function InvitationClientPageFlow({
 
         {/* INVITATION CARD & COUNTDOWN SECTION */}
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
               autoPlay
@@ -766,7 +766,7 @@ export default function InvitationClientPageFlow({
 
         {/* TIMELINE & DETAILS SECTION */}
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
               autoPlay
@@ -884,7 +884,7 @@ export default function InvitationClientPageFlow({
 
         {/* MOMENTS GALLERY SECTION (Flow Theme) */}
         <section id="moments-section" className="relative min-h-[400px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
               autoPlay
@@ -948,7 +948,7 @@ export default function InvitationClientPageFlow({
 
         {/* WISHES & RSVP SECTION */}
         <section id="rsvp-section" className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
               autoPlay
@@ -1147,7 +1147,7 @@ export default function InvitationClientPageFlow({
 
         {/* FOOTER SECTION */}
         <section className="relative min-h-[302px] py-12 px-6 flex flex-col justify-center text-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
               autoPlay

@@ -616,7 +616,7 @@ export default function InvitationClientPageWhiteGypsophila({
 
         {/* HERO SECTION */}
         <section className="relative min-h-[700px] flex flex-col items-center justify-start text-center pt-24">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={videoRef}
               src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
@@ -658,7 +658,7 @@ export default function InvitationClientPageWhiteGypsophila({
 
         {/* INVITATION CARD & COUNTDOWN SECTION */}
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay
@@ -768,7 +768,7 @@ export default function InvitationClientPageWhiteGypsophila({
         {/* INTERACTIVE EVENT TIMELINE SECTION */}
         {timelineEvents.length > 0 && (
           <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-            <div className="absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
               <video
                 src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
                 autoPlay
@@ -848,7 +848,7 @@ export default function InvitationClientPageWhiteGypsophila({
 
         {/* MOMENTS GALLERY & GUESTBOOK SECTION */}
         <section className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay
@@ -1114,7 +1114,7 @@ export default function InvitationClientPageWhiteGypsophila({
         </section>
         {/* FOOTER SECTION */}
         <section className="relative min-h-[302px] py-12 px-6 flex flex-col justify-center text-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay

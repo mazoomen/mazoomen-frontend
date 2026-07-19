@@ -488,7 +488,7 @@ export default function InvitationClientPageEmerald({
         {/* Section 1: Hero Banner */}
         <section className="relative min-h-[760px] flex flex-col justify-between py-12 px-6 overflow-hidden">
           {/* Background Video */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={mainVideoRef}
               src={`${S3_BASE_URL}/templates/videos/emerald-bg-1_e216a5a4.mp4`}
@@ -527,7 +527,7 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 2: Invitation Text Card & Countdown */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={bodyVideoRef}
               src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
@@ -611,7 +611,7 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 3: Interactive Event Timeline & Guidelines */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={timelineVideoRef}
               src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
@@ -757,7 +757,7 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 4: Moments Gallery Uploads */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={wishesVideoRef}
               src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
@@ -835,7 +835,7 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 5: RSVP Form & Congratulations wishes */}
         <section className="relative min-h-[760px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={footerVideoRef}
               src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
@@ -1047,7 +1047,7 @@ export default function InvitationClientPageEmerald({
 
         {/* Footer info details */}
         <section className="relative min-h-[300px] py-12 px-6 flex flex-col justify-center text-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={footerVideoRef}
               src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
