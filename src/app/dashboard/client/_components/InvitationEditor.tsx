@@ -198,7 +198,8 @@ export default function InvitationEditor({
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await api.post<{ url: string }>("/upload", formData, {
+      const urlParam = invitation?.id ? `?invitationId=${invitation.id}` : "";
+      const res = await api.post<{ url: string }>(`/upload${urlParam}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setImages(prev => [...prev.filter(url => url.trim() !== ""), res.data.url]);
@@ -217,7 +218,8 @@ export default function InvitationEditor({
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await api.post<{ url: string }>("/upload", formData, {
+      const urlParam = invitation?.id ? `?invitationId=${invitation.id}` : "";
+      const res = await api.post<{ url: string }>(`/upload${urlParam}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setMusicUrl(res.data.url);

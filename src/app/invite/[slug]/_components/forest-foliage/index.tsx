@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -147,14 +148,11 @@ export default function InvitationClientPageForestFoliage({
     formData.append('file', file);
 
     try {
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      const uploadRes = await api.post<any>(`/invitations/${invitation.id}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const momentUrl = uploadRes.data.url;
-
-      const saveRes = await api.post(`/invitations/${invitation.id}/moments`, { url: momentUrl });
-      if (saveRes.data) {
-        setInvitation(saveRes.data);
+      if (uploadRes.data) {
+        setInvitation(uploadRes.data);
       }
     } catch (err) {
       console.error("Camera upload failed:", err);
@@ -618,10 +616,10 @@ export default function InvitationClientPageForestFoliage({
 
         {/* HERO SECTION */}
         <section className="relative min-h-[700px] flex flex-col items-center justify-start text-center pt-24">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={videoRef}
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline
@@ -660,9 +658,9 @@ export default function InvitationClientPageForestFoliage({
 
         {/* INVITATION CARD & COUNTDOWN SECTION */}
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline
@@ -770,9 +768,9 @@ export default function InvitationClientPageForestFoliage({
         {/* INTERACTIVE EVENT TIMELINE SECTION */}
         {timelineEvents.length > 0 && (
           <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-            <div className="absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
               <video
-                src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+                src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
                 autoPlay
                 loop
                 playsInline
@@ -850,9 +848,9 @@ export default function InvitationClientPageForestFoliage({
 
         {/* MOMENTS GALLERY & GUESTBOOK SECTION */}
         <section className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline
@@ -1156,9 +1154,9 @@ export default function InvitationClientPageForestFoliage({
         </section>
         {/* FOOTER SECTION */}
         <section className="relative min-h-[302px] py-12 px-6 flex flex-col justify-center text-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline

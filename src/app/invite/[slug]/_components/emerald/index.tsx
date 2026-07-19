@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, MessageCircle, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -198,14 +199,11 @@ export default function InvitationClientPageEmerald({
     formData.append('file', file);
 
     try {
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      const uploadRes = await api.post<any>(`/invitations/${invitation.id}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const momentUrl = uploadRes.data.url;
-
-      const saveRes = await api.post(`/invitations/${invitation.id}/moments`, { url: momentUrl });
-      if (saveRes.data) {
-        setInvitation(saveRes.data);
+      if (uploadRes.data) {
+        setInvitation(uploadRes.data);
       }
     } catch (err) {
       console.error("Camera upload failed:", err);
@@ -490,10 +488,10 @@ export default function InvitationClientPageEmerald({
         {/* Section 1: Hero Banner */}
         <section className="relative min-h-[760px] flex flex-col justify-between py-12 px-6 overflow-hidden">
           {/* Background Video */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={mainVideoRef}
-              src="/videos/emerald-bg-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-1_e216a5a4.mp4`}
               autoPlay
               loop
               playsInline
@@ -529,10 +527,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 2: Invitation Text Card & Countdown */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={bodyVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -613,10 +611,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 3: Interactive Event Timeline & Guidelines */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={timelineVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               loop
               playsInline
               muted
@@ -759,10 +757,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 4: Moments Gallery Uploads */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={wishesVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -837,10 +835,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 5: RSVP Form & Congratulations wishes */}
         <section className="relative min-h-[760px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={footerVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -1049,10 +1047,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Footer info details */}
         <section className="relative min-h-[300px] py-12 px-6 flex flex-col justify-center text-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={footerVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
