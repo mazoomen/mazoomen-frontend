@@ -124,6 +124,24 @@ export default function InvitationClientPageGarden({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert(isEn 
+        ? "The image is too large. Maximum size is 5MB." 
+        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت."
+      );
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(isEn 
+        ? "Invalid file type. Please upload an image (JPG, PNG, WEBP, GIF)." 
+        : "نوع الملف غير صالح. يرجى رفع صورة (JPG, PNG, WEBP, GIF)."
+      );
+      return;
+    }
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -882,42 +900,44 @@ export default function InvitationClientPageGarden({
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-6">
-            <h3 className="text-center text-lg font-bold text-[#1B3222] font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
+            {invitation.showMoments !== false && (
+              <>
+                <h3 className="text-center text-lg font-bold text-[#1B3222] font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
 
-            {invitation.moments && invitation.moments.length > 0 ? (
-              <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-                <div className="grid grid-cols-2 gap-3">
-                  {invitation.moments.map((src, index) => {
-                    const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com') + src : src;
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => setSelectedImage(fullUrl)}
-                        className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform"
-                        style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
-                      >
-                        <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-[#1B3222]/60 border border-dashed border-[#1B3222]/20 rounded-[22px] font-sans text-xs bg-white/30 backdrop-blur-md">
-                {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته!"}
-              </div>
+                {invitation.moments && invitation.moments.length > 0 ? (
+                  <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+                    <div className="grid grid-cols-2 gap-3">
+                      {invitation.moments.map((src, index) => {
+                        const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com') + src : src;
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => setSelectedImage(fullUrl)}
+                            className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform"
+                            style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
+                          >
+                            <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-[#1B3222]/60 border border-dashed border-[#1B3222]/20 rounded-[22px] font-sans text-xs bg-white/30 backdrop-blur-md">
+                    {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته!"}
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Camera Upload trigger for moments in Garden theme */}
             {invitation.allowGuestUploads !== false && (
               <div className="flex justify-center mt-4">
                 <label className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-[#1B3222]/15 shadow-xs backdrop-blur-md hover:bg-[#1B3222]/5 cursor-pointer bg-white/60 text-[#1B3222]">
                   <Camera className="w-4 h-4 text-[#2E5A36]" />
-                  {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Capture Moment" : "شاركنا لحظة")}
+                  {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة")}
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={handleCameraUpload}
                     disabled={isUploading}
                     className="hidden"

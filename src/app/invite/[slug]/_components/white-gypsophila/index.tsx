@@ -124,6 +124,24 @@ export default function InvitationClientPageWhiteGypsophila({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert(isEn 
+        ? "The image is too large. Maximum size is 5MB." 
+        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت."
+      );
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(isEn 
+        ? "Invalid file type. Please upload an image (JPG, PNG, WEBP, GIF)." 
+        : "نوع الملف غير صالح. يرجى رفع صورة (JPG, PNG, WEBP, GIF)."
+      );
+      return;
+    }
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -896,13 +914,12 @@ export default function InvitationClientPageWhiteGypsophila({
                     </p>
                   </div>
                   <div className="flex justify-center relative">
-                    <label className="flex items-center gap-2 px-6 py-3 bg-[#334155] text-white hover:bg-[#1E293B] text-xs font-bold rounded-full shadow-md cursor-pointer transition-all">
+                    <label className="flex items-center gap-2 px-6 py-3 bg-slate-700 text-white hover:bg-slate-800 text-xs font-bold rounded-full shadow-md cursor-pointer transition-all">
                       <Camera className="w-4 h-4" />
-                      {isEn ? "Open Camera" : "افتح الكاميرا"}
+                      {isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة"}
                       <input
                         type="file"
                         accept="image/*"
-                        capture="environment"
                         onChange={handleCameraUpload}
                         className="hidden"
                         disabled={isUploading}
@@ -919,7 +936,7 @@ export default function InvitationClientPageWhiteGypsophila({
             )}
 
             {/* Moments Slideshow/Showcase */}
-            {invitation.moments && invitation.moments.length > 0 && (
+            {invitation.showMoments !== false && invitation.moments && invitation.moments.length > 0 && (
               <div
                 className="p-6 animate-on-scroll fade-up"
                 style={{
