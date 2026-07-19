@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -617,7 +618,7 @@ export default function InvitationClientPageWatercolorLily({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={videoRef}
-              src="/videos/template-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-2_bd8bde95.mp4`}
               autoPlay
               loop
               playsInline
@@ -658,7 +659,7 @@ export default function InvitationClientPageWatercolorLily({
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-2_bd8bde95.mp4`}
               autoPlay
               loop
               playsInline
@@ -767,7 +768,7 @@ export default function InvitationClientPageWatercolorLily({
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-2_bd8bde95.mp4`}
               autoPlay
               loop
               playsInline
@@ -885,7 +886,7 @@ export default function InvitationClientPageWatercolorLily({
         <section id="moments-section" className="relative min-h-[400px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-2_bd8bde95.mp4`}
               autoPlay
               loop
               playsInline
@@ -949,7 +950,7 @@ export default function InvitationClientPageWatercolorLily({
         <section id="rsvp-section" className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-2_bd8bde95.mp4`}
               autoPlay
               loop
               playsInline
@@ -1148,7 +1149,7 @@ export default function InvitationClientPageWatercolorLily({
         <section className="relative min-h-[302px] py-12 px-6 flex flex-col justify-center text-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-2_bd8bde95.mp4`}
               autoPlay
               loop
               playsInline

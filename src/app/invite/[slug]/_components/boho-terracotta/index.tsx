@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Phone } from 'lucide-react';
 import { EnvelopeOverlay } from '../EnvelopeOverlay';
@@ -182,7 +183,7 @@ export default function InvitationClientPageBohoTerracotta({
         <section className="relative min-h-[700px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
               loop
               playsInline
@@ -208,7 +209,7 @@ export default function InvitationClientPageBohoTerracotta({
         <section className="relative min-h-[700px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
               loop
               playsInline
@@ -228,7 +229,7 @@ export default function InvitationClientPageBohoTerracotta({
         <section className="relative min-h-[763px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
               loop
               playsInline
@@ -260,7 +261,7 @@ export default function InvitationClientPageBohoTerracotta({
         <section className="relative min-h-[302px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/template-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
               autoPlay
               loop
               playsInline

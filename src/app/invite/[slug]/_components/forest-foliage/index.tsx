@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -618,7 +619,7 @@ export default function InvitationClientPageForestFoliage({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={videoRef}
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline
@@ -659,7 +660,7 @@ export default function InvitationClientPageForestFoliage({
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline
@@ -769,7 +770,7 @@ export default function InvitationClientPageForestFoliage({
           <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
             <div className="absolute inset-0 z-0 overflow-hidden">
               <video
-                src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+                src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
                 autoPlay
                 loop
                 playsInline
@@ -849,7 +850,7 @@ export default function InvitationClientPageForestFoliage({
         <section className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline
@@ -1155,7 +1156,7 @@ export default function InvitationClientPageForestFoliage({
         <section className="relative min-h-[302px] py-12 px-6 flex flex-col justify-center text-center">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/Animated_wallpaper_simple_moveme…_1080p_202607141412.mp4"
+              src={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
               autoPlay
               loop
               playsInline

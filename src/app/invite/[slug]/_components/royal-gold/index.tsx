@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Phone } from 'lucide-react';
 import {
@@ -177,7 +178,7 @@ export default function InvitationClientPageRoyalGold({
         <section className="relative min-h-[700px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/3917df860_CopyofCopyofdesign11.mp4"
+              src={`${S3_BASE_URL}/templates/videos/3917df860_CopyofCopyofdesign11_643aa6bb.mp4`}
               autoPlay
               loop
               playsInline
@@ -203,7 +204,7 @@ export default function InvitationClientPageRoyalGold({
         <section className="relative min-h-[700px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/939bfcb40_CopyofCopyofdesign1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`}
               autoPlay
               loop
               playsInline
@@ -223,7 +224,7 @@ export default function InvitationClientPageRoyalGold({
         <section className="relative min-h-[763px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/3917df860_CopyofCopyofdesign11.mp4"
+              src={`${S3_BASE_URL}/templates/videos/3917df860_CopyofCopyofdesign11_643aa6bb.mp4`}
               autoPlay
               loop
               playsInline
@@ -255,7 +256,7 @@ export default function InvitationClientPageRoyalGold({
         <section className="relative min-h-[302px] py-8 px-4">
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
-              src="/videos/939bfcb40_CopyofCopyofdesign1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`}
               autoPlay
               loop
               playsInline

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, MessageCircle, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -490,7 +491,7 @@ export default function InvitationClientPageEmerald({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={mainVideoRef}
-              src="/videos/emerald-bg-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-1_e216a5a4.mp4`}
               autoPlay
               loop
               playsInline
@@ -529,7 +530,7 @@ export default function InvitationClientPageEmerald({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={bodyVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -613,7 +614,7 @@ export default function InvitationClientPageEmerald({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={timelineVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               loop
               playsInline
               muted
@@ -759,7 +760,7 @@ export default function InvitationClientPageEmerald({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={wishesVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -837,7 +838,7 @@ export default function InvitationClientPageEmerald({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={footerVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -1049,7 +1050,7 @@ export default function InvitationClientPageEmerald({
           <div className="absolute inset-0 z-0 overflow-hidden">
             <video
               ref={footerVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 
 interface InvitationHeroProps {
   eventTitle: string;
@@ -60,7 +61,7 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
       <div className="absolute inset-0 z-0 overflow-hidden">
         <video
           ref={videoRef}
-          src="/videos/939bfcb40_CopyofCopyofdesign1.mp4"
+          src={`${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`}
           autoPlay
           loop
           playsInline
