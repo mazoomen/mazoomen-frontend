@@ -375,17 +375,19 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
             )}
 
             {/* Guest Message/Wish */}
-            <div>
-              <label htmlFor="wish-text" className="block text-sm font-medium text-black mb-1">{isEn ? "Congratulate the newlyweds (Optional)" : "تهنئة للعروسين (اختياري)"}</label>
-              <textarea
-                id="wish-text"
-                rows={2}
-                value={newWish}
-                onChange={(e) => setNewWish(e.target.value)}
-                placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب تهنئتك الجميلة للعروسين..."}
-                className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] resize-none ${isEn ? "text-left" : "text-right"}`}
-              />
-            </div>
+            {allowCompanions !== false && (
+              <div>
+                <label htmlFor="wish-text" className="block text-sm font-medium text-black mb-1">{isEn ? "Congratulate the newlyweds (Optional)" : "تهنئة للعروسين (اختياري)"}</label>
+                <textarea
+                  id="wish-text"
+                  rows={2}
+                  value={newWish}
+                  onChange={(e) => setNewWish(e.target.value)}
+                  placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب تهنئتك الجميلة للعروسين..."}
+                  className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] resize-none ${isEn ? "text-left" : "text-right"}`}
+                />
+              </div>
+            )}
 
             {/* Error Message */}
             {status === 'error' && (
@@ -408,32 +410,34 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       </div>
 
       {/* Wishes List */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 justify-center mb-2">
-          <MessageCircle className="w-3 h-3 text-black" />
-          <p className="text-xs tracking-widest uppercase text-black font-semibold">{isEn ? "Guests Wishes & Congratulations" : "تهاني وتبريكات الضيوف"}</p>
-        </div>
+      {allowCompanions !== false && wishes.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 justify-center mb-2">
+            <MessageCircle className="w-3 h-3 text-black" />
+            <p className="text-xs tracking-widest uppercase text-black font-semibold">{isEn ? "Guests Wishes & Congratulations" : "تهاني وتبريكات الضيوف"}</p>
+          </div>
 
-        {/* Wish entry list container */}
-        <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
-          {wishes.map((wish, index) => (
-            <div
-              key={index}
-              className="p-4"
-              style={{
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '22px',
-                boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px'
-              }}
-            >
-              <p className="text-sm text-center leading-relaxed text-[#ac8c60] font-semibold mb-1">"{wish.text}"</p>
-              <p className="text-[10px] text-center text-gray-500 font-medium">— {wish.name}</p>
-            </div>
-          ))}
+          {/* Wish entry list container */}
+          <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
+            {wishes.map((wish, index) => (
+              <div
+                key={index}
+                className="p-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '22px',
+                  boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px'
+                }}
+              >
+                <p className="text-sm text-center leading-relaxed text-[#ac8c60] font-semibold mb-1">"{wish.text}"</p>
+                <p className="text-[10px] text-center text-gray-500 font-medium">— {wish.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lightbox Modal */}
       {selectedImage && (

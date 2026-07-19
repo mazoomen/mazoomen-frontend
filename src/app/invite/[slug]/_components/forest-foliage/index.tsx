@@ -1067,21 +1067,23 @@ export default function InvitationClientPageForestFoliage({
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-[#103020]/75">{isEn ? "Leave a Congratulations Message" : "أكتب تهنئة للعروسين"}</label>
-                    <textarea
-                      placeholder={isEn ? "Write your wish here..." : "شارك العروسين كلماتك الطيبة وتهانيك..."}
-                      value={newWish}
-                      onChange={(e) => setNewWish(e.target.value)}
-                      rows={3}
-                      className="w-full px-4 py-3 rounded-xl border text-xs font-semibold focus:outline-hidden transition-all resize-none"
-                      style={{
-                        borderColor: 'rgba(184, 156, 114, 0.3)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                        color: '#103020'
-                      }}
-                    />
-                  </div>
+                  {invitation.allowCompanions !== false && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[#103020]/75">{isEn ? "Leave a Congratulations Message" : "أكتب تهنئة للعروسين"}</label>
+                      <textarea
+                        placeholder={isEn ? "Write your wish here..." : "شارك العروسين كلماتك الطيبة وتهانيك..."}
+                        value={newWish}
+                        onChange={(e) => setNewWish(e.target.value)}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-xl border text-xs font-semibold focus:outline-hidden transition-all resize-none"
+                        style={{
+                          borderColor: 'rgba(184, 156, 114, 0.3)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                          color: '#103020'
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {errorMsg && (
                     <p className="text-[10px] text-red-500 font-bold text-center">{errorMsg}</p>
@@ -1104,7 +1106,7 @@ export default function InvitationClientPageForestFoliage({
             </div>
 
             {/* Wishes/Feedback Guestbook Timeline widget */}
-            {wishes.length > 0 && (
+            {invitation.allowCompanions !== false && wishes.length > 0 && (
               <div
                 className="p-6 animate-on-scroll fade-up"
                 style={{
