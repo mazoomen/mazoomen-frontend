@@ -84,6 +84,7 @@ export interface RsvpResponse {
   attendance: "YES" | "NO";
   guestsCount: number;
   message?: string;
+  isHidden?: boolean;
   createdAt: string;
 }
 
