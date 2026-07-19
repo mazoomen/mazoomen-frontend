@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, Baby, QrCode, MessageCircle, Users, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -124,19 +125,34 @@ export default function InvitationClientPageWhiteGypsophila({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert(isEn 
+        ? "The image is too large. Maximum size is 5MB." 
+        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت."
+      );
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(isEn 
+        ? "Invalid file type. Please upload an image (JPG, PNG, WEBP, GIF)." 
+        : "نوع الملف غير صالح. يرجى رفع صورة (JPG, PNG, WEBP, GIF)."
+      );
+      return;
+    }
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      const uploadRes = await api.post<any>(`/invitations/${invitation.id}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const momentUrl = uploadRes.data.url;
-
-      const saveRes = await api.post(`/invitations/${invitation.id}/moments`, { url: momentUrl });
-      if (saveRes.data) {
-        setInvitation(saveRes.data);
+      if (uploadRes.data) {
+        setInvitation(uploadRes.data);
       }
     } catch (err) {
       console.error("Camera upload failed:", err);
@@ -600,10 +616,10 @@ export default function InvitationClientPageWhiteGypsophila({
 
         {/* HERO SECTION */}
         <section className="relative min-h-[700px] flex flex-col items-center justify-start text-center pt-24">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={videoRef}
-              src="/videos/temp1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay
               loop
               playsInline
@@ -642,9 +658,9 @@ export default function InvitationClientPageWhiteGypsophila({
 
         {/* INVITATION CARD & COUNTDOWN SECTION */}
         <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
-              src="/videos/temp1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay
               loop
               playsInline
@@ -752,9 +768,9 @@ export default function InvitationClientPageWhiteGypsophila({
         {/* INTERACTIVE EVENT TIMELINE SECTION */}
         {timelineEvents.length > 0 && (
           <section className="relative min-h-[700px] py-12 px-6 flex flex-col justify-center">
-            <div className="absolute inset-0 z-0 overflow-hidden">
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
               <video
-                src="/videos/temp1.mp4"
+                src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
                 autoPlay
                 loop
                 playsInline
@@ -832,9 +848,9 @@ export default function InvitationClientPageWhiteGypsophila({
 
         {/* MOMENTS GALLERY & GUESTBOOK SECTION */}
         <section className="relative min-h-[763px] py-12 px-6 flex flex-col justify-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
-              src="/videos/temp1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay
               loop
               playsInline
@@ -896,13 +912,12 @@ export default function InvitationClientPageWhiteGypsophila({
                     </p>
                   </div>
                   <div className="flex justify-center relative">
-                    <label className="flex items-center gap-2 px-6 py-3 bg-[#334155] text-white hover:bg-[#1E293B] text-xs font-bold rounded-full shadow-md cursor-pointer transition-all">
+                    <label className="flex items-center gap-2 px-6 py-3 bg-slate-700 text-white hover:bg-slate-800 text-xs font-bold rounded-full shadow-md cursor-pointer transition-all">
                       <Camera className="w-4 h-4" />
-                      {isEn ? "Open Camera" : "افتح الكاميرا"}
+                      {isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة"}
                       <input
                         type="file"
                         accept="image/*"
-                        capture="environment"
                         onChange={handleCameraUpload}
                         className="hidden"
                         disabled={isUploading}
@@ -919,7 +934,7 @@ export default function InvitationClientPageWhiteGypsophila({
             )}
 
             {/* Moments Slideshow/Showcase */}
-            {invitation.moments && invitation.moments.length > 0 && (
+            {invitation.showMoments !== false && invitation.moments && invitation.moments.length > 0 && (
               <div
                 className="p-6 animate-on-scroll fade-up"
                 style={{
@@ -1099,9 +1114,9 @@ export default function InvitationClientPageWhiteGypsophila({
         </section>
         {/* FOOTER SECTION */}
         <section className="relative min-h-[302px] py-12 px-6 flex flex-col justify-center text-center">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
-              src="/videos/temp1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/temp1_95011bcd.mp4`}
               autoPlay
               loop
               playsInline

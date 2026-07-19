@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { S3_BASE_URL } from '@/lib/s3';
 import type { InvitationData } from '@/types/invitation';
 import { Calendar, Heart, Info, MessageCircle, CheckCircle2, Phone, Camera, X } from 'lucide-react';
 import api from '@/lib/api';
@@ -175,19 +176,34 @@ export default function InvitationClientPageEmerald({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert(isEn 
+        ? "The image is too large. Maximum size is 5MB." 
+        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 5 ميجابايت."
+      );
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(isEn 
+        ? "Invalid file type. Please upload an image (JPG, PNG, WEBP, GIF)." 
+        : "نوع الملف غير صالح. يرجى رفع صورة (JPG, PNG, WEBP, GIF)."
+      );
+      return;
+    }
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      const uploadRes = await api.post<any>(`/invitations/${invitation.id}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const momentUrl = uploadRes.data.url;
-
-      const saveRes = await api.post(`/invitations/${invitation.id}/moments`, { url: momentUrl });
-      if (saveRes.data) {
-        setInvitation(saveRes.data);
+      if (uploadRes.data) {
+        setInvitation(uploadRes.data);
       }
     } catch (err) {
       console.error("Camera upload failed:", err);
@@ -472,10 +488,10 @@ export default function InvitationClientPageEmerald({
         {/* Section 1: Hero Banner */}
         <section className="relative min-h-[760px] flex flex-col justify-between py-12 px-6 overflow-hidden">
           {/* Background Video */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={mainVideoRef}
-              src="/videos/emerald-bg-1.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-1_e216a5a4.mp4`}
               autoPlay
               loop
               playsInline
@@ -511,10 +527,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 2: Invitation Text Card & Countdown */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={bodyVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -595,10 +611,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 3: Interactive Event Timeline & Guidelines */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={timelineVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               loop
               playsInline
               muted
@@ -741,10 +757,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 4: Moments Gallery Uploads */}
         <section className="relative min-h-[750px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={wishesVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -756,42 +772,46 @@ export default function InvitationClientPageEmerald({
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-8">
-            <div className="text-center animate-on-scroll">
-              <span className="text-xs tracking-widest uppercase text-[#dfba73] font-bold block mb-1">
-                {isEn ? "Wedding Moments" : "مشاركة لحظاتنا السعيدة"}
-              </span>
-              <h2 className="text-xl font-bold text-white">{isEn ? "Photo Moments" : "معرض صور الحاضرين"}</h2>
-              <div className="h-0.5 w-12 bg-[#dfba73]/30 mx-auto mt-2" />
-            </div>
-
-            {/* Moments Grid list */}
-            {(invitation.moments || []).length > 0 ? (
-              <div className="animate-on-scroll">
-                <div className="grid grid-cols-3 gap-2 max-h-[360px] overflow-y-auto pr-1">
-                  {(invitation.moments || []).map((momentUrl, index) => {
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => setSelectedImage(momentUrl)}
-                        className="relative aspect-square rounded-xl overflow-hidden shadow-md group cursor-pointer border border-[#dfba73]/15"
-                      >
-                        <img
-                          src={momentUrl}
-                          alt="Moment"
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                    );
-                  })}
+            {invitation.showMoments !== false && (
+              <>
+                <div className="text-center animate-on-scroll">
+                  <span className="text-xs tracking-widest uppercase text-[#dfba73] font-bold block mb-1">
+                    {isEn ? "Wedding Moments" : "مشاركة لحظاتنا السعيدة"}
+                  </span>
+                  <h2 className="text-xl font-bold text-white">{isEn ? "Photo Moments" : "معرض صور الحاضرين"}</h2>
+                  <div className="h-0.5 w-12 bg-[#dfba73]/30 mx-auto mt-2" />
                 </div>
-              </div>
-            ) : (
-              <div
-                className="text-center py-10 text-white/60 font-sans text-xs bg-[#030f23]/75 border border-dashed border-[#dfba73]/30 rounded-[22px]"
-              >
-                {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته الجميلة!"}
-              </div>
+
+                {/* Moments Grid list */}
+                {(invitation.moments || []).length > 0 ? (
+                  <div className="animate-on-scroll">
+                    <div className="grid grid-cols-3 gap-2 max-h-[360px] overflow-y-auto pr-1">
+                      {(invitation.moments || []).map((momentUrl, index) => {
+                        return (
+                          <div
+                            key={index}
+                            onClick={() => setSelectedImage(momentUrl)}
+                            className="relative aspect-square rounded-xl overflow-hidden shadow-md group cursor-pointer border border-[#dfba73]/15"
+                          >
+                            <img
+                              src={momentUrl}
+                              alt="Moment"
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="text-center py-10 text-white/60 font-sans text-xs bg-[#030f23]/75 border border-dashed border-[#dfba73]/30 rounded-[22px]"
+                  >
+                    {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته الجميلة!"}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Camera photo upload trigger button */}
@@ -799,11 +819,10 @@ export default function InvitationClientPageEmerald({
               <div className="flex justify-center mt-4">
                 <label className="flex items-center gap-2 px-6 py-3 text-xs font-semibold rounded-full border border-[#dfba73]/35 shadow-md backdrop-blur-md hover:bg-white/5 cursor-pointer bg-gradient-to-r from-[#dfba73] to-[#c5a880] text-[#030f23] hover:brightness-105 transition-all duration-300">
                   <Camera className="w-4 h-4 text-[#030f23]" />
-                  {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Upload Photo" : "شاركنا لحظة بالصورة")}
+                  {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة")}
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     onChange={handleCameraUpload}
                     disabled={isUploading}
                     className="hidden"
@@ -816,10 +835,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Section 5: RSVP Form & Congratulations wishes */}
         <section className="relative min-h-[760px] py-12 px-6 flex flex-col justify-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={footerVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline
@@ -1028,10 +1047,10 @@ export default function InvitationClientPageEmerald({
 
         {/* Footer info details */}
         <section className="relative min-h-[300px] py-12 px-6 flex flex-col justify-center text-center overflow-hidden">
-          <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
             <video
               ref={footerVideoRef}
-              src="/videos/emerald-bg-2.mp4"
+              src={`${S3_BASE_URL}/templates/videos/emerald-bg-2_10abb538.mp4`}
               autoPlay
               loop
               playsInline

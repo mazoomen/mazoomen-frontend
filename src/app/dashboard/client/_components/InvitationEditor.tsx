@@ -158,6 +158,7 @@ export default function InvitationEditor({
   const [contactName, setContactName] = useState(invitation?.contactName || "");
   const [contactPhone, setContactPhone] = useState(invitation?.contactPhone || "");
   const [allowGuestUploads, setAllowGuestUploads] = useState(invitation?.allowGuestUploads !== false);
+  const [showMoments, setShowMoments] = useState(invitation?.showMoments !== false);
   const [allowCompanions, setAllowCompanions] = useState(invitation?.allowCompanions !== false);
 
   // Upload loaders
@@ -197,7 +198,8 @@ export default function InvitationEditor({
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await api.post<{ url: string }>("/upload", formData, {
+      const urlParam = invitation?.id ? `?invitationId=${invitation.id}` : "";
+      const res = await api.post<{ url: string }>(`/upload${urlParam}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setImages(prev => [...prev.filter(url => url.trim() !== ""), res.data.url]);
@@ -216,7 +218,8 @@ export default function InvitationEditor({
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const res = await api.post<{ url: string }>("/upload", formData, {
+      const urlParam = invitation?.id ? `?invitationId=${invitation.id}` : "";
+      const res = await api.post<{ url: string }>(`/upload${urlParam}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setMusicUrl(res.data.url);
@@ -309,6 +312,7 @@ export default function InvitationEditor({
       contactName: contactName.trim() || undefined,
       contactPhone: contactPhone.trim() || undefined,
       allowGuestUploads,
+      showMoments,
       allowCompanions,
     };
 
@@ -645,6 +649,20 @@ export default function InvitationEditor({
           />
           <label htmlFor="allow-guest-uploads" className="text-xs font-semibold text-neutral-700 cursor-pointer select-none font-sans">
             {isRtl ? "السماح للضيوف بالتقاط ورفع الصور في قسم اللحظات" : "Allow guests to capture and upload photos in the Moments section"}
+          </label>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <input
+            id="show-moments"
+            type="checkbox"
+            checked={showMoments}
+            onChange={(e) => setShowMoments(e.target.checked)}
+            disabled={status === "saving"}
+            className="w-4.5 h-4.5 rounded border-neutral-300 text-black focus:ring-black accent-black cursor-pointer"
+          />
+          <label htmlFor="show-moments" className="text-xs font-semibold text-neutral-700 cursor-pointer select-none font-sans">
+            {isRtl ? "إظهار ألبوم صور الضيوف للزوار" : "Show guest photos album to guests"}
           </label>
         </div>
 

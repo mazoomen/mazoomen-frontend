@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from 'react';
+import { getS3Url } from "@/lib/s3";
 import api from "@/lib/api";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -284,7 +285,7 @@ export default function OrdersTable({
                       <div className="flex items-center gap-2">
                         <div className="relative h-8 w-12 shrink-0 overflow-hidden rounded border border-[#EBE7DF] bg-[#FAF8F5]">
                           <img
-                            src={order.template.previewImage}
+                            src={getS3Url(order.template.previewImage)}
                             alt={order.template.title}
                             className="h-full w-full object-cover"
                           />

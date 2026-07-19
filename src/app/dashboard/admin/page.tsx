@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { getS3Url } from "@/lib/s3";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import api from "@/lib/api";
@@ -750,7 +751,7 @@ export default function AdminDashboardPage() {
                             {/* Image Section */}
                             <div className="w-full aspect-[4/3] bg-[#FAF8F5] p-3 border-b border-[#FAF1EA] flex items-center justify-center relative overflow-hidden shrink-0">
                               <Image
-                                src={tpl.previewImage}
+                                src={getS3Url(tpl.previewImage)}
                                 alt={tpl.title}
                                 fill
                                 unoptimized

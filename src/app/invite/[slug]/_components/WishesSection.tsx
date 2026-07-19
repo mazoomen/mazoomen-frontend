@@ -18,6 +18,7 @@ interface WishesSectionProps {
   viewingLang?: string;
   allowGuestUploads: boolean;
   allowCompanions?: boolean;
+  showMoments?: boolean;
   moments: string[];
   ownerId?: string;
   onMomentUploaded?: (updatedInvitation: any) => void;
@@ -32,6 +33,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   viewingLang,
   allowGuestUploads,
   allowCompanions,
+  showMoments,
   moments: initialMoments = [],
   ownerId,
   onMomentUploaded,
@@ -153,33 +155,37 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 20 * 1024 * 1024) {
+      alert(isEn 
+        ? "The image is too large. Maximum size is 20MB." 
+        : "حجم الصورة كبير جداً. الحد الأقصى المسموح به هو 20 ميجابايت."
+      );
+      return;
+    }
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      // 1. Upload file to static folder
-      const uploadRes = await api.post<{ url: string }>('/upload', formData, {
+      // 1. Upload file directly to S3 and save moments in one step
+      const uploadRes = await api.post<any>(`/invitations/${invitationId}/guest-upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // 2. Append URL to invitation moments
-      const momentUrl = uploadRes.data.url;
-      const saveRes = await api.post(`/invitations/${invitationId}/moments`, { url: momentUrl });
+      const updatedInvitation = uploadRes.data;
+      const momentsList = updatedInvitation.moments || [];
 
-      // 3. Update local state
-      if (saveRes.data && saveRes.data.moments) {
-        setMoments(saveRes.data.moments);
-      } else {
-        setMoments(prev => [...prev, momentUrl]);
-      }
+      // 2. Update local state
+      setMoments(momentsList);
 
-      if (onMomentUploaded && saveRes.data) {
-        onMomentUploaded(saveRes.data);
+      if (onMomentUploaded && updatedInvitation) {
+        onMomentUploaded(updatedInvitation);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Camera upload failed:", err);
-      alert(isEn ? "Failed to upload photo. Please try again." : "فشل رفع الصورة. يرجى المحاولة مرة أخرى.");
+      const serverMsg = err?.response?.data?.message || err?.message;
+      alert(serverMsg || (isEn ? "Failed to upload photo. Please try again." : "فشل رفع الصورة. يرجى المحاولة مرة أخرى."));
     } finally {
       setIsUploading(false);
     }
@@ -213,50 +219,55 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       </div>
 
       {/* Moments Gallery */}
-      <div id="moments-section" className="mb-8">
-        <h3 className="text-center text-xl mb-4 font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
+      {(showMoments !== false || canUpload) && (
+        <div id="moments-section" className="mb-8">
+          {showMoments !== false && (
+            <>
+              <h3 className="text-center text-xl mb-4 font-sans">{isEn ? "Moments from the wedding" : "لحظات من الحفل"}</h3>
 
-        {moments.length === 0 ? (
-          <div className="text-center py-8 text-neutral-400 border border-dashed border-neutral-300 rounded-[22px] mb-4 font-sans text-xs bg-white/30 backdrop-blur-md">
-            {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته!"}
-          </div>
-        ) : (
-          <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              {moments.map((src, index) => {
-                const fullUrl = src.startsWith('/public') ? baseUrl + src : src;
-                return (
-                  <div
-                    key={index}
-                    onClick={() => setSelectedImage(fullUrl)}
-                    className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform"
-                    style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
-                  >
-                    <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+              {moments.length === 0 ? (
+                <div className="text-center py-8 text-neutral-400 border border-dashed border-neutral-300 rounded-[22px] mb-4 font-sans text-xs bg-white/30 backdrop-blur-md">
+                  {isEn ? "No moments captured yet. Be the first!" : "لا توجد صور ملتقطة بعد. كن أول من يشاركنا لحظاته!"}
+                </div>
+              ) : (
+                <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {moments.map((src, index) => {
+                      const fullUrl = src.startsWith('/public') ? baseUrl + src : src;
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => setSelectedImage(fullUrl)}
+                          className="aspect-square rounded-xl overflow-hidden shadow-md cursor-zoom-in active:scale-[0.97] transition-transform"
+                          style={{ background: 'rgba(255, 255, 255, 0.55)', backdropFilter: 'blur(12px)', border: '1px solid rgba(0, 0, 0, 0.08)', borderRadius: '22px' }}
+                        >
+                          <img src={fullUrl} alt="Captured moment" className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                </div>
+              )}
+            </>
+          )}
 
-        {canUpload && (
-          <div className="flex justify-center mt-3">
-            <label className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-black/15 shadow-xs backdrop-blur-md hover:bg-black/5 cursor-pointer bg-white/60 text-black">
-              <Camera className="w-4 h-4 text-[#ac8c60]" />
-              {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Capture Moment" : "شاركنا لحظة")}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleCameraUpload}
-                disabled={isUploading}
-                className="hidden"
-              />
-            </label>
-          </div>
-        )}
-      </div>
+          {canUpload && (
+            <div className="flex justify-center mt-3">
+              <label className="flex items-center gap-2 px-6 py-2.5 text-xs font-semibold rounded-full border border-black/15 shadow-xs backdrop-blur-md hover:bg-black/5 cursor-pointer bg-white/60 text-black">
+                <Camera className="w-4 h-4 text-[#ac8c60]" />
+                {isUploading ? (isEn ? "Uploading..." : "جاري الرفع...") : (isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة")}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCameraUpload}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Guest Attendance Count */}
       <div className="text-center py-6">
@@ -375,17 +386,19 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
             )}
 
             {/* Guest Message/Wish */}
-            <div>
-              <label htmlFor="wish-text" className="block text-sm font-medium text-black mb-1">{isEn ? "Congratulate the newlyweds (Optional)" : "تهنئة للعروسين (اختياري)"}</label>
-              <textarea
-                id="wish-text"
-                rows={2}
-                value={newWish}
-                onChange={(e) => setNewWish(e.target.value)}
-                placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب تهنئتك الجميلة للعروسين..."}
-                className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] resize-none ${isEn ? "text-left" : "text-right"}`}
-              />
-            </div>
+            {allowCompanions !== false && (
+              <div>
+                <label htmlFor="wish-text" className="block text-sm font-medium text-black mb-1">{isEn ? "Congratulate the newlyweds (Optional)" : "تهنئة للعروسين (اختياري)"}</label>
+                <textarea
+                  id="wish-text"
+                  rows={2}
+                  value={newWish}
+                  onChange={(e) => setNewWish(e.target.value)}
+                  placeholder={isEn ? "Write your beautiful wishes here..." : "اكتب تهنئتك الجميلة للعروسين..."}
+                  className={`w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white/60 focus:bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#ac8c60] resize-none ${isEn ? "text-left" : "text-right"}`}
+                />
+              </div>
+            )}
 
             {/* Error Message */}
             {status === 'error' && (
@@ -408,32 +421,34 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       </div>
 
       {/* Wishes List */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 justify-center mb-2">
-          <MessageCircle className="w-3 h-3 text-black" />
-          <p className="text-xs tracking-widest uppercase text-black font-semibold">{isEn ? "Guests Wishes & Congratulations" : "تهاني وتبريكات الضيوف"}</p>
-        </div>
+      {allowCompanions !== false && wishes.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 justify-center mb-2">
+            <MessageCircle className="w-3 h-3 text-black" />
+            <p className="text-xs tracking-widest uppercase text-black font-semibold">{isEn ? "Guests Wishes & Congratulations" : "تهاني وتبريكات الضيوف"}</p>
+          </div>
 
-        {/* Wish entry list container */}
-        <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
-          {wishes.map((wish, index) => (
-            <div
-              key={index}
-              className="p-4"
-              style={{
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '22px',
-                boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px'
-              }}
-            >
-              <p className="text-sm text-center leading-relaxed text-[#ac8c60] font-semibold mb-1">"{wish.text}"</p>
-              <p className="text-[10px] text-center text-gray-500 font-medium">— {wish.name}</p>
-            </div>
-          ))}
+          {/* Wish entry list container */}
+          <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
+            {wishes.map((wish, index) => (
+              <div
+                key={index}
+                className="p-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '22px',
+                  boxShadow: 'rgba(0, 0, 0, 0.08) 0px 2px 8px'
+                }}
+              >
+                <p className="text-sm text-center leading-relaxed text-[#ac8c60] font-semibold mb-1">"{wish.text}"</p>
+                <p className="text-[10px] text-center text-gray-500 font-medium">— {wish.name}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lightbox Modal */}
       {selectedImage && (

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { getS3Url } from '@/lib/s3';
 import { useLanguage } from "@/components/LanguageContext";
 import { useCurrency } from "@/components/CurrencyContext";
 import type { Template } from "@/types/template";
@@ -92,7 +93,7 @@ export default function TemplateGrid({
                 <div className="w-full aspect-[4/3.2] bg-[#FAF8F5] p-3 flex items-center justify-center overflow-hidden shrink-0 border-b border-[#F0ECE3] relative">
                   <div className="w-full h-full rounded-lg overflow-hidden shadow-sm relative">
                     <Image
-                      src={template.previewImage}
+                      src={getS3Url(template.previewImage)}
                       alt={t(template.title)}
                       fill
                       unoptimized

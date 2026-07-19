@@ -17,22 +17,48 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
   const [status, setStatus] = useState<LoadStatus>('loading');
   const [selectedRsvp, setSelectedRsvp] = useState<RsvpResponse | null>(null);
 
-  useEffect(() => {
-    const fetchRsvps = async () => {
-      try {
-        setStatus('loading');
-        const res = await api.get<RsvpListResponse>(
-          `/invitations/${invitationId}/rsvps`
-        );
-        setData(res.data);
-        setStatus('loaded');
-      } catch {
-        setStatus('error');
-      }
-    };
+  const fetchRsvps = async (showLoading = true) => {
+    try {
+      if (showLoading) setStatus('loading');
+      const res = await api.get<RsvpListResponse>(
+        `/invitations/${invitationId}/rsvps`
+      );
+      setData(res.data);
+      setStatus('loaded');
+    } catch {
+      setStatus('error');
+    }
+  };
 
+  useEffect(() => {
     fetchRsvps();
   }, [invitationId]);
+
+  const handleToggleHide = async (rsvp: RsvpResponse) => {
+    try {
+      await api.patch(`/rsvp/${rsvp.id}/toggle-hide`);
+      setSelectedRsvp((prev) => (prev ? { ...prev, isHidden: !prev.isHidden } : null));
+      fetchRsvps(false);
+    } catch (err) {
+      alert(lang === 'ar' ? 'فشل تعديل حالة الظهور' : 'Failed to update visibility status');
+    }
+  };
+
+  const handleDelete = async (rsvp: RsvpResponse) => {
+    const confirmed = window.confirm(
+      lang === 'ar'
+        ? 'هل أنت متأكد من حذف هذا الرد؟'
+        : 'Are you sure you want to delete this RSVP response?'
+    );
+    if (!confirmed) return;
+    try {
+      await api.delete(`/rsvp/${rsvp.id}`);
+      setSelectedRsvp(null);
+      fetchRsvps(false);
+    } catch (err) {
+      alert(lang === 'ar' ? 'فشل حذف الرد' : 'Failed to delete RSVP response');
+    }
+  };
 
   if (status === 'loading') {
     return (
@@ -132,7 +158,14 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
                       className="transition-colors hover:bg-[#FAF8F5] text-neutral-700 cursor-pointer"
                     >
                       <td className="px-5 py-3.5 font-semibold text-neutral-800">
-                        {rsvp.name}
+                        <div className="flex items-center gap-1.5">
+                          <span>{rsvp.name}</span>
+                          {rsvp.isHidden && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 border border-amber-200 text-amber-700" title={lang === 'ar' ? 'مخفي عن الضيوف' : 'Hidden from Guests'}>
+                              {lang === 'ar' ? 'مخفي' : 'Hidden'}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-3.5">
                         {willAttend ? (
@@ -276,14 +309,37 @@ export default function RsvpTracker({ invitationId }: RsvpTrackerProps) {
               </div>
             </div>
 
-            {/* Footer close button */}
-            <div className="mt-6 pt-4 border-t border-[#F4F1EA] flex justify-end">
+            {/* Footer action buttons */}
+            <div className="mt-6 pt-4 border-t border-[#F4F1EA] flex justify-between items-center gap-2 flex-wrap">
               <button
-                onClick={() => setSelectedRsvp(null)}
-                className="px-4 py-2 bg-neutral-800 text-white rounded-xl text-xs font-semibold hover:bg-neutral-900 transition-colors cursor-pointer"
+                onClick={() => handleDelete(selectedRsvp)}
+                className="px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100/70 text-red-600 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
               >
-                {t('Close')}
+                {lang === 'ar' ? 'حذف الرد' : 'Delete RSVP'}
               </button>
+
+              <div className="flex gap-2">
+                {selectedRsvp.message && (
+                  <button
+                    onClick={() => handleToggleHide(selectedRsvp)}
+                    className={`px-4 py-2 border rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs ${
+                      selectedRsvp.isHidden
+                        ? 'border-emerald-200 bg-emerald-50 hover:bg-emerald-100/70 text-emerald-700'
+                        : 'border-[#EBE7DF] bg-[#FAF8F5] hover:bg-neutral-100/75 text-neutral-700'
+                    }`}
+                  >
+                    {selectedRsvp.isHidden
+                      ? `${lang === 'ar' ? 'إظهار للضيوف' : 'Show to Guests'}`
+                      : `${lang === 'ar' ? 'إخفاء عن الضيوف' : 'Hide from Guests'}`}
+                  </button>
+                )}
+                <button
+                  onClick={() => setSelectedRsvp(null)}
+                  className="px-4 py-2 bg-neutral-800 text-white rounded-xl text-xs font-semibold hover:bg-neutral-900 transition-colors cursor-pointer"
+                >
+                  {t('Close')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

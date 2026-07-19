@@ -131,11 +131,9 @@ export default function InvitationClientPage({
 
   let pageContent: React.ReactNode;
 
-  // Delegate rendering to corresponding template component
-  if (
-    localInvitation.template?.title === 'Watercolor Garden Wedding' ||
-    localInvitation.template?.titleEn === 'Watercolor Garden Wedding'
-  ) {
+  const tTitle = (localInvitation.template?.title || '') + ' ' + (localInvitation.template?.titleEn || '');
+
+  if (tTitle.includes('Garden') || tTitle.includes('حديقة')) {
     pageContent = (
       <InvitationClientPageGarden
         invitation={localInvitation}
@@ -145,10 +143,7 @@ export default function InvitationClientPage({
         setViewingLangProp={setViewingLang}
       />
     );
-  } else if (
-    localInvitation.template?.title === 'Emerald Luxury Wedding' ||
-    localInvitation.template?.titleEn === 'Emerald Luxury Wedding'
-  ) {
+  } else if (tTitle.includes('Emerald') || tTitle.includes('الزمرد')) {
     pageContent = (
       <InvitationClientPageEmerald
         invitation={localInvitation}
@@ -158,10 +153,7 @@ export default function InvitationClientPage({
         setViewingLangProp={setViewingLang}
       />
     );
-  } else if (
-    localInvitation.template?.title === 'Boho Terracotta Wedding' ||
-    localInvitation.template?.titleEn === 'Boho Terracotta Wedding'
-  ) {
+  } else if (tTitle.includes('Boho') || tTitle.includes('Terracotta') || tTitle.includes('البوهو')) {
     pageContent = (
       <InvitationClientPageBohoTerracotta
         invitation={localInvitation}
@@ -171,10 +163,7 @@ export default function InvitationClientPage({
         setViewingLangProp={setViewingLang}
       />
     );
-  } else if (
-    localInvitation.template?.title === 'Watercolor Lily Wedding' ||
-    localInvitation.template?.titleEn === 'Watercolor Lily Wedding'
-  ) {
+  } else if (tTitle.includes('Lily') || tTitle.includes('زنبق')) {
     pageContent = (
       <InvitationClientPageWatercolorLily
         invitation={localInvitation}
@@ -184,10 +173,7 @@ export default function InvitationClientPage({
         setViewingLangProp={setViewingLang}
       />
     );
-  } else if (
-    localInvitation.template?.title === 'White Gypsophila Wedding' ||
-    localInvitation.template?.titleEn === 'White Gypsophila Wedding'
-  ) {
+  } else if (tTitle.includes('Gypsophila') || tTitle.includes('الجبسوفيلا')) {
     pageContent = (
       <InvitationClientPageWhiteGypsophila
         invitation={localInvitation}
@@ -197,10 +183,7 @@ export default function InvitationClientPage({
         setViewingLangProp={setViewingLang}
       />
     );
-  } else if (
-    localInvitation.template?.title === 'Flow Wedding' ||
-    localInvitation.template?.titleEn === 'Flow Wedding'
-  ) {
+  } else if (tTitle.includes('Flow') || tTitle.includes('انسيابي')) {
     pageContent = (
       <InvitationClientPageFlow
         invitation={localInvitation}
@@ -210,10 +193,7 @@ export default function InvitationClientPage({
         setViewingLangProp={setViewingLang}
       />
     );
-  } else if (
-    localInvitation.template?.title === 'Forest Foliage Wedding' ||
-    localInvitation.template?.titleEn === 'Forest Foliage Wedding'
-  ) {
+  } else if (tTitle.includes('Forest') || tTitle.includes('Foliage') || tTitle.includes('أوراق الشجر')) {
     pageContent = (
       <InvitationClientPageForestFoliage
         invitation={localInvitation}
@@ -224,7 +204,7 @@ export default function InvitationClientPage({
       />
     );
   } else {
-    // Default fallback to Royal Gold Wedding (1st template)
+    // Default fallback to Royal Gold Wedding
     pageContent = (
       <InvitationClientPageRoyalGold
         invitation={localInvitation}

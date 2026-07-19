@@ -60,6 +60,7 @@ export interface InvitationData {
   contactName?: string | null;
   contactPhone?: string | null;
   allowGuestUploads?: boolean;
+  showMoments?: boolean;
   allowCompanions?: boolean;
   moments?: string[];
   createdAt: string;
@@ -84,6 +85,7 @@ export interface RsvpResponse {
   attendance: "YES" | "NO";
   guestsCount: number;
   message?: string;
+  isHidden?: boolean;
   createdAt: string;
 }
 
