@@ -231,6 +231,7 @@ export const translations: Record<string, Record<Language, string>> = {
   "Track RSVPs": { en: "Track RSVPs", ar: "تعقب الردود" },
   "Track": { en: "Track", ar: "تتبع" },
   "RSVPs": { en: "RSVPs", ar: "الردود" },
+  "Download All": { en: "Download All", ar: "تحميل الكل" },
   "Image": { en: "Image", ar: "الصور" },
   "Live guest RSVPs and uploaded photos.": { en: "Live guest RSVPs and uploaded photos.", ar: "بيانات حضور الضيوف والصور المرفوعة مباشرة." },
   "No guest photos uploaded yet.": { en: "No guest photos uploaded yet.", ar: "لم يتم تحميل أي صور من قبل الضيوف بعد." },

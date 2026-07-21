@@ -27,6 +27,7 @@ export default function ClientDashboardPage() {
   const [activeTab, setActiveTab] = useState<"rsvps" | "image">("rsvps");
   const [selectedLightboxMoment, setSelectedLightboxMoment] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
 
   // Copy status
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -313,22 +314,217 @@ export default function ClientDashboardPage() {
     }
   };
 
-  const handleDownloadImage = async (url: string) => {
+  const downloadRsvpsPdf = async (invitationId: string, withHidden: boolean) => {
+    const isAr = lang === "ar";
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      const filename = url.split("/").pop()?.split("?")[0] || "download.jpg";
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+      const res = await api.get(`/invitations/${invitationId}/rsvps`);
+      const allRsvps = res.data.rsvps || [];
+      const statistics = res.data.statistics || { totalResponses: 0, totalAttending: 0, totalExcused: 0, totalCompanions: 0 };
+      const filteredRsvps = withHidden ? allRsvps : allRsvps.filter((r: any) => !r.isHidden);
+
+      const title = isAr ? `قائمة الحضور - ${trackingTemplateTitle}` : `RSVPs List - ${trackingTemplateTitle}`;
+      
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+
+      const totalResponsesStr = isAr ? "إجمالي الردود" : "Total Responses";
+      const totalAttendingStr = isAr ? "إجمالي الحضور" : "Total Attending";
+      const excusedStr = isAr ? "المعتذرين" : "Excused";
+      const totalCompanionsStr = isAr ? "إجمالي المرافقين" : "Total Companions";
+      const guestNameStr = isAr ? "اسم الضيف" : "Guest Name";
+      const statusStr = isAr ? "الحالة" : "Status";
+      const companionsStr = isAr ? "عدد المرافقين" : "Number of Companions";
+      const messageStr = isAr ? "الرسالة" : "Message";
+      const dateStr = isAr ? "تاريخ الرد" : "Date Responded";
+      const attendingVal = isAr ? "حاضر" : "Attending";
+      const declinedVal = isAr ? "معتذر" : "Declined";
+
+      const rsvpsRows = filteredRsvps.map((rsvp: any) => {
+        const dateFormatted = new Date(rsvp.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const statusText = rsvp.attendance === 'YES' ? attendingVal : declinedVal;
+        return `
+          <tr>
+            <td>${rsvp.name}</td>
+            <td>${statusText}</td>
+            <td>${rsvp.guestsCount}</td>
+            <td>${rsvp.message || '-'}</td>
+            <td>${dateFormatted}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              color: #333;
+              padding: 40px;
+              margin: 0;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 24px;
+              color: #111;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #666;
+              font-size: 14px;
+            }
+            .stats-container {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 20px;
+              margin-bottom: 35px;
+            }
+            .stat-card {
+              border: 1px solid #EBE7DF;
+              background-color: #FAF8F5;
+              padding: 15px;
+              border-radius: 12px;
+              text-align: center;
+            }
+            .stat-card .value {
+              font-size: 20px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            .stat-card .label {
+              font-size: 11px;
+              color: #666;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              font-size: 13px;
+            }
+            th, td {
+              border-bottom: 1px solid #EBE7DF;
+              padding: 12px 15px;
+              text-align: start;
+            }
+            th {
+              background-color: #FAF8F5;
+              font-weight: 600;
+              color: #555;
+            }
+            tr:hover {
+              background-color: rgba(250, 248, 245, 0.5);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${title}</h1>
+            <p>${new Date().toLocaleString(isAr ? 'ar-EG' : 'en-US')}</p>
+          </div>
+          
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="value">${statistics.totalResponses}</div>
+              <div class="label">${totalResponsesStr}</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: #10B981;">${statistics.totalAttending}</div>
+              <div class="label">${totalAttendingStr}</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: #EF4444;">${statistics.totalExcused}</div>
+              <div class="label">${excusedStr}</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: #F59E0B;">${statistics.totalCompanions}</div>
+              <div class="label">${totalCompanionsStr}</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>${guestNameStr}</th>
+                <th>${statusStr}</th>
+                <th>${companionsStr}</th>
+                <th>${messageStr}</th>
+                <th>${dateStr}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rsvpsRows}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => { window.close(); }, 500);
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
     } catch (err) {
-      window.open(url, "_blank");
+      logger.error("Failed to generate PDF", err);
+      alert(isAr ? "فشل إنشاء ملف PDF" : "Failed to generate PDF");
     }
+  };
+
+  const downloadAllImages = async (invitationId: string, withHidden: boolean) => {
+    const purchase = purchases.find((p) => p.invitation?.id === invitationId);
+    if (!purchase || !purchase.invitation) return;
+
+    const hostImages = purchase.invitation.images || [];
+    const moments = purchase.invitation.moments || [];
+    const hiddenMoments = purchase.invitation.hiddenMoments || [];
+    
+    const urls = [
+      ...hostImages,
+      ...moments,
+      ...(withHidden ? hiddenMoments : [])
+    ];
+
+    if (urls.length === 0) {
+      alert(lang === "ar" ? "لا توجد صور لتحميلها" : "No images to download");
+      return;
+    }
+
+    for (let i = 0; i < urls.length; i++) {
+      const fullUrl = getS3Url(urls[i]);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      handleDownloadImage(fullUrl);
+    }
+  };
+
+  const handleDownloadImage = (url: string) => {
+    const baseApiUrl = api.defaults.baseURL || "http://localhost:3000";
+    const downloadUrl = `${baseApiUrl}/invitations/download-file?url=${encodeURIComponent(url)}`;
+    
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.target = "_self";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // ── Open Editor (Create or Edit) ──────────────────────────────────
@@ -624,9 +820,86 @@ export default function ClientDashboardPage() {
                   {t("Live guest RSVPs and uploaded photos.")}
                 </p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setTrackingInvitationId(null)}>
-                {t("Close")}
-              </Button>
+              <div className="flex gap-2 items-center relative select-none">
+                <button
+                  onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
+                  className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 h-8 text-xs font-semibold rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 transition-colors border border-neutral-200 cursor-pointer ${
+                    lang === "ar" ? "flex-row-reverse" : "flex-row"
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  {t("Download All")}
+                </button>
+
+                {isDownloadDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsDownloadDropdownOpen(false)} />
+                    <div 
+                      className={`absolute top-full mt-2 w-52 bg-white border border-[#EBE7DF] rounded-xl shadow-lg z-20 py-1.5 ${
+                        lang === "ar" ? "left-0" : "right-0"
+                      }`}
+                    >
+                      {activeTab === "rsvps" ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              downloadRsvpsPdf(trackingInvitationId, false);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل بدون المخفي (PDF)" : "Download without hidden (PDF)"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              downloadRsvpsPdf(trackingInvitationId, true);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer border-t border-[#F4F1EA] ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل مع المخفي (PDF)" : "Download with hidden (PDF)"}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              downloadAllImages(trackingInvitationId, false);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل الصور بدون المخفي" : "Download images without hidden"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              downloadAllImages(trackingInvitationId, true);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer border-t border-[#F4F1EA] ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل الصور مع المخفي" : "Download images with hidden"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <Button variant="outline" size="sm" onClick={() => setTrackingInvitationId(null)}>
+                  {t("Close")}
+                </Button>
+              </div>
             </div>
 
             {/* Tabs Header */}
