@@ -118,6 +118,10 @@ export default function ClientDashboardPage() {
       const currentHidden = purchase.invitation.hiddenMoments || [];
       const isHostImage = hostImages.includes(urlToDelete);
 
+      const updatedGalleryOrder = (purchase.invitation.galleryOrder || []).filter(
+        (url) => url !== urlToDelete
+      );
+
       if (isHostImage) {
         const updatedImages = hostImages.filter((url) => url !== urlToDelete);
         const updatedDeletedImages = [
@@ -127,6 +131,7 @@ export default function ClientDashboardPage() {
         await api.put(`/invitations/${invitationId}`, {
           images: updatedImages,
           deletedImages: updatedDeletedImages,
+          galleryOrder: updatedGalleryOrder,
         });
 
         // Update local state so UI updates instantly
@@ -139,7 +144,8 @@ export default function ClientDashboardPage() {
                     ? { 
                         ...p.invitation, 
                         images: updatedImages,
-                        deletedImages: updatedDeletedImages
+                        deletedImages: updatedDeletedImages,
+                        galleryOrder: updatedGalleryOrder
                       }
                     : null,
                 }
@@ -157,6 +163,7 @@ export default function ClientDashboardPage() {
           moments: updatedMoments,
           hiddenMoments: updatedHidden,
           deletedMoments: updatedDeletedMoments,
+          galleryOrder: updatedGalleryOrder,
         });
 
         // Update local state so UI updates instantly
@@ -170,7 +177,8 @@ export default function ClientDashboardPage() {
                         ...p.invitation, 
                         moments: updatedMoments,
                         hiddenMoments: updatedHidden,
-                        deletedMoments: updatedDeletedMoments
+                        deletedMoments: updatedDeletedMoments,
+                        galleryOrder: updatedGalleryOrder
                       }
                     : null,
                 }
@@ -263,6 +271,7 @@ export default function ClientDashboardPage() {
     const newImages = updatedList.filter(item => !item.isGuest).map(item => item.url);
     const newMoments = updatedList.filter(item => item.isGuest && !item.isHidden).map(item => item.url);
     const newHidden = updatedList.filter(item => item.isGuest && item.isHidden).map(item => item.url);
+    const newGalleryOrder = updatedList.map(item => item.url);
 
     setPurchases(prev => prev.map(p => {
       if (p.invitation?.id === trackingInvitationId) {
@@ -273,7 +282,8 @@ export default function ClientDashboardPage() {
                 ...p.invitation,
                 images: newImages,
                 moments: newMoments,
-                hiddenMoments: newHidden
+                hiddenMoments: newHidden,
+                galleryOrder: newGalleryOrder
               }
             : null
         };
@@ -295,7 +305,8 @@ export default function ClientDashboardPage() {
       await api.put(`/invitations/${trackingInvitationId}`, {
         images: purchase.invitation.images || [],
         moments: purchase.invitation.moments || [],
-        hiddenMoments: purchase.invitation.hiddenMoments || []
+        hiddenMoments: purchase.invitation.hiddenMoments || [],
+        galleryOrder: purchase.invitation.galleryOrder || []
       });
     } catch (err) {
       logger.error("Failed to save reordered images", err);
@@ -558,11 +569,23 @@ export default function ClientDashboardPage() {
         const hostImages = trackingPurchase?.invitation?.images || [];
         const moments = trackingPurchase?.invitation?.moments || [];
         const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
+        const galleryOrder = trackingPurchase?.invitation?.galleryOrder || [];
         const allFeedImages = [
           ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
           ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
           ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
         ];
+
+        if (galleryOrder.length > 0) {
+          allFeedImages.sort((a, b) => {
+            const idxA = galleryOrder.indexOf(a.url);
+            const idxB = galleryOrder.indexOf(b.url);
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+          });
+        }
 
         return (
           <section
@@ -691,11 +714,23 @@ export default function ClientDashboardPage() {
         const hostImages = trackingPurchase?.invitation?.images || [];
         const moments = trackingPurchase?.invitation?.moments || [];
         const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
+        const galleryOrder = trackingPurchase?.invitation?.galleryOrder || [];
         const allFeedImages = [
           ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
           ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
           ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
         ];
+
+        if (galleryOrder.length > 0) {
+          allFeedImages.sort((a, b) => {
+            const idxA = galleryOrder.indexOf(a.url);
+            const idxB = galleryOrder.indexOf(b.url);
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+          });
+        }
         const selectedItem = allFeedImages.find((item) => item.url === moment);
         const isGuest = selectedItem?.isGuest;
         const isHidden = selectedItem?.isHidden;

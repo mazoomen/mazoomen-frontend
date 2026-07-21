@@ -917,10 +917,22 @@ export default function InvitationClientPageForestFoliage({
                     {(() => {
                       const hostImages = invitation.images || [];
                       const guestImages = invitation.moments || [];
+                      const galleryOrder = (invitation as any).galleryOrder || [];
                       const allFeedImages = [
                         ...hostImages.map((url) => ({ url, isGuest: false })),
                         ...guestImages.map((url) => ({ url, isGuest: true }))
                       ];
+
+                      if (galleryOrder.length > 0) {
+                        allFeedImages.sort((a, b) => {
+                          const idxA = galleryOrder.indexOf(a.url);
+                          const idxB = galleryOrder.indexOf(b.url);
+                          if (idxA === -1 && idxB === -1) return 0;
+                          if (idxA === -1) return 1;
+                          if (idxB === -1) return -1;
+                          return idxA - idxB;
+                        });
+                      }
 
                       return allFeedImages.length > 0 ? (
                         <div 

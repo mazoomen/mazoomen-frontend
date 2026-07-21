@@ -40,6 +40,7 @@ export interface PurchaseInvitation {
   hiddenMoments?: string[];
   deletedMoments?: string[];
   deletedImages?: string[];
+  galleryOrder?: string[];
 }
 
 export interface PurchaseData {
