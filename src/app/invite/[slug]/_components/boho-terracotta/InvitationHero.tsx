@@ -17,7 +17,7 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
-      videoRef.current.muted = false;
+      videoRef.current.muted = true;
       videoRef.current.play().catch((err) => console.log('Video auto-play error:', err));
     }
   }, [isOpen]);

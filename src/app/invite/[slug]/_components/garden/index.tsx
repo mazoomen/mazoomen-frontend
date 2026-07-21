@@ -164,7 +164,7 @@ export default function InvitationClientPageGarden({
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
-      videoRef.current.muted = false;
+      videoRef.current.muted = true;
       videoRef.current.play().catch((err) => console.log('Video play error:', err));
     }
   }, [isOpen]);
