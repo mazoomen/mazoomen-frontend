@@ -21,9 +21,11 @@ export default function ClientDashboardPage() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<PurchaseData | null>(null);
 
-  // RSVP panel state
+  // RSVP / Tracking panel state
   const [trackingInvitationId, setTrackingInvitationId] = useState<string | null>(null);
   const [trackingTemplateTitle, setTrackingTemplateTitle] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"rsvps" | "image">("rsvps");
+  const [selectedLightboxMoment, setSelectedLightboxMoment] = useState<string | null>(null);
 
   // Copy status
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -94,6 +96,152 @@ export default function ClientDashboardPage() {
       );
     } catch (err) {
       logger.error("Failed to toggle link activation", err);
+    }
+  };
+
+  // ── Delete a guest photo/moment or host gallery image ─────────────
+  const handleDeleteMoment = async (invitationId: string, urlToDelete: string) => {
+    const confirmed = window.confirm(
+      lang === "ar"
+        ? "هل أنت متأكد من رغبتك في حذف هذه الصورة؟"
+        : "Are you sure you want to delete this image?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const purchase = purchases.find((p) => p.invitation?.id === invitationId);
+      if (!purchase || !purchase.invitation) return;
+
+      const hostImages = purchase.invitation.images || [];
+      const currentMoments = purchase.invitation.moments || [];
+      const currentHidden = purchase.invitation.hiddenMoments || [];
+      const isHostImage = hostImages.includes(urlToDelete);
+
+      if (isHostImage) {
+        const updatedImages = hostImages.filter((url) => url !== urlToDelete);
+        const updatedDeletedImages = [
+          ...Array.from(new Set([...(purchase.invitation.deletedImages || []), urlToDelete])),
+        ];
+
+        await api.put(`/invitations/${invitationId}`, {
+          images: updatedImages,
+          deletedImages: updatedDeletedImages,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? { 
+                        ...p.invitation, 
+                        images: updatedImages,
+                        deletedImages: updatedDeletedImages
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
+      } else {
+        const updatedMoments = currentMoments.filter((url) => url !== urlToDelete);
+        const updatedHidden = currentHidden.filter((url) => url !== urlToDelete);
+        const updatedDeletedMoments = [
+          ...Array.from(new Set([...(purchase.invitation.deletedMoments || []), urlToDelete])),
+        ];
+
+        await api.put(`/invitations/${invitationId}`, {
+          moments: updatedMoments,
+          hiddenMoments: updatedHidden,
+          deletedMoments: updatedDeletedMoments,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? { 
+                        ...p.invitation, 
+                        moments: updatedMoments,
+                        hiddenMoments: updatedHidden,
+                        deletedMoments: updatedDeletedMoments
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
+      }
+      setSelectedLightboxMoment(null);
+    } catch (err) {
+      logger.error("Failed to delete image", err);
+      alert(
+        lang === "ar"
+          ? "فشل حذف الصورة. يرجى المحاولة مرة أخرى."
+          : "Failed to delete image. Please try again."
+      );
+    }
+  };
+
+  // ── Toggle visibility of guest photo/moment ──────────────────────
+  const handleToggleHideMoment = async (invitationId: string, urlToToggle: string) => {
+    try {
+      const purchase = purchases.find((p) => p.invitation?.id === invitationId);
+      if (!purchase || !purchase.invitation) return;
+
+      const currentMoments = purchase.invitation.moments || [];
+      const currentHidden = purchase.invitation.hiddenMoments || [];
+      const isCurrentlyHidden = currentHidden.includes(urlToToggle);
+
+      let updatedMoments: string[];
+      let updatedHidden: string[];
+
+      if (isCurrentlyHidden) {
+        // Move from hidden to visible
+        updatedHidden = currentHidden.filter((url) => url !== urlToToggle);
+        updatedMoments = currentMoments.includes(urlToToggle)
+          ? currentMoments
+          : [...currentMoments, urlToToggle];
+      } else {
+        // Move from visible to hidden
+        updatedHidden = [...currentHidden, urlToToggle];
+        updatedMoments = currentMoments.filter((url) => url !== urlToToggle);
+      }
+
+      await api.put(`/invitations/${invitationId}`, {
+        moments: updatedMoments,
+        hiddenMoments: updatedHidden,
+      });
+
+      // Update local state so UI updates instantly
+      setPurchases((prev) =>
+        prev.map((p) =>
+          p.invitation?.id === invitationId
+            ? {
+                ...p,
+                invitation: p.invitation
+                  ? {
+                      ...p.invitation,
+                      moments: updatedMoments,
+                      hiddenMoments: updatedHidden,
+                    }
+                  : null,
+              }
+            : p
+        )
+      );
+    } catch (err) {
+      logger.error("Failed to toggle hide moment", err);
+      alert(
+        lang === "ar"
+          ? "فشل تعديل حالة ظهور الصورة. يرجى المحاولة مرة أخرى."
+          : "Failed to update image visibility. Please try again."
+      );
     }
   };
 
@@ -329,13 +477,14 @@ export default function ClientDashboardPage() {
                         onClick={() => {
                           setTrackingInvitationId(purchase.invitation!.id);
                           setTrackingTemplateTitle(purchase.template.title);
+                          setActiveTab("rsvps");
                           document
                             .getElementById("rsvp-tracker-section")
                             ?.scrollIntoView({ behavior: "smooth" });
                         }}
                         className="flex-1"
                       >
-                        {t("Track RSVPs")}
+                        {t("Track")}
                       </Button>
                     </div>
                   )}
@@ -346,33 +495,197 @@ export default function ClientDashboardPage() {
         </div>
       )}
 
-      {/* ── RSVP Tracker Panel (Only if selected) ───────────────────── */}
-      {trackingInvitationId && (
-        <section
-          id="rsvp-tracker-section"
-          className="bg-white border border-[#EBE7DF] rounded-[32px] p-6 sm:p-8 shadow-sm transition-all duration-300"
-        >
-          <div
-            className={`border-b border-[#F4F1EA] pb-4 mb-6 flex justify-between items-start gap-4 ${
-              lang === "ar" ? "flex-row-reverse" : "flex-row"
-            }`}
+      {/* ── Tracking Dashboard Panel (Only if selected) ──────────────── */}
+      {trackingInvitationId && (() => {
+        const trackingPurchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
+        const hostImages = trackingPurchase?.invitation?.images || [];
+        const moments = trackingPurchase?.invitation?.moments || [];
+        const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
+        const allFeedImages = [
+          ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
+          ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
+          ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
+        ];
+
+        return (
+          <section
+            id="rsvp-tracker-section"
+            className="bg-white border border-[#EBE7DF] rounded-[32px] p-6 sm:p-8 shadow-sm transition-all duration-300"
           >
-            <div className={lang === "ar" ? "text-right" : "text-left"}>
-              <h2 className="text-xl font-serif font-medium text-neutral-800">
-                {t("Audience RSVPs")} —{" "}
-                <span className="text-[#B89C72]">{trackingTemplateTitle}</span>
-              </h2>
-              <p className="text-xs text-[#7F8487] mt-1">
-                {t("Live guest feedback and attendance metrics.")}
-              </p>
+            <div
+              className={`border-b border-[#F4F1EA] pb-4 mb-6 flex justify-between items-start gap-4 ${
+                lang === "ar" ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <div className={lang === "ar" ? "text-right" : "text-left"}>
+                <h2 className="text-xl font-serif font-medium text-neutral-800">
+                  {t("Track")} —{" "}
+                  <span className="text-[#B89C72]">{trackingTemplateTitle}</span>
+                </h2>
+                <p className="text-xs text-[#7F8487] mt-1">
+                  {t("Live guest RSVPs and uploaded photos.")}
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setTrackingInvitationId(null)}>
+                {t("Close")}
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setTrackingInvitationId(null)}>
-              {t("Close")}
-            </Button>
+
+            {/* Tabs Header */}
+            <div
+              className={`flex border-b border-[#F4F1EA] mb-6 gap-1 ${
+                lang === "ar" ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <button
+                onClick={() => setActiveTab("rsvps")}
+                className={`px-6 py-3 text-sm font-semibold transition-all border-b-2 -mb-px cursor-pointer ${
+                  activeTab === "rsvps"
+                    ? "border-[#B89C72] text-[#B89C72]"
+                    : "border-transparent text-[#7F8487] hover:text-neutral-800"
+                }`}
+              >
+                {t("RSVPs")}
+              </button>
+              <button
+                onClick={() => setActiveTab("image")}
+                className={`px-6 py-3 text-sm font-semibold transition-all border-b-2 -mb-px cursor-pointer ${
+                  activeTab === "image"
+                    ? "border-[#B89C72] text-[#B89C72]"
+                    : "border-transparent text-[#7F8487] hover:text-neutral-800"
+                }`}
+              >
+                {t("Image")}
+              </button>
+            </div>
+
+            {/* Active Tab Content */}
+            {activeTab === "rsvps" && (
+              <RsvpTracker invitationId={trackingInvitationId} />
+            )}
+
+            {activeTab === "image" && (
+              <div className="space-y-6">
+                {allFeedImages.length === 0 ? (
+                  <div className="rounded-2xl border border-[#EBE7DF] bg-[#FAF8F5] p-10 text-center shadow-inner">
+                    <p className="text-4xl block mb-2 select-none">📸</p>
+                    <h4 className="font-bold text-sm text-neutral-800">
+                      {t("No guest photos uploaded yet.")}
+                    </h4>
+                    <p className="mt-1 text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
+                      {t("Photos uploaded by guests using the moments gallery will appear here.")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {allFeedImages.map((item, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="relative aspect-square overflow-hidden shadow-md cursor-pointer active:scale-[0.97] transition-transform"
+                          style={{
+                            background: "rgba(255, 255, 255, 0.55)",
+                            backdropFilter: "blur(12px)",
+                            border: "1px solid rgba(0, 0, 0, 0.08)",
+                            borderRadius: "22px",
+                          }}
+                          onClick={() => setSelectedLightboxMoment(item.url)}
+                        >
+                          {/* Image Thumbnail */}
+                          <img
+                            src={getS3Url(item.url)}
+                            alt=""
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                          />
+
+                          {item.isHidden && (
+                            <span className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-bold bg-black/60 backdrop-blur-xs text-white rounded-full border border-white/10 shadow-md z-10 select-none">
+                              {t("Hidden")}
+                            </span>
+                          )}
+
+                          {item.isGuest && (
+                            <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-black/40 text-white/90 rounded backdrop-blur-[2px] uppercase tracking-wider select-none z-10">
+                              {lang === "ar" ? "ضيف" : "Guest"}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        );
+      })()}
+
+      {/* ── Image Lightbox Popup Modal ──────────────────────────────── */}
+      {selectedLightboxMoment && ((moment: string) => {
+        const trackingPurchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
+        const hostImages = trackingPurchase?.invitation?.images || [];
+        const moments = trackingPurchase?.invitation?.moments || [];
+        const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
+        const allFeedImages = [
+          ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
+          ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
+          ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
+        ];
+        const selectedItem = allFeedImages.find((item) => item.url === moment);
+        const isGuest = selectedItem?.isGuest;
+        const isHidden = selectedItem?.isHidden;
+        const displayUrl = getS3Url(moment);
+
+        return (
+          <div
+            className="fixed inset-0 bg-[#2D3142]/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setSelectedLightboxMoment(null)}
+          >
+            <div
+              className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl flex items-center justify-center bg-black/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top Left Controls */}
+              <div className="absolute top-4 left-4 flex gap-2 z-10">
+                {isGuest && (
+                  <button
+                    onClick={() => handleToggleHideMoment(trackingInvitationId!, moment)}
+                    className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                  >
+                    {isHidden ? t("Show") : t("Hide")}
+                  </button>
+                )}
+                <button
+                  onClick={() => handleDeleteMoment(trackingInvitationId!, moment)}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                >
+                  {lang === "ar" ? "حذف" : "Delete"}
+                </button>
+              </div>
+
+              {/* Close Button Top Right */}
+              <button
+                onClick={() => setSelectedLightboxMoment(null)}
+                className="absolute top-4 right-4 text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer p-2 rounded-full z-10"
+                aria-label="Close preview"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Fullscreen Image */}
+              <img
+                src={displayUrl}
+                alt="Preview"
+                className="max-w-full max-h-[85vh] object-contain rounded-xl select-none"
+              />
+            </div>
           </div>
-          <RsvpTracker invitationId={trackingInvitationId} />
-        </section>
-      )}
+        );
+      })(selectedLightboxMoment)}
 
       {/* ── Invitation Editor Overlay Modal (Create / Edit Popup) ───── */}
       {isEditorOpen && editingPurchase && (

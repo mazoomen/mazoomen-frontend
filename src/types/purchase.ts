@@ -36,6 +36,10 @@ export interface PurchaseInvitation {
   showMoments?: boolean;
   allowCompanions?: boolean;
   isActive: boolean;
+  moments?: string[];
+  hiddenMoments?: string[];
+  deletedMoments?: string[];
+  deletedImages?: string[];
 }
 
 export interface PurchaseData {
