@@ -115,9 +115,10 @@ export default function ClientDashboardPage() {
       if (!purchase || !purchase.invitation) return;
 
       const hostImages = purchase.invitation.images || [];
+      const hiddenImages = purchase.invitation.hiddenImages || [];
       const currentMoments = purchase.invitation.moments || [];
       const currentHidden = purchase.invitation.hiddenMoments || [];
-      const isHostImage = hostImages.includes(urlToDelete);
+      const isHostImage = hostImages.includes(urlToDelete) || hiddenImages.includes(urlToDelete);
 
       const updatedGalleryOrder = (purchase.invitation.galleryOrder || []).filter(
         (url) => url !== urlToDelete
@@ -125,12 +126,14 @@ export default function ClientDashboardPage() {
 
       if (isHostImage) {
         const updatedImages = hostImages.filter((url) => url !== urlToDelete);
+        const updatedHiddenImages = hiddenImages.filter((url) => url !== urlToDelete);
         const updatedDeletedImages = [
           ...Array.from(new Set([...(purchase.invitation.deletedImages || []), urlToDelete])),
         ];
 
         await api.put(`/invitations/${invitationId}`, {
           images: updatedImages,
+          hiddenImages: updatedHiddenImages,
           deletedImages: updatedDeletedImages,
           galleryOrder: updatedGalleryOrder,
         });
@@ -145,6 +148,7 @@ export default function ClientDashboardPage() {
                     ? { 
                         ...p.invitation, 
                         images: updatedImages,
+                        hiddenImages: updatedHiddenImages,
                         deletedImages: updatedDeletedImages,
                         galleryOrder: updatedGalleryOrder
                       }
@@ -204,47 +208,92 @@ export default function ClientDashboardPage() {
       const purchase = purchases.find((p) => p.invitation?.id === invitationId);
       if (!purchase || !purchase.invitation) return;
 
+      const hostImages = purchase.invitation.images || [];
+      const hiddenImages = purchase.invitation.hiddenImages || [];
       const currentMoments = purchase.invitation.moments || [];
       const currentHidden = purchase.invitation.hiddenMoments || [];
-      const isCurrentlyHidden = currentHidden.includes(urlToToggle);
 
-      let updatedMoments: string[];
-      let updatedHidden: string[];
+      const isHostImage = hostImages.includes(urlToToggle) || hiddenImages.includes(urlToToggle);
 
-      if (isCurrentlyHidden) {
-        // Move from hidden to visible
-        updatedHidden = currentHidden.filter((url) => url !== urlToToggle);
-        updatedMoments = currentMoments.includes(urlToToggle)
-          ? currentMoments
-          : [...currentMoments, urlToToggle];
+      if (isHostImage) {
+        const isCurrentlyHidden = hiddenImages.includes(urlToToggle);
+        let updatedImages: string[];
+        let updatedHiddenImages: string[];
+
+        if (isCurrentlyHidden) {
+          // Move from hidden to visible
+          updatedHiddenImages = hiddenImages.filter((url) => url !== urlToToggle);
+          updatedImages = hostImages.includes(urlToToggle)
+            ? hostImages
+            : [...hostImages, urlToToggle];
+        } else {
+          // Move from visible to hidden
+          updatedHiddenImages = [...hiddenImages, urlToToggle];
+          updatedImages = hostImages.filter((url) => url !== urlToToggle);
+        }
+
+        await api.put(`/invitations/${invitationId}`, {
+          images: updatedImages,
+          hiddenImages: updatedHiddenImages,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? {
+                        ...p.invitation,
+                        images: updatedImages,
+                        hiddenImages: updatedHiddenImages,
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
       } else {
-        // Move from visible to hidden
-        updatedHidden = [...currentHidden, urlToToggle];
-        updatedMoments = currentMoments.filter((url) => url !== urlToToggle);
+        const isCurrentlyHidden = currentHidden.includes(urlToToggle);
+        let updatedMoments: string[];
+        let updatedHidden: string[];
+
+        if (isCurrentlyHidden) {
+          // Move from hidden to visible
+          updatedHidden = currentHidden.filter((url) => url !== urlToToggle);
+          updatedMoments = currentMoments.includes(urlToToggle)
+            ? currentMoments
+            : [...currentMoments, urlToToggle];
+        } else {
+          // Move from visible to hidden
+          updatedHidden = [...currentHidden, urlToToggle];
+          updatedMoments = currentMoments.filter((url) => url !== urlToToggle);
+        }
+
+        await api.put(`/invitations/${invitationId}`, {
+          moments: updatedMoments,
+          hiddenMoments: updatedHidden,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? {
+                        ...p.invitation,
+                        moments: updatedMoments,
+                        hiddenMoments: updatedHidden,
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
       }
-
-      await api.put(`/invitations/${invitationId}`, {
-        moments: updatedMoments,
-        hiddenMoments: updatedHidden,
-      });
-
-      // Update local state so UI updates instantly
-      setPurchases((prev) =>
-        prev.map((p) =>
-          p.invitation?.id === invitationId
-            ? {
-                ...p,
-                invitation: p.invitation
-                  ? {
-                      ...p.invitation,
-                      moments: updatedMoments,
-                      hiddenMoments: updatedHidden,
-                    }
-                  : null,
-              }
-            : p
-        )
-      );
     } catch (err) {
       logger.error("Failed to toggle hide moment", err);
       alert(
@@ -494,11 +543,13 @@ export default function ClientDashboardPage() {
     if (!purchase || !purchase.invitation) return;
 
     const hostImages = purchase.invitation.images || [];
+    const hiddenImages = purchase.invitation.hiddenImages || [];
     const moments = purchase.invitation.moments || [];
     const hiddenMoments = purchase.invitation.hiddenMoments || [];
     
     const urls = [
       ...hostImages,
+      ...(withHidden ? hiddenImages : []),
       ...moments,
       ...(withHidden ? hiddenMoments : [])
     ];
@@ -781,11 +832,13 @@ export default function ClientDashboardPage() {
       {trackingInvitationId && (() => {
         const trackingPurchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
         const hostImages = trackingPurchase?.invitation?.images || [];
+        const hiddenImages = trackingPurchase?.invitation?.hiddenImages || [];
         const moments = trackingPurchase?.invitation?.moments || [];
         const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
         const galleryOrder = trackingPurchase?.invitation?.galleryOrder || [];
         const allFeedImages = [
           ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
+          ...hiddenImages.map((url) => ({ url, isGuest: false, isHidden: true })),
           ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
           ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
         ];
@@ -1003,11 +1056,13 @@ export default function ClientDashboardPage() {
       {selectedLightboxMoment && ((moment: string) => {
         const trackingPurchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
         const hostImages = trackingPurchase?.invitation?.images || [];
+        const hiddenImages = trackingPurchase?.invitation?.hiddenImages || [];
         const moments = trackingPurchase?.invitation?.moments || [];
         const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
         const galleryOrder = trackingPurchase?.invitation?.galleryOrder || [];
         const allFeedImages = [
           ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
+          ...hiddenImages.map((url) => ({ url, isGuest: false, isHidden: true })),
           ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
           ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
         ];
@@ -1040,14 +1095,12 @@ export default function ClientDashboardPage() {
             >
               {/* Top Left Controls */}
               <div className="absolute top-4 left-4 flex gap-2 z-10">
-                {isGuest && (
-                  <button
-                    onClick={() => handleToggleHideMoment(trackingInvitationId!, moment)}
-                    className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
-                  >
-                    {isHidden ? t("Show") : t("Hide")}
-                  </button>
-                )}
+                <button
+                  onClick={() => handleToggleHideMoment(trackingInvitationId!, moment)}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                >
+                  {isHidden ? t("Show") : t("Hide")}
+                </button>
                 <button
                   onClick={() => handleDeleteMoment(trackingInvitationId!, moment)}
                   className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
