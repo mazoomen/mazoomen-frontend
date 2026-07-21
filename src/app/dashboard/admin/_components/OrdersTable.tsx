@@ -49,6 +49,7 @@ interface OrdersTableProps {
   onStatusUpdated: (orderId: string, newStatus: "APPROVED" | "REJECTED") => void;
   onLinkStatusUpdated?: (invitationId: string, isActive: boolean) => void;
   onEditInvitation?: (purchase: any) => void;
+  onTrackInvitation?: (invitation: any) => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ export default function OrdersTable({
   onStatusUpdated,
   onLinkStatusUpdated,
   onEditInvitation,
+  onTrackInvitation,
 }: OrdersTableProps) {
   const { lang } = useLanguage();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -410,16 +412,26 @@ export default function OrdersTable({
                           </button>
                         </div>
                       ) : order.status === "APPROVED" && order.purchase?.invitation ? (
-                        <button
-                          onClick={() => {
-                            if (onEditInvitation) {
-                              onEditInvitation(order.purchase);
-                            }
-                          }}
-                          className="inline-flex items-center gap-1 rounded bg-[#0B1528] px-2.5 py-1 text-[10px] font-bold text-[#E5C38B] hover:bg-[#15243F] transition-colors select-none cursor-pointer"
-                        >
-                          {lang === "ar" ? "تعديل الدعوة" : "Edit Invitation"}
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            onClick={() => {
+                              if (onEditInvitation) {
+                                onEditInvitation(order.purchase);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 rounded bg-[#0B1528] px-2.5 py-1 text-[10px] font-bold text-[#E5C38B] hover:bg-[#15243F] transition-colors select-none cursor-pointer"
+                          >
+                            {lang === "ar" ? "تعديل الدعوة" : "Edit Invitation"}
+                          </button>
+                          {onTrackInvitation && (
+                            <button
+                              onClick={() => onTrackInvitation(order.purchase?.invitation)}
+                              className="inline-flex items-center gap-1 rounded border border-[#B89C72] bg-[#FAF9F6] px-2 py-1 text-[10px] font-bold text-[#B89C72] hover:bg-[#F4F1EA] transition-colors select-none cursor-pointer"
+                            >
+                              {lang === "ar" ? "متابعة (الردود والصور)" : "Track (RSVPs & Photos)"}
+                            </button>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-neutral-400 font-sans">—</span>
                       )}

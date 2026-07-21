@@ -54,6 +54,34 @@ export interface PurchaseData {
   invitation: PurchaseInvitation | null;
 }
 
+export interface CouponUsageUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string | null;
+}
+
+export interface CouponUsageTemplate {
+  id: string;
+  title: string;
+  previewImage?: string;
+  price?: number | string;
+}
+
+export interface CouponPurchaseRequest {
+  id: string;
+  userId: string;
+  contactEmail: string;
+  contactPhone: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  discountAmount?: number | string | null;
+  finalPrice?: number | string | null;
+  createdAt: string;
+  user?: CouponUsageUser | null;
+  template?: CouponUsageTemplate | null;
+}
+
 export interface Coupon {
   id: string;
   code: string;
@@ -67,6 +95,7 @@ export interface Coupon {
   _count?: {
     purchaseRequests: number;
   };
+  purchaseRequests?: CouponPurchaseRequest[];
 }
 
 export interface PurchaseRequestData {

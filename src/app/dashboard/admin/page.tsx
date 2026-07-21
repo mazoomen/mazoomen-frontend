@@ -16,6 +16,7 @@ import {
   ReviewsTable,
   AdminCharts,
   CouponsTable,
+  AdminInvitationTracker,
   type Order,
   type User,
 } from "./_components";
@@ -52,6 +53,13 @@ export default function AdminDashboardPage() {
   // ── Admin Edit Invitation States ────────────────────────────────────
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<any | null>(null);
+
+  // ── Admin Track Invitation Modal State ─────────────────────────────
+  const [trackingModalInfo, setTrackingModalInfo] = useState<{
+    slug?: string;
+    invitationId?: string;
+    title?: string;
+  } | null>(null);
 
   // ── User Add/Edit Modal States ───────────────────────────────────────
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -704,6 +712,13 @@ export default function AdminDashboardPage() {
                         setEditingPurchase(purchase);
                         setIsEditorOpen(true);
                       }}
+                      onTrackInvitation={(inv) => {
+                        setTrackingModalInfo({
+                          invitationId: inv.id,
+                          slug: inv.slug,
+                          title: inv.eventTitle,
+                        });
+                      }}
                     />
                   </div>
                 </div>
@@ -728,6 +743,13 @@ export default function AdminDashboardPage() {
                     onEditInvitation={(purchase) => {
                       setEditingPurchase(purchase);
                       setIsEditorOpen(true);
+                    }}
+                    onTrackInvitation={(inv) => {
+                      setTrackingModalInfo({
+                        invitationId: inv.id,
+                        slug: inv.slug,
+                        title: inv.eventTitle,
+                      });
                     }}
                   />
                 </div>
@@ -858,6 +880,34 @@ export default function AdminDashboardPage() {
                                   </Button>
                                 </div>
                               </div>
+
+                              {tpl.demoLink && (
+                                <button
+                                  onClick={() => {
+                                    const slug = tpl.demoLink?.replace(/^\/invite\//, "").replace(/^\//, "");
+                                    setTrackingModalInfo({
+                                      slug,
+                                      title: `${tpl.title} (${lang === "ar" ? "النسخة التجريبية" : "Demo"})`,
+                                    });
+                                  }}
+                                  className="w-full mt-2 py-2 px-3 bg-[#FAF9F6] hover:bg-[#F4F1EA] text-[#B89C72] border border-[#E6E2DA] hover:border-[#B89C72] rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                                >
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                  </svg>
+                                  <span>{lang === "ar" ? "متابعة التجريبية (الردود والصور)" : "Track Demo (RSVPs & Photos)"}</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -1124,6 +1174,16 @@ export default function AdminDashboardPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Admin Tracker Modal */}
+      {trackingModalInfo && (
+        <AdminInvitationTracker
+          slug={trackingModalInfo.slug}
+          invitationId={trackingModalInfo.invitationId}
+          title={trackingModalInfo.title}
+          onClose={() => setTrackingModalInfo(null)}
+        />
       )}
     </div>
   );

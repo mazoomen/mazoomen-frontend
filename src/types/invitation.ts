@@ -63,6 +63,8 @@ export interface InvitationData {
   showMoments?: boolean;
   allowCompanions?: boolean;
   moments?: string[];
+  hiddenImages?: string[];
+  hiddenMoments?: string[];
   createdAt: string;
   template: InvitationTemplate;
   wishes?: { name: string; text: string }[];

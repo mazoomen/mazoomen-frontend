@@ -97,6 +97,8 @@ export const translations: Record<string, Record<Language, string>> = {
   "Password (Min. 8 characters)": { en: "Password (Min. 8 characters)", ar: "كلمة المرور (8 أحرف على الأقل)" },
   "Registering...": { en: "Registering...", ar: "جاري التسجيل..." },
   "errors.user_deactivated": { en: "Your account is deactivated. Please contact the administrator.", ar: "تم تعطيل حسابك. يرجى التواصل مع المشرف." },
+  "errors.pending_purchase_request_exists": { en: "You already have a pending purchase request. Please wait for the administrator to review it before creating another request.", ar: "لديك بالفعل طلب شراء معلق. يرجى انتظار مراجعة المشرف قبل إنشاء طلب آخر." },
+  "You already have a pending purchase request. Please wait for the administrator to review it before creating another request.": { en: "You already have a pending purchase request. Please wait for the administrator to review it before creating another request.", ar: "لديك بالفعل طلب شراء معلق. يرجى انتظار مراجعة المشرف قبل إنشاء طلب آخر." },
   "Active": { en: "Active", ar: "نشط" },
   "Deactive": { en: "Deactive", ar: "معطل" },
   "Account Status": { en: "Account Status", ar: "حالة الحساب" },
