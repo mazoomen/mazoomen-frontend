@@ -26,6 +26,7 @@ export default function ClientDashboardPage() {
   const [trackingTemplateTitle, setTrackingTemplateTitle] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"rsvps" | "image">("rsvps");
   const [selectedLightboxMoment, setSelectedLightboxMoment] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // Copy status
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -242,6 +243,62 @@ export default function ClientDashboardPage() {
           ? "فشل تعديل حالة ظهور الصورة. يرجى المحاولة مرة أخرى."
           : "Failed to update image visibility. Please try again."
       );
+    }
+  };
+
+  // ── Drag and Drop Image Reordering ────────────────────────────────
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetIndex: number, allFeedImages: any[]) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+    const updatedList = [...allFeedImages];
+    const draggedItem = updatedList[draggedIndex];
+    updatedList.splice(draggedIndex, 1);
+    updatedList.splice(targetIndex, 0, draggedItem);
+
+    const newImages = updatedList.filter(item => !item.isGuest).map(item => item.url);
+    const newMoments = updatedList.filter(item => item.isGuest && !item.isHidden).map(item => item.url);
+    const newHidden = updatedList.filter(item => item.isGuest && item.isHidden).map(item => item.url);
+
+    setPurchases(prev => prev.map(p => {
+      if (p.invitation?.id === trackingInvitationId) {
+        return {
+          ...p,
+          invitation: p.invitation
+            ? {
+                ...p.invitation,
+                images: newImages,
+                moments: newMoments,
+                hiddenMoments: newHidden
+              }
+            : null
+        };
+      }
+      return p;
+    }));
+
+    setDraggedIndex(targetIndex);
+  };
+
+  const handleDragEnd = async () => {
+    setDraggedIndex(null);
+    if (!trackingInvitationId) return;
+
+    const purchase = purchases.find(p => p.invitation?.id === trackingInvitationId);
+    if (!purchase || !purchase.invitation) return;
+
+    try {
+      await api.put(`/invitations/${trackingInvitationId}`, {
+        images: purchase.invitation.images || [],
+        moments: purchase.invitation.moments || [],
+        hiddenMoments: purchase.invitation.hiddenMoments || []
+      });
+    } catch (err) {
+      logger.error("Failed to save reordered images", err);
     }
   };
 
@@ -582,11 +639,19 @@ export default function ClientDashboardPage() {
                       return (
                         <div
                           key={index}
-                          className="relative aspect-square overflow-hidden shadow-md cursor-pointer active:scale-[0.97] transition-transform"
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => handleDragOver(e, index, allFeedImages)}
+                          onDragEnd={handleDragEnd}
+                          className={`relative aspect-square overflow-hidden shadow-md cursor-grab active:scale-[0.97] transition-all duration-300 ${
+                            draggedIndex === index
+                              ? "opacity-40 scale-[0.95] border-2 border-dashed border-[#B89C72]"
+                              : ""
+                          }`}
                           style={{
                             background: "rgba(255, 255, 255, 0.55)",
                             backdropFilter: "blur(12px)",
-                            border: "1px solid rgba(0, 0, 0, 0.08)",
+                            border: draggedIndex === index ? undefined : "1px solid rgba(0, 0, 0, 0.08)",
                             borderRadius: "22px",
                           }}
                           onClick={() => setSelectedLightboxMoment(item.url)}
