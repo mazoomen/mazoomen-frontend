@@ -313,6 +313,24 @@ export default function ClientDashboardPage() {
     }
   };
 
+  const handleDownloadImage = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      const filename = url.split("/").pop()?.split("?")[0] || "download.jpg";
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      window.open(url, "_blank");
+    }
+  };
+
   // ── Open Editor (Create or Edit) ──────────────────────────────────
   const handleOpenEditor = (purchase: PurchaseData) => {
     setEditingPurchase(purchase);
@@ -762,6 +780,12 @@ export default function ClientDashboardPage() {
                   className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
                 >
                   {lang === "ar" ? "حذف" : "Delete"}
+                </button>
+                <button
+                  onClick={() => handleDownloadImage(displayUrl)}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                >
+                  {lang === "ar" ? "تحميل" : "Download"}
                 </button>
               </div>
 
