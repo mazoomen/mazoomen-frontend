@@ -235,9 +235,25 @@ export default function ClientOrdersPage() {
                         <h3 className="font-sans font-bold text-neutral-800 text-[14px] leading-tight">
                           {request.template.title}
                         </h3>
-                         <span className="text-[12px] font-bold text-neutral-700 font-mono">
-                           {formatPrice(request.template.price)}
-                         </span>
+                        {request.couponCode ? (
+                          <div className="flex flex-col items-end">
+                            <span className="text-[10px] text-neutral-400 line-through font-mono">
+                              {formatPrice(request.template.price)}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[12px] font-bold text-emerald-600 font-mono">
+                                {formatPrice(request.finalPrice ?? request.template.price)}
+                              </span>
+                              <span className="bg-emerald-100 text-emerald-800 text-[8px] font-bold px-1.5 py-0.5 rounded font-mono uppercase">
+                                {request.couponCode}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-[12px] font-bold text-neutral-700 font-mono">
+                            {formatPrice(request.template.price)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-[10px] text-[#7F8487] mt-1 font-medium">
                         {t("Requested")}:{" "}

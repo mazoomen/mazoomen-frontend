@@ -15,14 +15,16 @@ import {
   UsersTable,
   ReviewsTable,
   AdminCharts,
+  CouponsTable,
   type Order,
   type User,
 } from "./_components";
+import type { Coupon } from "@/types/purchase";
 import InvitationEditor from "../client/_components/InvitationEditor";
 import { Spinner, ErrorState, Modal, Button } from "@/components/ui";
 
 type LoadStatus = "loading" | "loaded" | "error";
-type TabType = "overview" | "users" | "requests" | "templates" | "reviews";
+type TabType = "overview" | "users" | "requests" | "templates" | "reviews" | "coupons";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -33,6 +35,7 @@ export default function AdminDashboardPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
 
   // Reactive UI Navigation state
@@ -68,16 +71,18 @@ export default function AdminDashboardPage() {
   // ── Fetch all data simultaneously ────────────────────────────────────
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [ordersRes, usersRes, templatesRes, reviewsRes] = await Promise.all([
+      const [ordersRes, usersRes, templatesRes, reviewsRes, couponsRes] = await Promise.all([
         api.get<Order[]>("/purchase-requests"),
         api.get<User[]>("/users"),
         api.get<Template[]>("/templates?includeInactive=true"),
         api.get<any[]>("/testimonials/admin"),
+        api.get<Coupon[]>("/coupons"),
       ]);
       setOrders(ordersRes.data);
       setUsers(usersRes.data);
       setTemplates(templatesRes.data);
       setReviews(reviewsRes.data);
+      setCoupons(couponsRes.data);
       setStatus("loaded");
     } catch (err) {
       logger.error("Dashboard data fetching error", err);
@@ -326,6 +331,11 @@ export default function AdminDashboardPage() {
       labelAr: "إدارة التقييمات",
       labelEn: "Client Reviews",
     },
+    {
+      id: "coupons" as const,
+      labelAr: "إدارة الكوبونات",
+      labelEn: "Coupons Management",
+    },
   ];
 
   return (
@@ -488,6 +498,23 @@ export default function AdminDashboardPage() {
                   />
                 </svg>
               )}
+              {item.id === "coupons" && (
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7 7h10M7 12h10m-8 5h8M15 3a2 2 0 012 2v14a2 2 0 01-2 2H9a2 2 0 01-2-2V5a2 2 0 012-2h6z"
+                  />
+                </svg>
+              )}
               <span className="truncate">{lang === "ar" ? item.labelAr : item.labelEn}</span>
             </button>
           ))}
@@ -564,9 +591,13 @@ export default function AdminDashboardPage() {
                     ? lang === "ar"
                       ? "إدارة القوالب"
                       : "Forms & Templates"
-                    : lang === "ar"
-                      ? "إدارة التقييمات"
-                      : "Client Reviews"}
+                    : activeTab === "reviews"
+                      ? lang === "ar"
+                        ? "إدارة التقييمات"
+                        : "Client Reviews"
+                      : lang === "ar"
+                        ? "إدارة الكوبونات"
+                        : "Coupons Management"}
           </span>
           <button
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
@@ -599,9 +630,13 @@ export default function AdminDashboardPage() {
                           ? lang === "ar"
                             ? "إدارة القوالب والنماذج"
                             : "Forms & Templates"
-                          : lang === "ar"
-                            ? "إدارة مراجعات العملاء"
-                            : "Client Reviews Management"}
+                          : activeTab === "reviews"
+                            ? lang === "ar"
+                              ? "إدارة مراجعات العملاء"
+                              : "Client Reviews Management"
+                            : lang === "ar"
+                              ? "إدارة كوبونات الخصم"
+                              : "Coupons Management"}
                 </h1>
                 <p className="text-[11px] text-neutral-400 mt-1 font-sans">
                   {activeTab === "overview"
@@ -620,9 +655,13 @@ export default function AdminDashboardPage() {
                           ? lang === "ar"
                             ? "إضافة وتعديل وحذف النماذج والقوالب المتوفرة على المنصة."
                             : "Configure templates, prices, preview images, and edit default categories."
-                          : lang === "ar"
-                            ? "عرض والبحث وحذف تقييمات العملاء للنماذج والخدمات."
-                            : "Browse, filter, and delete customer reviews and ratings."}
+                          : activeTab === "reviews"
+                            ? lang === "ar"
+                              ? "عرض والبحث وحذف تقييمات العملاء للنماذج والخدمات."
+                              : "Browse, filter, and delete customer reviews and ratings."
+                            : lang === "ar"
+                              ? "إضافة وتعديل وتفعيل أو تعطيل وحذف كوبونات الخصم المئوية."
+                              : "Add, edit, activate, deactivate, and soft-delete percentage discount coupons."}
                 </p>
               </div>
 
@@ -860,6 +899,15 @@ export default function AdminDashboardPage() {
                   <ReviewsTable
                     reviews={reviews}
                     onDeleteReview={handleDeleteReview}
+                  />
+                </div>
+              )}
+
+              {activeTab === "coupons" && (
+                <div className="animate-fadeIn">
+                  <CouponsTable
+                    coupons={coupons}
+                    onRefresh={fetchDashboardData}
                   />
                 </div>
               )}

@@ -29,6 +29,15 @@ export default function CheckoutModal({
   const [checkoutError, setCheckoutError] = useState("");
   const [purchaseLanguageMode] = useState("both");
 
+  // Coupon states
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountPercent: number;
+  } | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
+
   useEffect(() => {
     if (buyingTemplate && typeof window !== "undefined") {
       const userStr = localStorage.getItem("user");
@@ -42,10 +51,75 @@ export default function CheckoutModal({
       }
       setCheckoutSuccess(false);
       setCheckoutError("");
+      setCouponCodeInput("");
+      setAppliedCoupon(null);
+      setCouponError("");
     }
   }, [buyingTemplate]);
 
   if (!buyingTemplate) return null;
+
+  const originalPrice = Number(buyingTemplate.price) || 0;
+  const discountAmount = appliedCoupon
+    ? (originalPrice * appliedCoupon.discountPercent) / 100
+    : 0;
+  const finalPrice = Math.max(0, originalPrice - discountAmount);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim()) return;
+
+    setValidatingCoupon(true);
+    setCouponError("");
+
+    try {
+      const res = await api.post<{
+        valid: boolean;
+        code: string;
+        discountPercent: number;
+      }>("/coupons/validate", {
+        code: couponCodeInput.trim(),
+      });
+
+      if (res.data && res.data.valid) {
+        setAppliedCoupon({
+          code: res.data.code,
+          discountPercent: res.data.discountPercent,
+        });
+        setCouponError("");
+      }
+    } catch (err: any) {
+      logger.error("Failed to validate coupon", err);
+      setAppliedCoupon(null);
+      const msg = err?.response?.data?.message || "";
+      if (msg.includes("coupon_already_used_by_user") || msg.includes("already_used")) {
+        setCouponError(
+          lang === "ar"
+            ? "لقد استخدمت هذا الكوبون من قبل. لا يمكنك استخدامه أكثر من مرة."
+            : "You have already used this coupon code once."
+        );
+      } else if (msg.includes("coupon_limit_reached") || msg.includes("limit_reached")) {
+        setCouponError(
+          lang === "ar"
+            ? "تم الوصول للحد الأقصى لاستخدام هذا الكوبون."
+            : "This coupon has reached its maximum usage limit."
+        );
+      } else {
+        setCouponError(
+          lang === "ar"
+            ? "الكوبون غير صالح أو منتهي الصلاحية"
+            : "Invalid or expired coupon code"
+        );
+      }
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCodeInput("");
+    setCouponError("");
+  };
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +146,7 @@ export default function CheckoutModal({
         contactEmail: email,
         contactPhone: contactPhone.trim(),
         languageMode: purchaseLanguageMode,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       });
 
       // Synchronize phone number to localStorage user object if it was updated
@@ -172,6 +247,63 @@ export default function CheckoutModal({
                 dir="ltr"
               />
             </div>
+
+            {/* Coupon Code Section */}
+            <div>
+              <label htmlFor="couponInput" className="block text-xs font-semibold text-neutral-700 mb-1">
+                {lang === "ar" ? "كود الخصم (كوبون)" : "Coupon Code"}
+              </label>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-md uppercase font-mono">
+                      {appliedCoupon.code}
+                    </span>
+                    <span className="text-xs text-emerald-700 font-medium">
+                      {lang === "ar"
+                        ? `خصم ${appliedCoupon.discountPercent}% مطبق`
+                        : `${appliedCoupon.discountPercent}% discount applied`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-xs text-red-600 hover:text-red-800 font-medium underline"
+                  >
+                    {lang === "ar" ? "إلغاء" : "Remove"}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    id="couponInput"
+                    type="text"
+                    value={couponCodeInput}
+                    onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                    placeholder={lang === "ar" ? "أدخل الكوبون (مثلاً: mazoom)" : "Enter code (e.g. mazoom)"}
+                    className="flex-1 px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] font-mono uppercase"
+                    dir="ltr"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleApplyCoupon}
+                    isLoading={validatingCoupon}
+                    disabled={!couponCodeInput.trim() || validatingCoupon}
+                    className="!rounded-xl border-[#B89C72] text-[#B89C72] hover:bg-[#B89C72] hover:text-white shrink-0"
+                  >
+                    {lang === "ar" ? "تطبيق" : "Apply"}
+                  </Button>
+                </div>
+              )}
+
+              {couponError && (
+                <p className="text-[11px] text-red-600 mt-1 font-medium">
+                  {couponError}
+                </p>
+              )}
+            </div>
           </div>
 
           {checkoutError && (
@@ -185,9 +317,20 @@ export default function CheckoutModal({
               <span className="text-[10px] text-neutral-400 block">
                 {lang === "ar" ? "الإجمالي" : "Total Price"}
               </span>
-              <span className="text-base font-bold text-neutral-800">
-                {formatPrice(buyingTemplate.price)}
-              </span>
+              {appliedCoupon ? (
+                <div className="flex flex-col">
+                  <span className="text-xs text-neutral-400 line-through">
+                    {formatPrice(buyingTemplate.price)}
+                  </span>
+                  <span className="text-base font-bold text-emerald-600">
+                    {formatPrice(finalPrice)}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base font-bold text-neutral-800">
+                  {formatPrice(buyingTemplate.price)}
+                </span>
+              )}
             </div>
             <Button
               type="submit"

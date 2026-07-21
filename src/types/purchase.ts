@@ -54,12 +54,36 @@ export interface PurchaseData {
   invitation: PurchaseInvitation | null;
 }
 
+export interface Coupon {
+  id: string;
+  code: string;
+  discountPercent: number;
+  maxUses?: number | null;
+  usedCount?: number;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    purchaseRequests: number;
+  };
+}
+
 export interface PurchaseRequestData {
   id: string;
   templateId: string;
   contactEmail: string;
   contactPhone: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  couponId?: string | null;
+  couponCode?: string | null;
+  discountAmount?: number | string | null;
+  finalPrice?: number | string | null;
+  coupon?: {
+    id: string;
+    code: string;
+    discountPercent: number;
+  } | null;
   createdAt: string;
   template: PurchaseTemplate;
   purchase?: {

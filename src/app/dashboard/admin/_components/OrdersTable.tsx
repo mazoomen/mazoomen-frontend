@@ -27,6 +27,10 @@ export interface Order {
   userId: string;
   templateId: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  couponId?: string | null;
+  couponCode?: string | null;
+  discountAmount?: number | string | null;
+  finalPrice?: number | string | null;
   createdAt: string;
   user: OrderUser;
   template: OrderTemplate;
@@ -292,7 +296,21 @@ export default function OrdersTable({
                         </div>
                         <div>
                           <p className="font-semibold text-neutral-800">{order.template.title}</p>
-                          <p className="text-[10px] text-neutral-500 font-sans">{order.template.price} JOD</p>
+                          {order.couponCode ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] text-neutral-400 font-sans line-through">
+                                {order.template.price} JOD
+                              </span>
+                              <span className="text-[10px] text-emerald-600 font-bold font-sans">
+                                {order.finalPrice} JOD
+                              </span>
+                              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
+                                {order.couponCode}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-neutral-500 font-sans">{order.template.price} JOD</p>
+                          )}
                         </div>
                       </div>
                     </td>
