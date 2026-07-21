@@ -429,7 +429,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
           </div>
 
           {/* Wish entry list container */}
-          <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
+          <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px] no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {wishes.map((wish, index) => (
               <div
                 key={index}

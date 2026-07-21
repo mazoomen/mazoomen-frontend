@@ -1019,7 +1019,7 @@ export default function InvitationClientPageEmerald({
                   </p>
                 </div>
 
-                <div className="space-y-3 overflow-y-auto px-1 max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
+                <div className="space-y-3 overflow-y-auto px-1 max-h-[300px] no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {wishes.map((w, idx) => (
                     <div
                       key={idx}
@@ -1220,6 +1220,9 @@ export default function InvitationClientPageEmerald({
             transform: translateY(105vh) translateX(-20px) scale(0.5) rotate(240deg);
             opacity: 0;
           }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </main>

@@ -1122,7 +1122,7 @@ export default function InvitationClientPageGarden({
                   <p className="text-xs tracking-wider uppercase text-[#1B3222]/80 font-bold">{isEn ? "Guests wishes & congratulations" : "تبريكات وتهاني المهنئين"}</p>
                 </div>
 
-                <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
+                <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px] no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {wishes.map((wish, index) => (
                     <div
                       key={index}
