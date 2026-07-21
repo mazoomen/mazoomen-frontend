@@ -18,7 +18,9 @@ export default function CouponsTable({
   const { lang } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE" | "DELETED">("ALL");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "ALL" | "ACTIVE" | "INACTIVE" | "MAX_REACHED" | "DELETED"
+  >("ALL");
 
   // Modal State for Add / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,6 +72,18 @@ export default function CouponsTable({
 
     const parsedMaxUses = formMaxUses.trim() !== "" ? parseInt(formMaxUses.trim(), 10) : null;
 
+    if (editingCoupon && parsedMaxUses !== null) {
+      const currentUsed = editingCoupon.usedCount ?? 0;
+      if (parsedMaxUses < currentUsed) {
+        setFormError(
+          lang === "ar"
+            ? `الحد الأقصى للاستخدام لا يمكن أن يكون أقل من عدد الاستخدامات الحالية (${currentUsed})`
+            : `Max usage limit cannot be less than current usage count (${currentUsed})`
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
     setFormError("");
 
@@ -92,10 +106,20 @@ export default function CouponsTable({
       setIsModalOpen(false);
       onRefresh();
     } catch (err: any) {
-      setFormError(
-        err?.response?.data?.message ||
-          (lang === "ar" ? "حدث خطأ أثناء حفظ الكوبون" : "Failed to save coupon")
-      );
+      const msg = err?.response?.data?.message || "";
+      if (msg.includes("max_uses_cannot_be_less_than_used_count")) {
+        const count = msg.split("|")[1] || "";
+        setFormError(
+          lang === "ar"
+            ? `الحد الأقصى لا يمكن أن يكون أقل من عدد الاستخدامات الحالية (${count})`
+            : `Max usage limit cannot be less than current usage count (${count})`
+        );
+      } else {
+        setFormError(
+          msg ||
+            (lang === "ar" ? "حدث خطأ أثناء حفظ الكوبون" : "Failed to save coupon")
+        );
+      }
     } finally {
       setSubmitting(false);
     }
@@ -149,9 +173,21 @@ export default function CouponsTable({
   // Filter coupons
   const filteredCoupons = coupons.filter((coupon) => {
     // Filter by status
-    if (selectedFilter === "ACTIVE" && (!coupon.isActive || coupon.isDeleted))
+    if (
+      selectedFilter === "ACTIVE" &&
+      (!coupon.isActive ||
+        coupon.isDeleted ||
+        (coupon.maxUses != null && (coupon.usedCount ?? 0) >= coupon.maxUses))
+    )
       return false;
     if (selectedFilter === "INACTIVE" && (coupon.isActive || coupon.isDeleted))
+      return false;
+    if (
+      selectedFilter === "MAX_REACHED" &&
+      (coupon.maxUses == null ||
+        (coupon.usedCount ?? 0) < coupon.maxUses ||
+        coupon.isDeleted)
+    )
       return false;
     if (selectedFilter === "DELETED" && !coupon.isDeleted) return false;
 
@@ -186,22 +222,25 @@ export default function CouponsTable({
 
           {/* Filter Tabs */}
           <div className="flex items-center bg-[#FAF9F6] p-1 rounded-xl border border-[#E6E2DA] text-xs">
-            {(["ALL", "ACTIVE", "INACTIVE", "DELETED"] as const).map((filterKey) => (
-              <button
-                key={filterKey}
-                onClick={() => setSelectedFilter(filterKey)}
-                className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                  selectedFilter === filterKey
-                    ? "bg-white text-neutral-800 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-800"
-                }`}
-              >
-                {filterKey === "ALL" && (lang === "ar" ? "الكل" : "All")}
-                {filterKey === "ACTIVE" && (lang === "ar" ? "نشط" : "Active")}
-                {filterKey === "INACTIVE" && (lang === "ar" ? "غير نشط" : "Inactive")}
-                {filterKey === "DELETED" && (lang === "ar" ? "محذوف" : "Deleted")}
-              </button>
-            ))}
+            {(["ALL", "ACTIVE", "INACTIVE", "MAX_REACHED", "DELETED"] as const).map(
+              (filterKey) => (
+                <button
+                  key={filterKey}
+                  onClick={() => setSelectedFilter(filterKey)}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                    selectedFilter === filterKey
+                      ? "bg-white text-neutral-800 shadow-sm"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  {filterKey === "ALL" && (lang === "ar" ? "الكل" : "All")}
+                  {filterKey === "ACTIVE" && (lang === "ar" ? "نشط" : "Active")}
+                  {filterKey === "INACTIVE" && (lang === "ar" ? "غير نشط" : "Inactive")}
+                  {filterKey === "MAX_REACHED" && (lang === "ar" ? "مكتملة الحد" : "Max Reached")}
+                  {filterKey === "DELETED" && (lang === "ar" ? "محذوف" : "Deleted")}
+                </button>
+              )
+            )}
           </div>
         </div>
 
@@ -219,20 +258,20 @@ export default function CouponsTable({
       <div className="bg-white border border-[#E6E2DA] rounded-2xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-right text-xs">
-            <thead className="bg-[#FAF9F6] border-b border-[#E6E2DA] text-neutral-500 font-semibold uppercase tracking-wider">
+            <thead className="bg-[#FAF9F6] border-b border-[#E6E2DA] text-[#6B6661] font-semibold text-[11px] uppercase tracking-wider">
               <tr>
-                <th className="p-4">{lang === "ar" ? "الكود" : "Code"}</th>
-                <th className="p-4">{lang === "ar" ? "نسبة الخصم" : "Discount"}</th>
-                <th className="p-4">{lang === "ar" ? "الحالة" : "Status"}</th>
-                <th className="p-4">{lang === "ar" ? "الاستخدامات" : "Usage Count"}</th>
-                <th className="p-4">{lang === "ar" ? "تاريخ الإنشاء" : "Created Date"}</th>
-                <th className="p-4 text-center">{lang === "ar" ? "الإجراءات" : "Actions"}</th>
+                <th className="px-5 py-4">{lang === "ar" ? "الكود" : "Code"}</th>
+                <th className="px-5 py-4">{lang === "ar" ? "نسبة الخصم" : "Discount"}</th>
+                <th className="px-5 py-4">{lang === "ar" ? "الحالة" : "Status"}</th>
+                <th className="px-5 py-4">{lang === "ar" ? "الاستخدامات" : "Usage Count"}</th>
+                <th className="px-5 py-4">{lang === "ar" ? "تاريخ الإنشاء" : "Created Date"}</th>
+                <th className="px-5 py-4 text-center">{lang === "ar" ? "الإجراءات" : "Actions"}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E6E2DA]">
               {filteredCoupons.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-neutral-400">
+                  <td colSpan={6} className="text-center py-10 text-neutral-400">
                     {lang === "ar"
                       ? "لا توجد كوبونات مطابقة."
                       : "No coupons found."}
@@ -242,60 +281,83 @@ export default function CouponsTable({
                 filteredCoupons.map((coupon) => (
                   <tr
                     key={coupon.id}
-                    className={`hover:bg-[#FAF9F6]/50 transition-colors ${
+                    className={`hover:bg-[#FAF9F6]/60 transition-colors ${
                       coupon.isDeleted ? "bg-red-50/20" : ""
                     }`}
                   >
-                    <td className="p-4 font-mono font-bold text-neutral-800">
-                      <span className="bg-[#FAF9F6] border border-[#E6E2DA] px-2.5 py-1 rounded-lg text-sm tracking-wider uppercase text-neutral-900">
+                    {/* Code */}
+                    <td className="px-5 py-4 font-mono font-bold">
+                      <span className="inline-flex items-center px-3 py-1 bg-[#F4F1EA] border border-[#E6E2DA] text-[#2C2A29] text-xs font-mono font-bold rounded-lg tracking-wider uppercase shadow-2xs">
                         {coupon.code}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className="font-bold text-emerald-600 text-sm">
+
+                    {/* Discount */}
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-full bg-[#EBF3EE] text-[#2D5A43] border border-[#D5E6DC]">
                         {coupon.discountPercent}% OFF
                       </span>
                     </td>
-                    <td className="p-4">
+
+                    {/* Status */}
+                    <td className="px-5 py-4">
                       {coupon.isDeleted ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200/60">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                           {lang === "ar" ? "محذوف" : "Soft Deleted"}
                         </span>
                       ) : coupon.isActive ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           {lang === "ar" ? "نشط" : "Active"}
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                           {lang === "ar" ? "معطل" : "Inactive"}
                         </span>
                       )}
                     </td>
-                    <td className="p-4 font-medium text-neutral-600">
-                      <div className="flex flex-col">
-                        <span>
-                          {coupon.usedCount ?? coupon._count?.purchaseRequests ?? 0} /{" "}
-                          {coupon.maxUses != null ? coupon.maxUses : (lang === "ar" ? "غير محدود" : "∞")}
-                        </span>
-                        {coupon.maxUses != null && (coupon.usedCount ?? 0) >= coupon.maxUses && (
-                          <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 mt-0.5 inline-block w-fit">
-                            {lang === "ar" ? "تم الوصول للحد" : "Limit Reached"}
+
+                    {/* Usage Count */}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      {coupon.maxUses != null ? (
+                        (coupon.usedCount ?? 0) >= coupon.maxUses ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 border border-red-200/80 text-xs font-mono font-bold rounded-lg shadow-2xs">
+                            <span>
+                              {coupon.usedCount ?? 0} / {coupon.maxUses}
+                            </span>
+                            <span className="text-[10px] font-sans font-bold bg-red-100 text-red-800 px-1.5 py-0.2 rounded">
+                              {lang === "ar" ? "مكتمل" : "Max"}
+                            </span>
                           </span>
-                        )}
-                      </div>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 bg-[#F4F1EA] text-[#2C2A29] border border-[#E6E2DA] text-xs font-mono font-bold rounded-lg shadow-2xs">
+                            {coupon.usedCount ?? 0} / {coupon.maxUses}
+                          </span>
+                        )
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 bg-[#FAF9F6] text-neutral-600 border border-[#E6E2DA] text-xs font-mono font-medium rounded-lg shadow-2xs">
+                          {coupon.usedCount ?? 0} / {lang === "ar" ? "غير محدود" : "Unlimited"}
+                        </span>
+                      )}
                     </td>
-                    <td className="p-4 text-neutral-400 font-mono text-[11px]">
+
+                    {/* Created Date */}
+                    <td className="px-5 py-4 text-neutral-500 font-mono text-xs whitespace-nowrap">
                       {new Date(coupon.createdAt).toLocaleDateString(
                         lang === "ar" ? "ar-SA" : "en-US"
                       )}
                     </td>
-                    <td className="p-4">
+
+                    {/* Actions */}
+                    <td className="px-5 py-4">
                       <div className="flex items-center justify-center gap-2">
                         {coupon.isDeleted ? (
                           <button
                             onClick={() => handleRestore(coupon)}
                             disabled={actionLoadingId === coupon.id}
-                            className="px-2.5 py-1 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg text-xs font-semibold hover:bg-emerald-100"
+                            className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-xl text-xs font-medium transition-all shadow-2xs"
                           >
                             {lang === "ar" ? "استعادة" : "Restore"}
                           </button>
@@ -303,17 +365,17 @@ export default function CouponsTable({
                           <>
                             <button
                               onClick={() => openEditModal(coupon)}
-                              className="px-2.5 py-1 bg-neutral-100 text-neutral-700 border border-neutral-200 rounded-lg text-xs font-semibold hover:bg-neutral-200"
+                              className="px-3 py-1.5 bg-white hover:bg-[#F4F1EA] text-[#2C2A29] border border-[#E6E2DA] rounded-xl text-xs font-medium transition-all shadow-2xs"
                             >
                               {lang === "ar" ? "تعديل" : "Edit"}
                             </button>
                             <button
                               onClick={() => handleToggleActive(coupon)}
                               disabled={actionLoadingId === coupon.id}
-                              className={`px-2.5 py-1 border rounded-lg text-xs font-semibold transition-colors ${
+                              className={`px-3 py-1.5 border rounded-xl text-xs font-medium transition-all shadow-2xs ${
                                 coupon.isActive
-                                  ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
-                                  : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                                  ? "bg-white hover:bg-amber-50 text-amber-700 border-amber-200/80"
+                                  : "bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-200/80"
                               }`}
                             >
                               {coupon.isActive
@@ -327,7 +389,7 @@ export default function CouponsTable({
                             <button
                               onClick={() => handleSoftDelete(coupon)}
                               disabled={actionLoadingId === coupon.id}
-                              className="px-2.5 py-1 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-semibold hover:bg-red-100"
+                              className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200/80 rounded-xl text-xs font-medium transition-all shadow-2xs"
                             >
                               {lang === "ar" ? "حذف" : "Delete"}
                             </button>
@@ -396,16 +458,31 @@ export default function CouponsTable({
             <div>
               <label className="block text-xs font-semibold text-neutral-700 mb-1">
                 {lang === "ar"
-                  ? "نسبة الخصم المئوية (%)"
-                  : "Discount Percentage (%)"}
+                  ? "نسبة الخصم المئوية (%) (من 1 إلى 100)"
+                  : "Discount Percentage (%) (1 to 100)"}
               </label>
               <input
                 type="number"
                 min={1}
                 max={100}
                 required
-                value={formDiscountPercent}
-                onChange={(e) => setFormDiscountPercent(Number(e.target.value))}
+                value={formDiscountPercent === 0 ? "" : formDiscountPercent}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    setFormDiscountPercent(0);
+                    return;
+                  }
+                  const parsed = parseInt(raw, 10);
+                  if (isNaN(parsed)) return;
+                  if (parsed > 100) {
+                    setFormDiscountPercent(100);
+                  } else if (parsed < 1) {
+                    setFormDiscountPercent(1);
+                  } else {
+                    setFormDiscountPercent(parsed);
+                  }
+                }}
                 placeholder="50"
                 className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] font-mono"
                 dir="ltr"
@@ -420,13 +497,20 @@ export default function CouponsTable({
               </label>
               <input
                 type="number"
-                min={1}
+                min={editingCoupon ? (editingCoupon.usedCount ?? 1) : 1}
                 value={formMaxUses}
                 onChange={(e) => setFormMaxUses(e.target.value)}
                 placeholder={lang === "ar" ? "مثلاً: 3 (اختياري)" : "e.g. 3 (optional)"}
                 className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] font-mono"
                 dir="ltr"
               />
+              {editingCoupon && (editingCoupon.usedCount ?? 0) > 0 && (
+                <p className="text-[10px] text-amber-700 mt-1 font-medium">
+                  {lang === "ar"
+                    ? `تم استخدام الكوبون ${editingCoupon.usedCount} مرة. لا يمكن تقليل الحد الأقصى لأقل من ${editingCoupon.usedCount}.`
+                    : `Coupon has been used ${editingCoupon.usedCount} times. Max limit cannot be set lower than ${editingCoupon.usedCount}.`}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-2 pt-2">

@@ -26,6 +26,7 @@ export default function CheckoutModal({
   const [contactPhone, setContactPhone] = useState("");
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [isInstantApproved, setIsInstantApproved] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [purchaseLanguageMode] = useState("both");
 
@@ -50,6 +51,7 @@ export default function CheckoutModal({
         }
       }
       setCheckoutSuccess(false);
+      setIsInstantApproved(false);
       setCheckoutError("");
       setCouponCodeInput("");
       setAppliedCoupon(null);
@@ -141,13 +143,16 @@ export default function CheckoutModal({
         } catch {}
       }
 
-      await api.post("/purchase-requests", {
+      const res = await api.post("/purchase-requests", {
         templateId: buyingTemplate.id,
         contactEmail: email,
         contactPhone: contactPhone.trim(),
         languageMode: purchaseLanguageMode,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       });
+
+      const autoApproved = res.data?.status === "APPROVED" || finalPrice === 0;
+      setIsInstantApproved(autoApproved);
 
       // Synchronize phone number to localStorage user object if it was updated
       if (userStr) {
@@ -163,7 +168,7 @@ export default function CheckoutModal({
       setCheckoutSuccess(true);
       setTimeout(() => {
         onClose();
-        router.push("/dashboard/client/orders");
+        router.push(autoApproved ? "/dashboard/client" : "/dashboard/client/orders");
       }, 1500);
     } catch (err) {
       const error = err as AxiosError<{ message?: string }>;
@@ -207,10 +212,20 @@ export default function CheckoutModal({
             </svg>
           </div>
           <h3 className="text-lg font-bold text-neutral-800">
-            {lang === "ar" ? "تم تقديم طلبك بنجاح!" : "Order Submitted Successfully!"}
+            {isInstantApproved
+              ? lang === "ar"
+                ? "تم شراء وتفعيل القالب بنجاح!"
+                : "Template Unlocked & Activated!"
+              : lang === "ar"
+              ? "تم تقديم طلبك بنجاح!"
+              : "Order Submitted Successfully!"}
           </h3>
           <p className="text-xs text-neutral-500 leading-relaxed max-w-xs mx-auto">
-            {lang === "ar"
+            {isInstantApproved
+              ? lang === "ar"
+                ? "تم تطبيق الخصم بنسبة 100% وتفعيل القالب في حسابك مباشرة بدون انتظار موافقة الإدارة. يمكنك الآن بدء تعديل دعوتك!"
+                : "100% discount applied and template activated immediately in your account. You can now start customizing your invitation!"
+              : lang === "ar"
               ? "لقد تم تسجيل طلب الشراء للقالب بنجاح. سيقوم المسؤول بمراجعته وتفعيله لك قريباً."
               : "Your template purchase request has been submitted. The administrator will review and activate it shortly."}
           </p>
