@@ -588,7 +588,15 @@ export default function InvitationClientPageFlow({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled lavender seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/flow-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.60)' }} textColor="#B07070" />
+      <EnvelopeOverlay
+        eventTitle={eventTitle}
+        onOpen={handleOpenInvitation}
+        sealImage="/images/flow-seal.png"
+        viewingLang={isEn ? "en" : "ar"}
+        customSealStyle={{ transform: 'translate(0px, -1px) scale(1.60)' }}
+        textColor="#B07070"
+        videoUrl={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
+      />
 
       {/* Falling Leaves and Petals Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">

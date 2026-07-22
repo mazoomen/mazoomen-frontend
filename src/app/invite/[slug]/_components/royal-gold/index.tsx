@@ -146,7 +146,15 @@ export default function InvitationClientPageRoyalGold({
       )}
 
       {/* Wax seal cover splitting envelope */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/royal-gold-seal.png" viewingLang={viewingLang} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.20)' }} textColor="#ac8c60" />
+      <EnvelopeOverlay
+        eventTitle={eventTitle}
+        onOpen={handleOpenInvitation}
+        sealImage="/images/royal-gold-seal.png"
+        viewingLang={viewingLang}
+        customSealStyle={{ transform: 'translate(0px, -1px) scale(1.20)' }}
+        textColor="#ac8c60"
+        videoUrl={`${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`}
+      />
 
       {/* Snowfall Animation overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
@@ -172,6 +180,7 @@ export default function InvitationClientPageRoyalGold({
           eventDate={invitation.eventDate}
           isOpen={isOpen}
           viewingLang={viewingLang}
+          videoUrl={`${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`}
         />
 
         {/* Invitation Text Card, Location details & Countdown widgets */}

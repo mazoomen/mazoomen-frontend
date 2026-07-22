@@ -9,6 +9,7 @@ interface EnvelopeOverlayProps {
   viewingLang?: string;
   customSealStyle?: React.CSSProperties;
   textColor?: string;
+  videoUrl?: string | string[];
 }
 
 // Floating gold particle type
@@ -27,7 +28,8 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
   sealImage = "/images/royal-gold-seal.png",
   viewingLang,
   customSealStyle,
-  textColor
+  textColor,
+  videoUrl
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -40,9 +42,55 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
   const [flashFade, setFlashFade] = useState(false);
   const [showEnvelope, setShowEnvelope] = useState(true);
 
+  // Video ready & preloading states
+  const primaryVideoUrl = Array.isArray(videoUrl) ? videoUrl[0] : videoUrl;
+  const [videoReady, setVideoReady] = useState<boolean>(!primaryVideoUrl);
+  const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(false);
+  const [openRequested, setOpenRequested] = useState<boolean>(false);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Preload video automatically in background
+  useEffect(() => {
+    if (!primaryVideoUrl || typeof window === 'undefined') {
+      setVideoReady(true);
+      return;
+    }
+
+    let isMounted = true;
+    const video = document.createElement('video');
+    video.src = primaryVideoUrl;
+    video.preload = 'auto';
+    video.muted = true;
+    video.playsInline = true;
+
+    const handleReady = () => {
+      if (isMounted) {
+        setVideoReady(true);
+      }
+    };
+
+    if (video.readyState >= 3) {
+      handleReady();
+    } else {
+      video.addEventListener('canplaythrough', handleReady);
+      video.addEventListener('canplay', handleReady);
+      video.addEventListener('loadeddata', handleReady);
+      video.addEventListener('error', handleReady);
+    }
+
+    return () => {
+      isMounted = false;
+      video.removeEventListener('canplaythrough', handleReady);
+      video.removeEventListener('canplay', handleReady);
+      video.removeEventListener('loadeddata', handleReady);
+      video.removeEventListener('error', handleReady);
+      video.removeAttribute('src');
+      video.load();
+    };
+  }, [primaryVideoUrl]);
 
   const isEn = viewingLang === "en";
 
@@ -59,7 +107,7 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
     }));
   }, [isClient]);
 
-  const handleOpen = () => {
+  const startOpeningAnimation = () => {
     if (isOpen) return;
     setIsOpen(true);
     onOpen();
@@ -88,6 +136,32 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
       setIsDone(true);
     }, 2500);
   };
+
+  const handleOpen = () => {
+    if (isOpen || openRequested) return;
+
+    if (!videoReady && primaryVideoUrl) {
+      setOpenRequested(true);
+      setIsLoadingVideo(true);
+
+      // Safety timeout: 7 seconds fallback if network is extremely slow
+      setTimeout(() => {
+        setVideoReady(true);
+      }, 7000);
+
+      return;
+    }
+
+    startOpeningAnimation();
+  };
+
+  // Automatically open when video becomes ready after click
+  useEffect(() => {
+    if (openRequested && videoReady && !isOpen) {
+      setIsLoadingVideo(false);
+      startOpeningAnimation();
+    }
+  }, [openRequested, videoReady, isOpen]);
 
   // Helper to split couple names from eventTitle 
   const getCoupleNames = (title: string) => {
@@ -491,6 +565,63 @@ export const EnvelopeOverlay: React.FC<EnvelopeOverlayProps> = ({
               loading="eager"
             />
           </button>
+        )}
+
+        {/* VIDEO LOADING INDICATOR (Shown when user clicks open while video is downloading over slow network) */}
+        {isLoadingVideo && !isOpen && (
+          <div
+            className="envelope-video-loader"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '68%',
+              transform: 'translateX(-50%)',
+              zIndex: 30,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              pointerEvents: 'none',
+              animation: 'fadeIn 0.4s ease-out',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 20px',
+                borderRadius: '9999px',
+                background: 'rgba(20, 15, 10, 0.75)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(200, 160, 60, 0.45)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), 0 0 15px rgba(200, 160, 60, 0.25)',
+              }}
+            >
+              <div
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  border: '2px solid rgba(200, 160, 60, 0.25)',
+                  borderTopColor: '#f5e3b5',
+                  animation: 'spin 0.8s linear infinite',
+                }}
+              />
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#f5e3b5',
+                  letterSpacing: isEn ? '0.04em' : 'normal',
+                  whiteSpace: 'nowrap',
+                  fontFamily: isEn ? "'Cinzel', sans-serif" : "'Tajawal', 'Cairo', sans-serif",
+                }}
+              >
+                {isEn ? "Loading invitation ..." : "جاري تحميل الدعوة ..."}
+              </span>
+            </div>
+          </div>
         )}
 
         {/* LIGHT RAYS BEAMING FROM THE SEAL — wider, more dramatic golden rays */}

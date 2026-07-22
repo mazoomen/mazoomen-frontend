@@ -480,6 +480,7 @@ export default function InvitationClientPageEmerald({
           transform: 'translate(0px, -1px) scale(1.85)',
         }}
         textColor="#c5a880"
+        videoUrl={`${S3_BASE_URL}/templates/videos/emerald-bg-1_e216a5a4.mp4`}
       />
 
       {/* Content Container */}

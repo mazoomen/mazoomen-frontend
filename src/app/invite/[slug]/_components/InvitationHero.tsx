@@ -8,9 +8,16 @@ interface InvitationHeroProps {
   eventDate: string;
   isOpen: boolean;
   viewingLang?: string;
+  videoUrl?: string;
 }
 
-export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, eventDate, isOpen, viewingLang }) => {
+export const InvitationHero: React.FC<InvitationHeroProps> = ({
+  eventTitle,
+  eventDate,
+  isOpen,
+  viewingLang,
+  videoUrl = `${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const isEn = viewingLang === "en";
 
@@ -61,7 +68,7 @@ export const InvitationHero: React.FC<InvitationHeroProps> = ({ eventTitle, even
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <video
           ref={videoRef}
-          src={`${S3_BASE_URL}/templates/videos/939bfcb40_CopyofCopyofdesign1_773e1ce7.mp4`}
+          src={videoUrl}
           autoPlay
           loop
           playsInline

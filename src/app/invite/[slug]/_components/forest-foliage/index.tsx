@@ -588,7 +588,15 @@ export default function InvitationClientPageForestFoliage({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled white/silver seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/forest-foliage-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.40)' }} textColor="#103020" />
+      <EnvelopeOverlay
+        eventTitle={eventTitle}
+        onOpen={handleOpenInvitation}
+        sealImage="/images/forest-foliage-seal.png"
+        viewingLang={isEn ? "en" : "ar"}
+        customSealStyle={{ transform: 'translate(0px, -1px) scale(1.40)' }}
+        textColor="#103020"
+        videoUrl={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
+      />
 
       {/* Falling Flowers Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
