@@ -21,7 +21,7 @@ export default function CheckoutModal({
 }: CheckoutModalProps) {
   const router = useRouter();
   const { t, lang } = useLanguage();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency, rate } = useCurrency();
 
   const [contactPhone, setContactPhone] = useState("");
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
@@ -61,11 +61,12 @@ export default function CheckoutModal({
 
   if (!buyingTemplate) return null;
 
-  const originalPrice = Number(buyingTemplate.price) || 0;
-  const discountAmount = appliedCoupon
-    ? (originalPrice * appliedCoupon.discountPercent) / 100
+  const originalPriceInJod = Number(buyingTemplate.price) || 0;
+  const discountAmountJod = appliedCoupon
+    ? (originalPriceInJod * appliedCoupon.discountPercent) / 100
     : 0;
-  const finalPrice = Math.max(0, originalPrice - discountAmount);
+  const finalPriceJod = Math.max(0, originalPriceInJod - discountAmountJod);
+  const finalPriceInCurrency = finalPriceJod * (rate || 1.0);
 
   const handleApplyCoupon = async () => {
     if (!couponCodeInput.trim()) return;
@@ -135,26 +136,20 @@ export default function CheckoutModal({
 
     try {
       const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      let email = "user@example.com";
+      let email = "customer@example.com";
+      let customerName = "Customer";
+
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
-          email = user.email || "user@example.com";
+          email = user.email || "customer@example.com";
+          if (user.firstName || user.lastName) {
+            customerName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+          }
         } catch {}
       }
 
-      const res = await api.post("/purchase-requests", {
-        templateId: buyingTemplate.id,
-        contactEmail: email,
-        contactPhone: contactPhone.trim(),
-        languageMode: purchaseLanguageMode,
-        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
-      });
-
-      const autoApproved = res.data?.status === "APPROVED" || finalPrice === 0;
-      setIsInstantApproved(autoApproved);
-
-      // Synchronize phone number to localStorage user object if it was updated
+      // Synchronize phone number to localStorage user object if updated
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
@@ -165,20 +160,68 @@ export default function CheckoutModal({
         } catch {}
       }
 
-      setCheckoutSuccess(true);
-      setTimeout(() => {
-        onClose();
-        router.push(autoApproved ? "/dashboard/client" : "/dashboard/client/orders");
-      }, 1500);
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      logger.error("Failed to submit purchase request", err);
-      setCheckoutError(
-        error.response?.data?.message ||
-          (lang === "ar"
-            ? "فشل تقديم طلب الشراء. يرجى المحاولة مرة أخرى."
-            : "Failed to submit purchase request. Please try again.")
-      );
+      // 1. Free purchase (final price === 0 due to 100% coupon or 0 base price)
+      if (finalPriceJod === 0) {
+        const res = await api.post("/purchase-requests", {
+          templateId: buyingTemplate.id,
+          contactEmail: email,
+          contactPhone: contactPhone.trim(),
+          languageMode: purchaseLanguageMode,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        });
+
+        const autoApproved = res.data?.status === "APPROVED" || finalPriceJod === 0;
+        setIsInstantApproved(autoApproved);
+        setCheckoutSuccess(true);
+        setTimeout(() => {
+          onClose();
+          router.push(autoApproved ? "/dashboard/client" : "/dashboard/client/orders");
+        }, 1500);
+      } else {
+        // 2. Paid purchase (final price > 0): Create Tap Charge & Redirect to Tap Checkout URL
+        const precision = ["JOD", "KWD", "BHD", "OMR"].includes(currency) ? 3 : 2;
+        const chargeAmount = Number(finalPriceInCurrency.toFixed(precision));
+
+        const res = await api.post<{ checkoutUrl: string; orderId: string }>(
+          "/payment/create-charge",
+          {
+            customerName,
+            customerEmail: email,
+            templateDetails: {
+              templateId: buyingTemplate.id,
+              templateTitle: buyingTemplate.title,
+              contactPhone: contactPhone.trim(),
+              couponCode: appliedCoupon?.code,
+              languageMode: purchaseLanguageMode,
+            },
+            amount: chargeAmount,
+            currency: currency || "JOD",
+          }
+        );
+
+        if (res.data?.checkoutUrl && res.data?.orderId) {
+          // Close modal and navigate to custom styled payment page (/payment/checkout)
+          onClose();
+          router.push(
+            `/payment/checkout?orderId=${res.data.orderId}&checkoutUrl=${encodeURIComponent(res.data.checkoutUrl)}`
+          );
+        } else {
+          throw new Error(
+            lang === "ar"
+              ? "لم يتم استلام رابط صفحة الدفع من بوابة الدفع."
+              : "Did not receive checkout URL from payment gateway."
+          );
+        }
+      }
+    } catch (err: any) {
+      logger.error("Failed to submit checkout", err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        (lang === "ar"
+          ? "فشل البدء بعملية الدفع. يرجى المحاولة مرة أخرى."
+          : "Failed to initiate payment. Please try again.");
+      setCheckoutError(errorMsg);
     } finally {
       setCheckoutSubmitting(false);
     }
@@ -338,7 +381,7 @@ export default function CheckoutModal({
                     {formatPrice(buyingTemplate.price)}
                   </span>
                   <span className="text-base font-bold text-emerald-600">
-                    {formatPrice(finalPrice)}
+                    {formatPrice(finalPriceJod)}
                   </span>
                 </div>
               ) : (
@@ -354,7 +397,13 @@ export default function CheckoutModal({
               isLoading={checkoutSubmitting}
               className="flex-1 !rounded-xl"
             >
-              {lang === "ar" ? "تأكيد طلب الشراء" : "Confirm Purchase"}
+              {finalPriceJod === 0
+                ? lang === "ar"
+                  ? "تأكيد طلب الشراء (مجاناً)"
+                  : "Confirm Purchase (Free)"
+                : lang === "ar"
+                ? "الانتقال إلى الدفع"
+                : "Proceed to Payment"}
             </Button>
           </div>
         </form>
