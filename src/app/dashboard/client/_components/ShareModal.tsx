@@ -13,20 +13,98 @@ interface ShareModalProps {
   slug: string;
 }
 
-export function generateQrCodeFile(url: string, filename = "invitation-qr.png") {
-  return QRCode.toDataURL(url, {
-    width: 600,
+export async function generateQrCodeFile(
+  url: string,
+  filename = "invitation-qr.png",
+  logoUrl = "/favicon.ico"
+): Promise<{ dataUrl: string; blob: Blob; file: File }> {
+  const size = 600;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  // Render QR code with High ('H') error correction level
+  await QRCode.toCanvas(canvas, url, {
+    width: size,
     margin: 2,
+    errorCorrectionLevel: "H",
     color: {
-      dark: "#0B1528",
-      light: "#FFFFFF",
+      dark: "#0B1528",  // Mazoom signature navy
+      light: "#FFFFFF", // Crisp white background
     },
-  }).then(async (dataUrl) => {
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], filename, { type: "image/png" });
-    return { dataUrl, blob, file };
   });
+
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    const center = size / 2;
+    const badgeRadius = Math.floor(size * 0.125); // ~75px radius
+    const logoRadius = Math.floor(size * 0.095);   // ~57px radius
+
+    ctx.save();
+
+    // Outer gold border ring (#E5C38B)
+    ctx.beginPath();
+    ctx.arc(center, center, badgeRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#E5C38B";
+    ctx.stroke();
+
+    // Inner subtle navy ring (#0B1528)
+    ctx.beginPath();
+    ctx.arc(center, center, badgeRadius - 4, 0, Math.PI * 2);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#0B1528";
+    ctx.stroke();
+
+    // Draw centered logo image
+    try {
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
+
+      const loaded = await new Promise<boolean>((resolve) => {
+        logoImg.onload = () => resolve(true);
+        logoImg.onerror = () => resolve(false);
+        logoImg.src = logoUrl;
+      });
+
+      if (loaded && logoImg.naturalWidth > 0) {
+        ctx.beginPath();
+        ctx.arc(center, center, logoRadius, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(
+          logoImg,
+          center - logoRadius,
+          center - logoRadius,
+          logoRadius * 2,
+          logoRadius * 2
+        );
+      } else {
+        // Fallback Mazoom Monogram
+        ctx.fillStyle = "#0B1528";
+        ctx.font = "bold 56px serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("M", center, center);
+      }
+    } catch {
+      ctx.fillStyle = "#0B1528";
+      ctx.font = "bold 56px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("M", center, center);
+    }
+
+    ctx.restore();
+  }
+
+  const dataUrl = canvas.toDataURL("image/png");
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const file = new File([blob], filename, { type: "image/png" });
+
+  return { dataUrl, blob, file };
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({
@@ -117,9 +195,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-6 py-4 bg-[#FAF8F5] border-b border-neutral-200/80 flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#FAF8F5] border-b border-[#E5C38B]/30 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#0B1528]/5 flex items-center justify-center text-[#0B1528]">
+            <div className="w-8 h-8 rounded-full bg-[#0B1528] text-[#E5C38B] flex items-center justify-center shadow-xs">
               <Share2 className="w-4 h-4" />
             </div>
             <div>
@@ -138,23 +216,24 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
-          {/* QR Code Container */}
-          <div className="flex flex-col items-center justify-center p-5 bg-neutral-50 rounded-xl border border-neutral-200/60 shadow-xs">
+          {/* Branded QR Code Container */}
+          <div className="flex flex-col items-center justify-center p-5 bg-[#FAF8F5] rounded-2xl border border-[#E5C38B]/40 shadow-xs relative overflow-hidden">
             {qrDataUrl ? (
-              <div className="p-3 bg-white rounded-xl shadow-md border border-neutral-100 mb-3">
+              <div className="p-3 bg-white rounded-2xl shadow-md border border-[#E5C38B]/30 mb-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrDataUrl}
                   alt="Invitation QR Code"
-                  className="w-44 h-44 object-contain"
+                  className="w-48 h-48 object-contain rounded-xl"
                 />
               </div>
             ) : (
-              <div className="w-44 h-44 flex items-center justify-center bg-white rounded-xl border border-neutral-200 mb-3">
-                <div className="w-8 h-8 border-2 border-[#0B1528] border-t-transparent rounded-full animate-spin" />
+              <div className="w-48 h-48 flex items-center justify-center bg-white rounded-2xl border border-neutral-200 mb-3">
+                <div className="w-8 h-8 border-2 border-[#0B1528] border-t-[#E5C38B] rounded-full animate-spin" />
               </div>
             )}
-            <p className="text-xs font-semibold text-neutral-600 text-center">
+            <p className="text-xs font-semibold text-[#0B1528] text-center flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E5C38B]" />
               {t("Scan QR Code to view invitation")}
             </p>
           </div>
