@@ -110,6 +110,17 @@ export const translations: Record<string, Record<Language, string>> = {
   "All fields are required.": { en: "All fields are required.", ar: "جميع الحقول مطلوبة." },
   "Password must be at least 8 characters.": { en: "Password must be at least 8 characters.", ar: "يجب أن تكون كلمة المرور من 8 أحرف على الأقل." },
   "Registration failed. Please try again.": { en: "Registration failed. Please try again.", ar: "فشل التسجيل. يرجى المحاولة مرة أخرى." },
+  "Password Requirements:": { en: "Password Requirements:", ar: "شروط كلمة المرور:" },
+  "At least 8 characters": { en: "At least 8 characters", ar: "8 أحرف على الأقل" },
+  "At least one uppercase letter (A-Z)": { en: "At least one uppercase letter (A-Z)", ar: "حرف كبير واحد على الأقل (A-Z)" },
+  "At least one lowercase letter (a-z)": { en: "At least one lowercase letter (a-z)", ar: "حرف صغير واحد على الأقل (a-z)" },
+  "At least one number or symbol": { en: "At least one number or symbol", ar: "رقم أو رمز خاص واحد على الأقل" },
+  "Confirm Password": { en: "Confirm Password", ar: "تأكيد كلمة المرور" },
+  "Passwords match": { en: "Passwords match", ar: "كلمتا المرور متطابقتان" },
+  "Passwords do not match": { en: "Passwords do not match", ar: "كلمتا المرور غير متطابقتين" },
+  "Please confirm your password.": { en: "Please confirm your password.", ar: "يرجى تأكيد كلمة المرور." },
+  "Passwords do not match. Please try again.": { en: "Passwords do not match. Please try again.", ar: "كلمتا المرور غير متطابقتين. يرجى المحاولة مرة أخرى." },
+  "errors.password_weak": { en: "Password is too weak. Please ensure all password requirements are met.", ar: "كلمة المرور غير مستوفية للشروط. يرجى التأكد من استيفاء جميع شروط كلمة المرور." },
 
   // Catalog templates translations
   "دعوة زفاف أنيقة": { en: "Elegant Wedding Invitation", ar: "دعوة زفاف أنيقة" },

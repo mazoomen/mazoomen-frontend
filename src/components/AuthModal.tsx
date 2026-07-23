@@ -73,11 +73,21 @@ export default function AuthModal({
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+
+  // Password complexity checks for registration
+  const hasMinLength = regPassword.length >= 8;
+  const hasUpper = /[A-Z]/.test(regPassword);
+  const hasLower = /[a-z]/.test(regPassword);
+  const hasNumberOrSpecial = /[0-9\W]/.test(regPassword);
+  const isPasswordValid = hasMinLength && hasUpper && hasLower && hasNumberOrSpecial;
+  const passwordsMatch = regPassword.length > 0 && regConfirmPassword.length > 0 && regPassword === regConfirmPassword;
 
   useEffect(() => {
     if (isOpen) {
       setAuthMode(initialMode);
       setAuthError("");
+      setRegConfirmPassword("");
     }
   }, [isOpen, initialMode]);
 
@@ -231,14 +241,20 @@ export default function AuthModal({
       !regLastName.trim() ||
       !regEmail.trim() ||
       !regPhone.trim() ||
-      !regPassword
+      !regPassword ||
+      !regConfirmPassword
     ) {
       setAuthError(t("All fields are required."));
       return;
     }
 
-    if (regPassword.length < 8) {
-      setAuthError(t("Password must be at least 8 characters."));
+    if (!isPasswordValid) {
+      setAuthError(t("errors.password_weak"));
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setAuthError(t("Passwords do not match. Please try again."));
       return;
     }
 
@@ -288,7 +304,7 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -299,44 +315,50 @@ export default function AuthModal({
       aria-modal="true"
       aria-label={authMode === "login" ? t("Login") : t("Register")}
     >
-      <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-sm w-full p-8 shadow-2xl relative flex flex-col items-center">
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            onClose();
-            setAuthError("");
-          }}
-          className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors cursor-pointer"
-          aria-label="Close dialog"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-
-        {/* Decorative elements */}
-        <div className="hidden sm:flex absolute left-[-28px] top-[30%] -rotate-12 w-14 h-14 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 items-center justify-center z-10">
+      {/* Outer Container enabling floating cards outside modal without clipping */}
+      <div className="relative max-w-sm sm:max-w-md w-full my-auto shrink-0 py-2">
+        {/* Floating Decorative Badges */}
+        <div className="hidden sm:flex absolute -left-5 sm:-left-7 top-[28%] -rotate-12 w-13 h-13 sm:w-14 sm:h-14 bg-white border border-[#E9E4DC] rounded-2xl shadow-xl p-1.5 items-center justify-center z-20 pointer-events-none">
           <span className="text-2xl select-none" aria-hidden="true">🎂</span>
         </div>
-        <div className="hidden sm:flex absolute right-[-24px] bottom-[15%] rotate-6 w-16 h-20 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 flex-col justify-between z-10">
-          <div className="w-full h-[65%] rounded bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl" aria-hidden="true">
+        <div className="hidden sm:flex absolute -right-4 sm:-right-6 bottom-[12%] rotate-6 w-14 h-18 sm:w-16 sm:h-20 bg-white border border-[#E9E4DC] rounded-2xl shadow-xl p-1.5 flex-col justify-between z-20 pointer-events-none">
+          <div className="w-full h-[65%] rounded-xl bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl" aria-hidden="true">
             🎈
           </div>
           <div className="flex items-center justify-center select-none text-sm leading-none -mt-1 font-serif text-black" aria-hidden="true">
             🧑‍🤝‍🧑
           </div>
         </div>
+
+        {/* Inner Modal Card Container with Rounded Corners & Clipping */}
+        <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[28px] sm:rounded-[32px] w-full shadow-2xl relative flex flex-col max-h-[85vh] sm:max-h-[88vh] overflow-hidden">
+          {/* Close Button */}
+          <button
+            onClick={() => {
+              onClose();
+              setAuthError("");
+            }}
+            className="absolute top-4 right-4 rtl:right-auto rtl:left-4 text-neutral-400 hover:text-black transition-colors cursor-pointer p-1.5 rounded-full hover:bg-neutral-200/50 z-30"
+            aria-label="Close dialog"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+          {/* Inner Scroll Body */}
+          <div className="w-full h-full overflow-y-auto custom-scrollbar p-5 sm:p-7 flex flex-col items-center">
 
         {/* Capsule tabs */}
         <div
@@ -521,6 +543,76 @@ export default function AuthModal({
                 placeholder={t("Password (Min. 8 characters)")}
                 disabled={authSubmitting}
               />
+
+              <PasswordInput
+                value={regConfirmPassword}
+                onChange={setRegConfirmPassword}
+                placeholder={t("Confirm Password")}
+                disabled={authSubmitting}
+              />
+
+              {/* Dynamic Password Requirement Checklist */}
+              <div className="bg-[#FAF7F2] border border-[#EBE6DC] rounded-xl p-3 text-[11px] space-y-1.5 transition-all text-left rtl:text-right">
+                <p className="font-semibold text-neutral-700 text-[11px] mb-1">
+                  {t("Password Requirements:")}
+                </p>
+                <ul className="space-y-1.5">
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasMinLength ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasMinLength ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasMinLength ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least 8 characters")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasUpper ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasUpper ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasUpper ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least one uppercase letter (A-Z)")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasLower ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasLower ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasLower ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least one lowercase letter (a-z)")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasNumberOrSpecial ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasNumberOrSpecial ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasNumberOrSpecial ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least one number or symbol")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    passwordsMatch ? "text-emerald-700 font-medium" : regConfirmPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      passwordsMatch ? "bg-emerald-100 text-emerald-700" : regConfirmPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {passwordsMatch ? "✓" : "✕"}
+                    </span>
+                    <span>{regConfirmPassword && !passwordsMatch ? t("Passwords do not match") : t("Passwords match")}</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <button
@@ -541,6 +633,8 @@ export default function AuthModal({
             {renderGoogleSection()}
           </form>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

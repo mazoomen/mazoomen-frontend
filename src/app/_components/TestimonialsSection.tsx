@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export interface TestimonialItem {
@@ -15,12 +16,31 @@ interface TestimonialsSectionProps {
   testimonials: TestimonialItem[];
 }
 
+const ITEMS_PER_PAGE = 6;
+
 export default function TestimonialsSection({
   testimonials,
 }: TestimonialsSectionProps) {
   const { t, lang } = useLanguage();
+  const [currentPage, setCurrentPage] = useState(0);
 
   if (!testimonials || testimonials.length === 0) return null;
+
+  const totalPages = Math.ceil(testimonials.length / ITEMS_PER_PAGE);
+  const validPage = Math.min(currentPage, Math.max(0, totalPages - 1));
+
+  const currentTestimonials = testimonials.slice(
+    validPage * ITEMS_PER_PAGE,
+    (validPage + 1) * ITEMS_PER_PAGE
+  );
+
+  const handlePrev = () => {
+    setCurrentPage((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentPage((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
+  };
 
   return (
     <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
@@ -33,8 +53,12 @@ export default function TestimonialsSection({
 
         <div className="relative w-full">
           {/* Testimonial grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pr-12">
-            {testimonials.map((item) => (
+          <div
+            className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${
+              totalPages > 1 ? "px-10 sm:px-12" : ""
+            }`}
+          >
+            {currentTestimonials.map((item) => (
               <div
                 key={item.id}
                 className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all"
@@ -55,7 +79,11 @@ export default function TestimonialsSection({
                       </span>
                     ))}
                   </div>
-                  <p className={`text-[12px] italic text-[#7F8487] leading-relaxed ${lang === "ar" ? "text-right" : "text-left"}`}>
+                  <p
+                    className={`text-[12px] italic text-[#7F8487] leading-relaxed ${
+                      lang === "ar" ? "text-right" : "text-left"
+                    }`}
+                  >
                     {item.comment}
                   </p>
                 </div>
@@ -78,35 +106,73 @@ export default function TestimonialsSection({
             ))}
           </div>
 
-          {/* Right navigation arrow */}
-          <button
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer"
-            aria-label="Next testimonials"
-          >
-            <svg
-              className="w-4 h-4 text-black"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+          {/* Navigation arrows */}
+          {totalPages > 1 && (
+            <>
+              {/* Left navigation arrow */}
+              <button
+                onClick={handlePrev}
+                className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer z-10"
+                aria-label="Previous testimonials"
+              >
+                <svg
+                  className="w-4 h-4 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Right navigation arrow */}
+              <button
+                onClick={handleNext}
+                className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer z-10"
+                aria-label="Next testimonials"
+              >
+                <svg
+                  className="w-4 h-4 text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Pagination dots */}
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#2D3142] transition-all" />
-          <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer" />
-          <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer" />
-          <span className="w-1.5 h-1.5 rounded-full bg-neutral-300 hover:bg-neutral-400 cursor-pointer" />
-        </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(idx)}
+                aria-label={`Go to page ${idx + 1}`}
+                className={`transition-all duration-300 rounded-full cursor-pointer border-0 ${
+                  validPage === idx
+                    ? "w-5 h-1.5 bg-[#2D3142]"
+                    : "w-1.5 h-1.5 bg-neutral-300 hover:bg-neutral-400"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

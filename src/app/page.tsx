@@ -31,7 +31,6 @@ export default function Home() {
 
   // Redesign filter and category states
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<"all" | "ready">("all");
   const [showEventTypesOverlay, setShowEventTypesOverlay] = useState(false);
 
   // Checkout modal template
@@ -130,8 +129,6 @@ export default function Home() {
         <TemplateGrid
           templates={filteredTemplates}
           loading={loading}
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
           selectedCategory={selectedCategory}
           isLoggedIn={isLoggedIn}
           onPurchaseClick={setBuyingTemplate}

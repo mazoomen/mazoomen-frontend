@@ -76,4 +76,52 @@ body {
   box-shadow: rgba(172, 140, 96, 0.19) 0px 0px 0px 4px, rgba(172, 140, 96, 0.314) 0px 0px 14px 6px !important;
 }
 
+/* Custom sleek scrollbar matching design aesthetic - NO ARROWS EVER */
+::-webkit-scrollbar-button,
+::-webkit-scrollbar-button:single-button,
+::-webkit-scrollbar-button:single-button:vertical:decrement,
+::-webkit-scrollbar-button:single-button:vertical:increment,
+::-webkit-scrollbar-button:start:decrement,
+::-webkit-scrollbar-button:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 0px;
+}
+.custom-scrollbar::-webkit-scrollbar-button,
+.custom-scrollbar::-webkit-scrollbar-button:single-button,
+.custom-scrollbar::-webkit-scrollbar-button:single-button:vertical:decrement,
+.custom-scrollbar::-webkit-scrollbar-button:single-button:vertical:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 20px 0;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #D8D2C5;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #B5AC99;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #D8D2C5 transparent;
+  overflow-x: hidden !important;
+}
+
+
 
