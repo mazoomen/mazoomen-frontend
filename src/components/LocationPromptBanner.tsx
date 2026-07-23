@@ -7,7 +7,7 @@ import { Button } from "./ui";
 
 export default function LocationPromptBanner() {
   const { lang } = useLanguage();
-  const { permissionStatus, requestLocationPermission, setDefaultCurrency, changeCurrencyManually, availableRates } = useCurrency();
+  const { currency, permissionStatus, requestLocationPermission, setDefaultCurrency, changeCurrencyManually, availableRates } = useCurrency();
   const [mounted, setMounted] = useState(false);
   const [showManualPicker, setShowManualPicker] = useState(false);
   const [cookieConsentCompleted, setCookieConsentCompleted] = useState(false);
@@ -115,7 +115,7 @@ export default function LocationPromptBanner() {
               <select
                 onChange={(e) => changeCurrencyManually(e.target.value)}
                 className="text-[10px] font-bold bg-[#14233C] border border-neutral-700 rounded-md px-2 py-1 outline-none text-[#E5C38B] cursor-pointer"
-                defaultValue="JOD"
+                value={currency}
               >
                 {Object.keys(availableRates).map((cCode) => (
                   <option key={cCode} value={cCode}>

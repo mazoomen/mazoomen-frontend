@@ -7,7 +7,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
-import { InvitationEditor, RsvpTracker } from "./_components";
+import { InvitationEditor, RsvpTracker, ShareModal, generateQrCodeFile } from "./_components";
 import type { PurchaseData } from "@/types/invitation";
 import { Spinner, ErrorState, Button } from "@/components/ui";
 
@@ -20,6 +20,19 @@ export default function ClientDashboardPage() {
   // Editor modal state
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<PurchaseData | null>(null);
+
+  // Share modal state
+  const [shareModalData, setShareModalData] = useState<{
+    isOpen: boolean;
+    title: string;
+    inviteUrl: string;
+    slug: string;
+  }>({
+    isOpen: false,
+    title: "",
+    inviteUrl: "",
+    slug: "",
+  });
 
   // RSVP / Tracking panel state
   const [trackingInvitationId, setTrackingInvitationId] = useState<string | null>(null);
@@ -80,6 +93,45 @@ export default function ClientDashboardPage() {
       setCopiedId(purchaseId);
       setTimeout(() => setCopiedId(null), 2000);
     }
+  };
+
+  // ── Share invitation with link & QR Code ─────────────────────────────
+  const handleShare = async (purchase: PurchaseData) => {
+    if (!purchase.invitation?.slug) return;
+    const baseUrl =
+      typeof window !== "undefined" ? window.location.origin : "http://localhost:3001";
+    const inviteUrl = `${baseUrl}/invite/${purchase.invitation.slug}`;
+    const title = purchase.template.title;
+    const slug = purchase.invitation.slug;
+
+    if (typeof window !== "undefined" && navigator.share) {
+      try {
+        const { file } = await generateQrCodeFile(inviteUrl, `qr-${slug}.png`);
+        const shareData: ShareData = {
+          title: title,
+          text: `${title}\n${inviteUrl}`,
+          url: inviteUrl,
+        };
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          shareData.files = [file];
+        }
+
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    setShareModalData({
+      isOpen: true,
+      title,
+      inviteUrl,
+      slug,
+    });
   };
 
   // ── Toggle Link Activation ──────────────────────────────────────────
@@ -783,12 +835,12 @@ export default function ClientDashboardPage() {
                       <span>{t("Create Invitation")}</span>
                     </Button>
                   ) : (
-                    <div className="w-full flex gap-2">
+                    <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenEditor(purchase)}
-                        className="flex-1"
+                        className="w-full"
                       >
                         {t("Edit Details")}
                       </Button>
@@ -796,9 +848,17 @@ export default function ClientDashboardPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleCopyLink(purchase.id, purchase.invitation!.slug)}
-                        className="flex-1"
+                        className="w-full"
                       >
                         {copiedId === purchase.id ? t("Copied!") : t("Copy Link")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare(purchase)}
+                        className="w-full"
+                      >
+                        {t("Share")}
                       </Button>
                       <Button
                         variant={
@@ -815,7 +875,7 @@ export default function ClientDashboardPage() {
                             .getElementById("rsvp-tracker-section")
                             ?.scrollIntoView({ behavior: "smooth" });
                         }}
-                        className="flex-1"
+                        className="w-full"
                       >
                         {t("Track")}
                       </Button>
@@ -1177,6 +1237,15 @@ export default function ClientDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* ── Share Modal (QR Code & Phone/Link Sharing) ───────────── */}
+      <ShareModal
+        isOpen={shareModalData.isOpen}
+        onClose={() => setShareModalData((prev) => ({ ...prev, isOpen: false }))}
+        title={shareModalData.title}
+        inviteUrl={shareModalData.inviteUrl}
+        slug={shareModalData.slug}
+      />
     </div>
   );
 }

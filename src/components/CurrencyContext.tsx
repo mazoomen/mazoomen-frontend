@@ -214,7 +214,10 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
 
   const setDefaultCurrency = () => {
     setCurrency("JOD");
+    setRate(availableRates["JOD"] || 1.0);
     localStorage.setItem("currency_code", "JOD");
+    localStorage.setItem("currency_permission_status", "denied");
+    setPermissionStatus("denied");
     setIsLoading(false);
   };
 
