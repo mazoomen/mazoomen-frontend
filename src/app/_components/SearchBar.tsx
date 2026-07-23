@@ -23,7 +23,7 @@ export default function SearchBar({
   const { t, lang } = useLanguage();
 
   return (
-    <section className="px-6 sm:px-10 py-4 sticky top-20 bg-[#FAF9F6] z-30">
+    <section className="px-4 sm:px-10 py-3 sm:py-4 sticky top-16 sm:top-20 bg-[#FAF9F6] z-30">
       <div className="max-w-xl mx-auto relative">
         <div className="relative flex items-center">
           <input
@@ -86,7 +86,7 @@ export default function SearchBar({
               onClick={() => setShowEventTypesOverlay(false)}
             />
             <div
-              className="absolute top-14 left-1/2 -translate-x-1/2 w-[340px] sm:w-[420px] bg-white border border-[#E6E2DA] rounded-2xl shadow-xl p-5 z-50 animate-fadeIn text-right font-sans"
+              className="absolute top-14 left-1/2 -translate-x-1/2 w-[calc(100vw-32px)] max-w-[420px] bg-white border border-[#E6E2DA] rounded-2xl shadow-xl p-4 sm:p-5 z-50 animate-fadeIn text-right font-sans"
               dir={lang === "ar" ? "rtl" : "ltr"}
             >
               <div className="flex justify-between items-center mb-4">

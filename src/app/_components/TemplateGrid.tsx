@@ -87,7 +87,7 @@ export default function TemplateGrid({
           </div>
 
           {/* Sort By Dropdown */}
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
             <label htmlFor="sortSelect" className="text-xs font-bold text-neutral-600 shrink-0">
               {isRtl ? "ترتيب حسب:" : "Sort by:"}
             </label>

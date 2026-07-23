@@ -25,7 +25,7 @@ export default function Header({
   const { lang, setLang, t } = useLanguage();
 
   return (
-    <header className="h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-16 sm:h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-4 sm:px-10 flex items-center justify-between sticky top-0 z-40">
       <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
         <div className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden relative">
           <Image

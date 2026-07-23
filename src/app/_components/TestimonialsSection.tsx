@@ -43,10 +43,10 @@ export default function TestimonialsSection({
   };
 
   return (
-    <section id="pricing" className="px-6 sm:px-10 py-16 bg-white border-t border-[#E6E2DA]">
-      <div className="max-w-[1700px] mx-auto flex flex-col gap-10 relative">
+    <section id="pricing" className="px-4 sm:px-10 py-10 sm:py-16 bg-white border-t border-[#E6E2DA]">
+      <div className="max-w-[1700px] mx-auto flex flex-col gap-6 sm:gap-10 relative">
         <div className="text-center flex flex-col gap-1">
-          <h2 className="text-[26px] font-serif font-medium text-neutral-800">
+          <h2 className="text-xl sm:text-[26px] font-serif font-medium text-neutral-800">
             {t("Testimonials")}
           </h2>
         </div>
@@ -54,14 +54,14 @@ export default function TestimonialsSection({
         <div className="relative w-full">
           {/* Testimonial grid */}
           <div
-            className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${
-              totalPages > 1 ? "px-10 sm:px-12" : ""
+            className={`grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 ${
+              totalPages > 1 ? "px-0 sm:px-12" : ""
             }`}
           >
             {currentTestimonials.map((item) => (
               <div
                 key={item.id}
-                className="bg-white border border-[#E9E4DC] p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-6 hover:shadow-md transition-all"
+                className="bg-white border border-[#E9E4DC] p-5 sm:p-6 rounded-2xl shadow-sm flex flex-col justify-between gap-4 sm:gap-6 hover:shadow-md transition-all"
               >
                 <div className="flex flex-col gap-2">
                   {/* Rating stars display */}
@@ -80,7 +80,7 @@ export default function TestimonialsSection({
                     ))}
                   </div>
                   <p
-                    className={`text-[12px] italic text-[#7F8487] leading-relaxed ${
+                    className={`text-xs italic text-[#7F8487] leading-relaxed ${
                       lang === "ar" ? "text-right" : "text-left"
                     }`}
                   >
@@ -94,7 +94,7 @@ export default function TestimonialsSection({
                     </span>
                   </div>
                   <div>
-                    <h4 className="text-[12px] font-bold text-[#2D3142]">
+                    <h4 className="text-xs font-bold text-[#2D3142]">
                       {item.clientName}
                     </h4>
                     <span className="text-[10px] text-[#7F8487] block -mt-0.5">
@@ -112,7 +112,7 @@ export default function TestimonialsSection({
               {/* Left navigation arrow */}
               <button
                 onClick={handlePrev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer z-10"
+                className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer z-10"
                 aria-label="Previous testimonials"
               >
                 <svg
@@ -134,7 +134,7 @@ export default function TestimonialsSection({
               {/* Right navigation arrow */}
               <button
                 onClick={handleNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm flex items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer z-10"
+                className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white border border-[#E9E4DC] shadow-sm items-center justify-center hover:bg-neutral-50 hover:shadow transition-all shrink-0 cursor-pointer z-10"
                 aria-label="Next testimonials"
               >
                 <svg
