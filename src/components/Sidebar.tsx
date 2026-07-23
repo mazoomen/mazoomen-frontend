@@ -99,13 +99,11 @@ export default function Sidebar({
 
   const isMazoom = pathname === "/";
   const isProfile = pathname.startsWith("/profile");
-  const isPurchases =
-    pathname.startsWith("/dashboard/client") && !pathname.includes("/orders");
-  const isOrders = pathname.startsWith("/dashboard/client/orders");
+  const isPurchases = pathname.startsWith("/dashboard/client");
 
   return (
     <aside
-      className={`fixed inset-y-0 z-50 bg-[#0B1528] flex flex-col py-6 gap-8 justify-between shrink-0 h-screen transition-all duration-300 sm:sticky sm:top-0
+      className={`fixed inset-y-0 z-50 bg-[#0B1528] flex flex-col py-6 pb-12 sm:pb-6 gap-6 justify-between shrink-0 h-screen h-[100dvh] max-h-[100dvh] overflow-y-auto transition-all duration-300 sm:sticky sm:top-0
         ${lang === "ar" ? "right-0 border-l border-[#1E2E4A]" : "left-0 border-r border-[#1E2E4A]"}
         ${isSidebarExpanded ? "sm:w-56 sm:px-4" : "sm:w-[72px] sm:px-0"}
         w-64 px-4
@@ -115,21 +113,24 @@ export default function Sidebar({
             : lang === "ar"
               ? "translate-x-full sm:translate-x-0"
               : "-translate-x-full sm:translate-x-0"
-        }`}
+        }
+      `}
     >
-      <div className="flex flex-col gap-8 w-full items-stretch">
-        {/* Logo / Brand Icon & Toggle Button */}
+      {/* Top Section */}
+      <div className="flex flex-col gap-6 w-full items-center">
+        {/* Header/Logo */}
         <div
-          className={`flex items-center gap-3 w-full ${
-            isSidebarExpanded ? "px-2 justify-between" : "flex-col gap-4 items-center"
+          className={`flex items-center w-full transition-all duration-300 ${
+            isSidebarExpanded ? "justify-between px-2" : "sm:justify-center px-2 sm:px-0"
           }`}
         >
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              onClick={() => setIsMobileOpen(false)}
-              className="w-10 h-10 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm hover:border-[#E5C38B] transition-colors shrink-0 overflow-hidden"
-            >
+          <button
+            onClick={() => handleNav("/")}
+            className={`flex items-center gap-3 group transition-all text-start cursor-pointer ${
+              !isSidebarExpanded ? "sm:hidden" : ""
+            }`}
+          >
+            <div className="w-10 h-10 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm hover:border-[#E5C38B] transition-colors shrink-0 overflow-hidden relative">
               <Image
                 src="/favicon.ico"
                 alt="Logo"
@@ -137,66 +138,71 @@ export default function Sidebar({
                 height={24}
                 className="object-contain"
               />
-            </Link>
-
-            {/* Brand Logo Text */}
-            <span
-              className={`text-[#E5C38B] font-serif font-bold text-sm tracking-wide transition-all duration-300 ${
-                isSidebarExpanded ? "opacity-100 max-w-[100px]" : "opacity-0 max-w-0 overflow-hidden hidden"
+            </div>
+            <div
+              className={`flex flex-col transition-all duration-300 ${
+                isSidebarExpanded
+                  ? "opacity-100 max-w-[150px]"
+                  : "opacity-100 sm:opacity-0 max-w-[150px] sm:max-w-0 sm:overflow-hidden"
               }`}
             >
-              Mazoom
-            </span>
-          </div>
+              <span className="text-base font-serif font-semibold tracking-tight text-[#E5C38B]">
+                Mazoom
+              </span>
+            </div>
+          </button>
 
-          {/* Toggle Button (Desktop Only) */}
+          {/* Desktop Toggle Button */}
           <button
             onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
             className="hidden sm:flex w-8 h-8 rounded-full border border-[#1E2E4A] items-center justify-center bg-[#101F35] shadow-sm hover:bg-[#1A2D4C] transition-all cursor-pointer"
             title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
           >
             <svg
-              className="w-3.5 h-3.5 text-neutral-300 hover:text-[#E5C38B]"
+              className={`w-4 h-4 text-[#E5C38B] transition-transform duration-300 ${
+                isSidebarExpanded
+                  ? lang === "ar"
+                    ? "rotate-0"
+                    : "rotate-180"
+                  : lang === "ar"
+                    ? "rotate-180"
+                    : "rotate-0"
+              }`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
-              aria-hidden="true"
             >
-              {isSidebarExpanded ? (
-                lang === "ar" ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                )
-              ) : (
-                lang === "ar" ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                )
-              )}
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          {/* Close Button (Mobile Drawer Only) */}
+          {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileOpen(false)}
             className="sm:hidden w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm hover:bg-neutral-800 transition-all cursor-pointer"
             title="Close Drawer"
           >
-            <svg
-              className="w-3.5 h-3.5 text-neutral-300 hover:text-red-500"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
+            <svg className="w-4 h-4 text-neutral-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+
+        {/* User Info Badge (Mobile Drawer) */}
+        {isLoggedIn && user && (
+          <div className="sm:hidden w-full p-3 rounded-xl bg-[#101F35] border border-[#1E2E4A] flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#1A2D4C] text-[#E5C38B] flex items-center justify-center font-bold text-xs border border-[#1E2E4A] shrink-0">
+              {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-xs font-semibold text-[#E5C38B] truncate">
+                {user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.email}
+              </span>
+              <span className="text-[10px] text-neutral-400 truncate">{user.email}</span>
+            </div>
+          </div>
+        )}
 
         {/* Sidebar Nav Icons */}
         <nav className="flex flex-col gap-4 w-full">
@@ -227,19 +233,6 @@ export default function Sidebar({
           />
 
           <SidebarNavItem
-            onClick={() => handleNav("/dashboard/client/orders", true)}
-            isActive={isOrders}
-            isSidebarExpanded={isSidebarExpanded}
-            label={t("My Orders")}
-            icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-              </svg>
-            }
-            lang={lang}
-          />
-
-          <SidebarNavItem
             onClick={() => handleNav(user?.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/client", true)}
             isActive={isPurchases}
             isSidebarExpanded={isSidebarExpanded}
@@ -255,9 +248,9 @@ export default function Sidebar({
       </div>
 
       {/* Bottom Section */}
-      <div className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col gap-3 w-full mt-auto pt-4 border-t border-[#1E2E4A]">
         {/* Language Switcher (Mobile Only) */}
-        <div className="sm:hidden px-4">
+        <div className="sm:hidden px-1">
           <button
             onClick={() => setLang(lang === "ar" ? "en" : "ar")}
             className="w-full h-11 border border-[#1E2E4A] hover:bg-[#1A2D4C] rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-xs font-bold text-[#E5C38B] font-sans"

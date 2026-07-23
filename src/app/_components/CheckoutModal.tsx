@@ -175,7 +175,7 @@ export default function CheckoutModal({
         setCheckoutSuccess(true);
         setTimeout(() => {
           onClose();
-          router.push(autoApproved ? "/dashboard/client" : "/dashboard/client/orders");
+          router.push("/dashboard/client");
         }, 1500);
       } else {
         // 2. Paid purchase (final price > 0): Create Tap Charge & Redirect to Tap Checkout URL
