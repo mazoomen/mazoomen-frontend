@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getS3Url } from "@/lib/s3";
 import Link from "next/link";
 import Image from "next/image";
@@ -41,6 +41,13 @@ export default function ClientDashboardPage() {
   const [selectedLightboxMoment, setSelectedLightboxMoment] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
+
+  // Drag and Drop refs for mobile touch interaction
+  const touchStartPosRef = useRef<{ x: number; y: number; index: number } | null>(null);
+  const isTouchDraggingRef = useRef<boolean>(false);
+  const touchDraggedIndexRef = useRef<number | null>(null);
+  const currentFeedImagesRef = useRef<any[]>([]);
+  const preventClickRef = useRef<boolean>(false);
 
   // Copy status
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -357,6 +364,47 @@ export default function ClientDashboardPage() {
   };
 
   // ── Drag and Drop Image Reordering ────────────────────────────────
+  const reorderImages = useCallback(
+    (fromIndex: number, toIndex: number, list: any[]) => {
+      if (fromIndex === null || fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || toIndex >= list.length) return;
+
+      const updatedList = [...list];
+      const draggedItem = updatedList[fromIndex];
+      updatedList.splice(fromIndex, 1);
+      updatedList.splice(toIndex, 0, draggedItem);
+
+      const newImages = updatedList.filter((item) => !item.isGuest).map((item) => item.url);
+      const newMoments = updatedList.filter((item) => item.isGuest && !item.isHidden).map((item) => item.url);
+      const newHidden = updatedList.filter((item) => item.isGuest && item.isHidden).map((item) => item.url);
+      const newGalleryOrder = updatedList.map((item) => item.url);
+
+      setPurchases((prev) =>
+        prev.map((p) => {
+          if (p.invitation?.id === trackingInvitationId) {
+            return {
+              ...p,
+              invitation: p.invitation
+                ? {
+                    ...p.invitation,
+                    images: newImages,
+                    moments: newMoments,
+                    hiddenMoments: newHidden,
+                    galleryOrder: newGalleryOrder,
+                  }
+                : null,
+            };
+          }
+          return p;
+        })
+      );
+
+      setDraggedIndex(toIndex);
+      touchDraggedIndexRef.current = toIndex;
+      currentFeedImagesRef.current = updatedList;
+    },
+    [trackingInvitationId]
+  );
+
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
   };
@@ -364,43 +412,14 @@ export default function ClientDashboardPage() {
   const handleDragOver = (e: React.DragEvent, targetIndex: number, allFeedImages: any[]) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === targetIndex) return;
-
-    const updatedList = [...allFeedImages];
-    const draggedItem = updatedList[draggedIndex];
-    updatedList.splice(draggedIndex, 1);
-    updatedList.splice(targetIndex, 0, draggedItem);
-
-    const newImages = updatedList.filter(item => !item.isGuest).map(item => item.url);
-    const newMoments = updatedList.filter(item => item.isGuest && !item.isHidden).map(item => item.url);
-    const newHidden = updatedList.filter(item => item.isGuest && item.isHidden).map(item => item.url);
-    const newGalleryOrder = updatedList.map(item => item.url);
-
-    setPurchases(prev => prev.map(p => {
-      if (p.invitation?.id === trackingInvitationId) {
-        return {
-          ...p,
-          invitation: p.invitation
-            ? {
-                ...p.invitation,
-                images: newImages,
-                moments: newMoments,
-                hiddenMoments: newHidden,
-                galleryOrder: newGalleryOrder
-              }
-            : null
-        };
-      }
-      return p;
-    }));
-
-    setDraggedIndex(targetIndex);
+    reorderImages(draggedIndex, targetIndex, allFeedImages);
   };
 
   const handleDragEnd = async () => {
     setDraggedIndex(null);
     if (!trackingInvitationId) return;
 
-    const purchase = purchases.find(p => p.invitation?.id === trackingInvitationId);
+    const purchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
     if (!purchase || !purchase.invitation) return;
 
     try {
@@ -408,11 +427,72 @@ export default function ClientDashboardPage() {
         images: purchase.invitation.images || [],
         moments: purchase.invitation.moments || [],
         hiddenMoments: purchase.invitation.hiddenMoments || [],
-        galleryOrder: purchase.invitation.galleryOrder || []
+        galleryOrder: purchase.invitation.galleryOrder || [],
       });
     } catch (err) {
       logger.error("Failed to save reordered images", err);
     }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, index: number, allFeedImages: any[]) => {
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY, index };
+    touchDraggedIndexRef.current = index;
+    currentFeedImagesRef.current = allFeedImages;
+    isTouchDraggingRef.current = false;
+
+    const onTouchMove = (moveEvent: TouchEvent) => {
+      if (!touchStartPosRef.current) return;
+      const currentTouch = moveEvent.touches[0];
+      const dx = Math.abs(currentTouch.clientX - touchStartPosRef.current.x);
+      const dy = Math.abs(currentTouch.clientY - touchStartPosRef.current.y);
+
+      if (!isTouchDraggingRef.current) {
+        if (dx > 8 || dy > 8) {
+          isTouchDraggingRef.current = true;
+          setDraggedIndex(touchStartPosRef.current.index);
+        }
+      }
+
+      if (isTouchDraggingRef.current) {
+        if (moveEvent.cancelable) {
+          moveEvent.preventDefault();
+        }
+
+        const elem = document.elementFromPoint(currentTouch.clientX, currentTouch.clientY);
+        const cardElem = elem?.closest("[data-drag-index]") as HTMLElement | null;
+
+        if (cardElem && cardElem.dataset.dragIndex !== undefined) {
+          const targetIndex = parseInt(cardElem.dataset.dragIndex, 10);
+          if (!isNaN(targetIndex) && touchDraggedIndexRef.current !== null && targetIndex !== touchDraggedIndexRef.current) {
+            reorderImages(touchDraggedIndexRef.current, targetIndex, currentFeedImagesRef.current);
+          }
+        }
+      }
+    };
+
+    const onTouchEnd = () => {
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+
+      if (isTouchDraggingRef.current) {
+        preventClickRef.current = true;
+        setTimeout(() => {
+          preventClickRef.current = false;
+        }, 300);
+
+        handleDragEnd();
+      }
+
+      touchStartPosRef.current = null;
+      touchDraggedIndexRef.current = null;
+      isTouchDraggingRef.current = false;
+    };
+
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
   };
 
   const downloadRsvpsPdf = async (invitationId: string, withHidden: boolean) => {
@@ -1066,11 +1146,13 @@ export default function ClientDashboardPage() {
                       return (
                         <div
                           key={index}
+                          data-drag-index={index}
                           draggable
                           onDragStart={() => handleDragStart(index)}
                           onDragOver={(e) => handleDragOver(e, index, allFeedImages)}
                           onDragEnd={handleDragEnd}
-                          className={`relative aspect-square overflow-hidden shadow-md cursor-grab active:scale-[0.97] transition-all duration-300 ${
+                          onTouchStart={(e) => handleTouchStart(e, index, allFeedImages)}
+                          className={`relative aspect-square overflow-hidden shadow-md cursor-grab active:scale-[0.97] transition-all duration-300 select-none ${
                             draggedIndex === index
                               ? "opacity-40 scale-[0.95] border-2 border-dashed border-[#B89C72]"
                               : ""
@@ -1080,14 +1162,20 @@ export default function ClientDashboardPage() {
                             backdropFilter: "blur(12px)",
                             border: draggedIndex === index ? undefined : "1px solid rgba(0, 0, 0, 0.08)",
                             borderRadius: "22px",
+                            touchAction: "pan-y",
+                            WebkitUserSelect: "none",
                           }}
-                          onClick={() => setSelectedLightboxMoment(item.url)}
+                          onClick={() => {
+                            if (preventClickRef.current) return;
+                            setSelectedLightboxMoment(item.url);
+                          }}
                         >
                           {/* Image Thumbnail */}
                           <img
                             src={getS3Url(item.url)}
                             alt=""
-                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 pointer-events-none select-none"
+                            draggable={false}
                           />
 
                           {item.isHidden && (
