@@ -480,6 +480,7 @@ export default function InvitationClientPageEmerald({
           transform: 'translate(0px, -1px) scale(1.85)',
         }}
         textColor="#c5a880"
+        videoUrl={`${S3_BASE_URL}/templates/videos/emerald-bg-1_e216a5a4.mp4`}
       />
 
       {/* Content Container */}
@@ -1019,7 +1020,7 @@ export default function InvitationClientPageEmerald({
                   </p>
                 </div>
 
-                <div className="space-y-3 overflow-y-auto px-1 max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
+                <div className="space-y-3 overflow-y-auto px-1 max-h-[300px] no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {wishes.map((w, idx) => (
                     <div
                       key={idx}
@@ -1071,7 +1072,7 @@ export default function InvitationClientPageEmerald({
                 {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <a href="/" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-sans hover:underline transition-all cursor-pointer block">
-                {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
+                {isEn ? "Made with love on Mazoomen platform" : "صنع بكل حب عبر منصة معزومين"}
               </a>
               {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
               <div className="h-24" />
@@ -1220,6 +1221,9 @@ export default function InvitationClientPageEmerald({
             transform: translateY(105vh) translateX(-20px) scale(0.5) rotate(240deg);
             opacity: 0;
           }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </main>

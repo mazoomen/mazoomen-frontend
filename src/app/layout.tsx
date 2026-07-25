@@ -36,11 +36,11 @@ const cinzel = Cinzel({
 
 export const metadata: Metadata = {
   title: {
-    default: "Mazoom — Digital Wedding Invitations",
-    template: "%s | Mazoom",
+    default: "Mazoomen — Digital Wedding Invitations",
+    template: "%s | Mazoomen",
   },
   description:
-    "Create and share beautiful digital wedding invitations with Mazoom.",
+    "Create and share beautiful digital wedding invitations with Mazoomen.",
 };
 
 export default function RootLayout({

@@ -21,13 +21,23 @@ export default function CheckoutModal({
 }: CheckoutModalProps) {
   const router = useRouter();
   const { t, lang } = useLanguage();
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency, rate } = useCurrency();
 
   const [contactPhone, setContactPhone] = useState("");
   const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [isInstantApproved, setIsInstantApproved] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [purchaseLanguageMode] = useState("both");
+
+  // Coupon states
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountPercent: number;
+  } | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
 
   useEffect(() => {
     if (buyingTemplate && typeof window !== "undefined") {
@@ -41,11 +51,78 @@ export default function CheckoutModal({
         }
       }
       setCheckoutSuccess(false);
+      setIsInstantApproved(false);
       setCheckoutError("");
+      setCouponCodeInput("");
+      setAppliedCoupon(null);
+      setCouponError("");
     }
   }, [buyingTemplate]);
 
   if (!buyingTemplate) return null;
+
+  const originalPriceInJod = Number(buyingTemplate.price) || 0;
+  const discountAmountJod = appliedCoupon
+    ? (originalPriceInJod * appliedCoupon.discountPercent) / 100
+    : 0;
+  const finalPriceJod = Math.max(0, originalPriceInJod - discountAmountJod);
+  const finalPriceInCurrency = finalPriceJod * (rate || 1.0);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim()) return;
+
+    setValidatingCoupon(true);
+    setCouponError("");
+
+    try {
+      const res = await api.post<{
+        valid: boolean;
+        code: string;
+        discountPercent: number;
+      }>("/coupons/validate", {
+        code: couponCodeInput.trim(),
+      });
+
+      if (res.data && res.data.valid) {
+        setAppliedCoupon({
+          code: res.data.code,
+          discountPercent: res.data.discountPercent,
+        });
+        setCouponError("");
+      }
+    } catch (err: any) {
+      logger.error("Failed to validate coupon", err);
+      setAppliedCoupon(null);
+      const msg = err?.response?.data?.message || "";
+      if (msg.includes("coupon_already_used_by_user") || msg.includes("already_used")) {
+        setCouponError(
+          lang === "ar"
+            ? "لقد استخدمت هذا الكوبون من قبل. لا يمكنك استخدامه أكثر من مرة."
+            : "You have already used this coupon code once."
+        );
+      } else if (msg.includes("coupon_limit_reached") || msg.includes("limit_reached")) {
+        setCouponError(
+          lang === "ar"
+            ? "تم الوصول للحد الأقصى لاستخدام هذا الكوبون."
+            : "This coupon has reached its maximum usage limit."
+        );
+      } else {
+        setCouponError(
+          lang === "ar"
+            ? "الكوبون غير صالح أو منتهي الصلاحية"
+            : "Invalid or expired coupon code"
+        );
+      }
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCodeInput("");
+    setCouponError("");
+  };
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,22 +136,20 @@ export default function CheckoutModal({
 
     try {
       const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
-      let email = "user@example.com";
+      let email = "customer@example.com";
+      let customerName = "Customer";
+
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
-          email = user.email || "user@example.com";
+          email = user.email || "customer@example.com";
+          if (user.firstName || user.lastName) {
+            customerName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+          }
         } catch {}
       }
 
-      await api.post("/purchase-requests", {
-        templateId: buyingTemplate.id,
-        contactEmail: email,
-        contactPhone: contactPhone.trim(),
-        languageMode: purchaseLanguageMode,
-      });
-
-      // Synchronize phone number to localStorage user object if it was updated
+      // Synchronize phone number to localStorage user object if updated
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
@@ -85,20 +160,68 @@ export default function CheckoutModal({
         } catch {}
       }
 
-      setCheckoutSuccess(true);
-      setTimeout(() => {
-        onClose();
-        router.push("/dashboard/client/orders");
-      }, 1500);
-    } catch (err) {
-      const error = err as AxiosError<{ message?: string }>;
-      logger.error("Failed to submit purchase request", err);
-      setCheckoutError(
-        error.response?.data?.message ||
-          (lang === "ar"
-            ? "فشل تقديم طلب الشراء. يرجى المحاولة مرة أخرى."
-            : "Failed to submit purchase request. Please try again.")
-      );
+      // 1. Free purchase (final price === 0 due to 100% coupon or 0 base price)
+      if (finalPriceJod === 0) {
+        const res = await api.post("/purchase-requests", {
+          templateId: buyingTemplate.id,
+          contactEmail: email,
+          contactPhone: contactPhone.trim(),
+          languageMode: purchaseLanguageMode,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        });
+
+        const autoApproved = res.data?.status === "APPROVED" || finalPriceJod === 0;
+        setIsInstantApproved(autoApproved);
+        setCheckoutSuccess(true);
+        setTimeout(() => {
+          onClose();
+          router.push("/dashboard/client");
+        }, 1500);
+      } else {
+        // 2. Paid purchase (final price > 0): Create Tap Charge & Redirect to Tap Checkout URL
+        const precision = ["JOD", "KWD", "BHD", "OMR"].includes(currency) ? 3 : 2;
+        const chargeAmount = Number(finalPriceInCurrency.toFixed(precision));
+
+        const res = await api.post<{ checkoutUrl: string; orderId: string }>(
+          "/payment/create-charge",
+          {
+            customerName,
+            customerEmail: email,
+            templateDetails: {
+              templateId: buyingTemplate.id,
+              templateTitle: buyingTemplate.title,
+              contactPhone: contactPhone.trim(),
+              couponCode: appliedCoupon?.code,
+              languageMode: purchaseLanguageMode,
+            },
+            amount: chargeAmount,
+            currency: currency || "JOD",
+          }
+        );
+
+        if (res.data?.checkoutUrl && res.data?.orderId) {
+          // Close modal and navigate to custom styled payment page (/payment/checkout)
+          onClose();
+          router.push(
+            `/payment/checkout?orderId=${res.data.orderId}&checkoutUrl=${encodeURIComponent(res.data.checkoutUrl)}`
+          );
+        } else {
+          throw new Error(
+            lang === "ar"
+              ? "لم يتم استلام رابط صفحة الدفع من بوابة الدفع."
+              : "Did not receive checkout URL from payment gateway."
+          );
+        }
+      }
+    } catch (err: any) {
+      logger.error("Failed to submit checkout", err);
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        (lang === "ar"
+          ? "فشل البدء بعملية الدفع. يرجى المحاولة مرة أخرى."
+          : "Failed to initiate payment. Please try again.");
+      setCheckoutError(errorMsg);
     } finally {
       setCheckoutSubmitting(false);
     }
@@ -132,10 +255,20 @@ export default function CheckoutModal({
             </svg>
           </div>
           <h3 className="text-lg font-bold text-neutral-800">
-            {lang === "ar" ? "تم تقديم طلبك بنجاح!" : "Order Submitted Successfully!"}
+            {isInstantApproved
+              ? lang === "ar"
+                ? "تم شراء وتفعيل القالب بنجاح!"
+                : "Template Unlocked & Activated!"
+              : lang === "ar"
+              ? "تم تقديم طلبك بنجاح!"
+              : "Order Submitted Successfully!"}
           </h3>
           <p className="text-xs text-neutral-500 leading-relaxed max-w-xs mx-auto">
-            {lang === "ar"
+            {isInstantApproved
+              ? lang === "ar"
+                ? "تم تطبيق الخصم بنسبة 100% وتفعيل القالب في حسابك مباشرة بدون انتظار موافقة الإدارة. يمكنك الآن بدء تعديل دعوتك!"
+                : "100% discount applied and template activated immediately in your account. You can now start customizing your invitation!"
+              : lang === "ar"
               ? "لقد تم تسجيل طلب الشراء للقالب بنجاح. سيقوم المسؤول بمراجعته وتفعيله لك قريباً."
               : "Your template purchase request has been submitted. The administrator will review and activate it shortly."}
           </p>
@@ -172,6 +305,63 @@ export default function CheckoutModal({
                 dir="ltr"
               />
             </div>
+
+            {/* Coupon Code Section */}
+            <div>
+              <label htmlFor="couponInput" className="block text-xs font-semibold text-neutral-700 mb-1">
+                {lang === "ar" ? "كود الخصم (كوبون)" : "Coupon Code"}
+              </label>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-emerald-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-md uppercase font-mono">
+                      {appliedCoupon.code}
+                    </span>
+                    <span className="text-xs text-emerald-700 font-medium">
+                      {lang === "ar"
+                        ? `خصم ${appliedCoupon.discountPercent}% مطبق`
+                        : `${appliedCoupon.discountPercent}% discount applied`}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-xs text-red-600 hover:text-red-800 font-medium underline"
+                  >
+                    {lang === "ar" ? "إلغاء" : "Remove"}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    id="couponInput"
+                    type="text"
+                    value={couponCodeInput}
+                    onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                    placeholder={lang === "ar" ? "أدخل الكوبون (مثلاً: mazoomen)" : "Enter code (e.g. mazoomen)"}
+                    className="flex-1 px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] font-mono uppercase"
+                    dir="ltr"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleApplyCoupon}
+                    isLoading={validatingCoupon}
+                    disabled={!couponCodeInput.trim() || validatingCoupon}
+                    className="!rounded-xl border-[#B89C72] text-[#B89C72] hover:bg-[#B89C72] hover:text-white shrink-0"
+                  >
+                    {lang === "ar" ? "تطبيق" : "Apply"}
+                  </Button>
+                </div>
+              )}
+
+              {couponError && (
+                <p className="text-[11px] text-red-600 mt-1 font-medium">
+                  {couponError}
+                </p>
+              )}
+            </div>
           </div>
 
           {checkoutError && (
@@ -185,9 +375,20 @@ export default function CheckoutModal({
               <span className="text-[10px] text-neutral-400 block">
                 {lang === "ar" ? "الإجمالي" : "Total Price"}
               </span>
-              <span className="text-base font-bold text-neutral-800">
-                {formatPrice(buyingTemplate.price)}
-              </span>
+              {appliedCoupon ? (
+                <div className="flex flex-col">
+                  <span className="text-xs text-neutral-400 line-through">
+                    {formatPrice(buyingTemplate.price)}
+                  </span>
+                  <span className="text-base font-bold text-emerald-600">
+                    {formatPrice(finalPriceJod)}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-base font-bold text-neutral-800">
+                  {formatPrice(buyingTemplate.price)}
+                </span>
+              )}
             </div>
             <Button
               type="submit"
@@ -196,7 +397,13 @@ export default function CheckoutModal({
               isLoading={checkoutSubmitting}
               className="flex-1 !rounded-xl"
             >
-              {lang === "ar" ? "تأكيد طلب الشراء" : "Confirm Purchase"}
+              {finalPriceJod === 0
+                ? lang === "ar"
+                  ? "تأكيد طلب الشراء (مجاناً)"
+                  : "Confirm Purchase (Free)"
+                : lang === "ar"
+                ? "الانتقال إلى الدفع"
+                : "Proceed to Payment"}
             </Button>
           </div>
         </form>

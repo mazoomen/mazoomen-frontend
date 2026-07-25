@@ -41,7 +41,7 @@ console.log("ALL NEXT PUBLIC ENV:", {
 /** Public API base URL (used by Axios client) */
 export const API_BASE_URL = getEnvVar(
   "NEXT_PUBLIC_API_URL",
-  "https://mazoom-backend.onrender.com",
+  "https://mazoomen-backend.onrender.com",
 );
 
 console.log("FINAL API_BASE_URL:", API_BASE_URL);

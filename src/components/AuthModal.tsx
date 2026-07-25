@@ -53,13 +53,85 @@ function OrDivider({ label }: { label: string }) {
   );
 }
 
+// ── 6-Digit OTP Box Component ──────────────────────────────────────────
+function OtpBoxes({
+  value,
+  onChange,
+  disabled,
+  idPrefix = "otp-input",
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+  idPrefix?: string;
+}) {
+  const digits = Array.from({ length: 6 }).map((_, i) => value[i] || "");
+
+  const handleChange = (index: number, val: string) => {
+    const char = val.slice(-1);
+    if (!/^\d*$/.test(char)) return;
+
+    const newDigits = [...digits];
+    newDigits[index] = char;
+    const nextVal = newDigits.join("").slice(0, 6);
+    onChange(nextVal);
+
+    if (char && index < 5) {
+      const nextInput = document.getElementById(`${idPrefix}-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      const prevInput = document.getElementById(`${idPrefix}-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted) {
+      onChange(pasted);
+      const targetIndex = Math.min(pasted.length, 5);
+      const targetInput = document.getElementById(`${idPrefix}-${targetIndex}`);
+      targetInput?.focus();
+    }
+  };
+
+  return (
+    <div className="flex justify-center gap-2 dir-ltr">
+      {Array.from({ length: 6 }).map((_, idx) => (
+        <input
+          key={idx}
+          id={`${idPrefix}-${idx}`}
+          type="text"
+          inputMode="numeric"
+          pattern="\d*"
+          maxLength={1}
+          value={digits[idx] || ""}
+          onChange={(e) => handleChange(idx, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(idx, e)}
+          onPaste={handlePaste}
+          disabled={disabled}
+          className="w-10 h-12 text-center text-lg font-bold bg-white border border-[#E6E2DA] rounded-xl outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm disabled:opacity-50 text-neutral-800"
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function AuthModal({
   isOpen,
   onClose,
   initialMode,
 }: AuthModalProps) {
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authMode, setAuthMode] = useState<"login" | "register" | "forgot">("login");
+  const [regStep, setRegStep] = useState<"details" | "otp">("details");
+  const [forgotStep, setForgotStep] = useState<"email" | "otp">("email");
   const [authError, setAuthError] = useState("");
+  const [otpInfoMsg, setOtpInfoMsg] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const { t, lang } = useLanguage();
 
@@ -73,11 +145,53 @@ export default function AuthModal({
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Forgot password inputs
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtpCode, setForgotOtpCode] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+
+  // Password complexity checks for registration
+  const hasMinLength = regPassword.length >= 8;
+  const hasUpper = /[A-Z]/.test(regPassword);
+  const hasLower = /[a-z]/.test(regPassword);
+  const hasNumberOrSpecial = /[0-9\W]/.test(regPassword);
+  const isPasswordValid = hasMinLength && hasUpper && hasLower && hasNumberOrSpecial;
+  const passwordsMatch = regPassword.length > 0 && regConfirmPassword.length > 0 && regPassword === regConfirmPassword;
+
+  // Password complexity checks for Forgot Password
+  const forgotHasMinLength = forgotNewPassword.length >= 8;
+  const forgotHasUpper = /[A-Z]/.test(forgotNewPassword);
+  const forgotHasLower = /[a-z]/.test(forgotNewPassword);
+  const forgotHasNumberOrSpecial = /[0-9\W]/.test(forgotNewPassword);
+  const isForgotPasswordValid = forgotHasMinLength && forgotHasUpper && forgotHasLower && forgotHasNumberOrSpecial;
+  const forgotPasswordsMatch = forgotNewPassword.length > 0 && forgotConfirmPassword.length > 0 && forgotNewPassword === forgotConfirmPassword;
+
+  // Countdown timer for Resend OTP
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   useEffect(() => {
     if (isOpen) {
       setAuthMode(initialMode);
+      setRegStep("details");
+      setForgotStep("email");
       setAuthError("");
+      setOtpInfoMsg("");
+      setRegConfirmPassword("");
+      setOtpCode("");
+      setForgotOtpCode("");
+      setForgotNewPassword("");
+      setForgotConfirmPassword("");
+      setResendTimer(0);
     }
   }, [isOpen, initialMode]);
 
@@ -222,8 +336,9 @@ export default function AuthModal({
     }
   };
 
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Step 1: Send Registration OTP to email
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setAuthError("");
 
     if (
@@ -231,14 +346,56 @@ export default function AuthModal({
       !regLastName.trim() ||
       !regEmail.trim() ||
       !regPhone.trim() ||
-      !regPassword
+      !regPassword ||
+      !regConfirmPassword
     ) {
       setAuthError(t("All fields are required."));
       return;
     }
 
-    if (regPassword.length < 8) {
-      setAuthError(t("Password must be at least 8 characters."));
+    if (!isPasswordValid) {
+      setAuthError(t("errors.password_weak"));
+      return;
+    }
+
+    if (regPassword !== regConfirmPassword) {
+      setAuthError(t("Passwords do not match. Please try again."));
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      await api.post("/auth/send-otp", {
+        firstName: regFirstName.trim(),
+        lastName: regLastName.trim(),
+        email: regEmail.trim(),
+        phoneNumber: regPhone.trim(),
+      });
+      setRegStep("otp");
+      setResendTimer(60);
+      setOtpInfoMsg(t("Code sent! Please check your email inbox."));
+      setAuthError("");
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      if (error.response?.data?.message) {
+        const msg = error.response.data.message;
+        const key = Array.isArray(msg) ? msg[0] : msg;
+        setAuthError(t(key) || key);
+      } else {
+        setAuthError(t("Registration failed. Please try again."));
+      }
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  // Step 2: Complete Registration with OTP
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+
+    if (!otpCode || otpCode.trim().length !== 6) {
+      setAuthError(t("Please enter a valid 6-digit verification code."));
       return;
     }
 
@@ -250,15 +407,98 @@ export default function AuthModal({
         email: regEmail.trim(),
         password: regPassword,
         phoneNumber: regPhone.trim(),
+        otp: otpCode.trim(),
       });
       handleAuthSuccess(res.data.user);
     } catch (err) {
       const error = err as AxiosError<{ message?: string | string[] }>;
       if (error.response?.data?.message) {
         const msg = error.response.data.message;
-        setAuthError(Array.isArray(msg) ? msg[0] : msg);
+        const key = Array.isArray(msg) ? msg[0] : msg;
+        setAuthError(t(key) || key);
       } else {
         setAuthError(t("Registration failed. Please try again."));
+      }
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  // Forgot Password Step 1: Send Reset OTP
+  const handleSendForgotPasswordOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthError("");
+
+    if (!forgotEmail.trim()) {
+      setAuthError(t("Please fill in all fields."));
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      await api.post("/auth/forgot-password/send-otp", {
+        email: forgotEmail.trim(),
+      });
+      setForgotStep("otp");
+      setResendTimer(60);
+      setOtpInfoMsg(t("Code sent! Please check your email inbox."));
+      setAuthError("");
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      if (error.response?.data?.message) {
+        const msg = error.response.data.message;
+        const key = Array.isArray(msg) ? msg[0] : msg;
+        setAuthError(t(key) || key);
+      } else {
+        setAuthError(t("Something went wrong. Please try again later."));
+      }
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
+  // Forgot Password Step 2: Reset Password with OTP
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+
+    if (!forgotOtpCode || forgotOtpCode.trim().length !== 6) {
+      setAuthError(t("Please enter a valid 6-digit verification code."));
+      return;
+    }
+
+    if (!isForgotPasswordValid) {
+      setAuthError(t("errors.password_weak"));
+      return;
+    }
+
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setAuthError(t("Passwords do not match. Please try again."));
+      return;
+    }
+
+    setAuthSubmitting(true);
+    try {
+      await api.post("/auth/forgot-password/reset", {
+        email: forgotEmail.trim(),
+        otp: forgotOtpCode.trim(),
+        newPassword: forgotNewPassword,
+      });
+
+      // Reset successful -> switch to login tab with success note
+      setAuthMode("login");
+      setLoginEmail(forgotEmail.trim());
+      setLoginPassword("");
+      setOtpInfoMsg(t("Password reset successfully. Please log in with your new password."));
+      setAuthError("");
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      if (error.response?.data?.message) {
+        const msg = error.response.data.message;
+        const key = Array.isArray(msg) ? msg[0] : msg;
+        setAuthError(t(key) || key);
+      } else {
+        setAuthError(t("Something went wrong. Please try again later."));
       }
     } finally {
       setAuthSubmitting(false);
@@ -288,7 +528,7 @@ export default function AuthModal({
 
   return (
     <div
-      className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -299,38 +539,14 @@ export default function AuthModal({
       aria-modal="true"
       aria-label={authMode === "login" ? t("Login") : t("Register")}
     >
-      <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[32px] max-w-sm w-full p-8 shadow-2xl relative flex flex-col items-center">
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            onClose();
-            setAuthError("");
-          }}
-          className="absolute top-6 right-6 text-neutral-400 hover:text-black transition-colors cursor-pointer"
-          aria-label="Close dialog"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-
-        {/* Decorative elements */}
-        <div className="hidden sm:flex absolute left-[-28px] top-[30%] -rotate-12 w-14 h-14 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 items-center justify-center z-10">
+      {/* Outer Container enabling floating cards outside modal without clipping */}
+      <div className="relative max-w-sm sm:max-w-md w-full my-auto shrink-0 py-2">
+        {/* Floating Decorative Badges */}
+        <div className="hidden sm:flex absolute -left-5 sm:-left-7 top-[28%] -rotate-12 w-13 h-13 sm:w-14 sm:h-14 bg-white border border-[#E9E4DC] rounded-2xl shadow-xl p-1.5 items-center justify-center z-20 pointer-events-none">
           <span className="text-2xl select-none" aria-hidden="true">🎂</span>
         </div>
-        <div className="hidden sm:flex absolute right-[-24px] bottom-[15%] rotate-6 w-16 h-20 bg-white border border-[#E9E4DC] rounded-xl shadow-lg p-1.5 flex-col justify-between z-10">
-          <div className="w-full h-[65%] rounded bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl" aria-hidden="true">
+        <div className="hidden sm:flex absolute -right-4 sm:-right-6 bottom-[12%] rotate-6 w-14 h-18 sm:w-16 sm:h-20 bg-white border border-[#E9E4DC] rounded-2xl shadow-xl p-1.5 flex-col justify-between z-20 pointer-events-none">
+          <div className="w-full h-[65%] rounded-xl bg-[#FAF9F6] overflow-hidden flex items-center justify-center select-none text-xl" aria-hidden="true">
             🎈
           </div>
           <div className="flex items-center justify-center select-none text-sm leading-none -mt-1 font-serif text-black" aria-hidden="true">
@@ -338,42 +554,83 @@ export default function AuthModal({
           </div>
         </div>
 
-        {/* Capsule tabs */}
-        <div
-          className="bg-neutral-100 border border-neutral-200/60 rounded-xl p-1 flex w-full mb-6 mt-2"
-          role="tablist"
-        >
+        {/* Inner Modal Card Container with Rounded Corners & Clipping */}
+        <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[28px] sm:rounded-[32px] w-full shadow-2xl relative flex flex-col max-h-[85vh] sm:max-h-[88vh] overflow-hidden">
+          {/* Close Button */}
           <button
-            role="tab"
-            aria-selected={authMode === "login"}
             onClick={() => {
-              setAuthMode("login");
+              onClose();
               setAuthError("");
             }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
-              authMode === "login"
-                ? "bg-[#F5EDE1] text-black shadow-sm"
-                : "text-neutral-500 hover:text-black"
-            }`}
+            className="absolute top-4 right-4 rtl:right-auto rtl:left-4 text-neutral-400 hover:text-black transition-colors cursor-pointer p-1.5 rounded-full hover:bg-neutral-200/50 z-30"
+            aria-label="Close dialog"
           >
-            {t("Login")}
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
-          <button
-            role="tab"
-            aria-selected={authMode === "register"}
-            onClick={() => {
-              setAuthMode("register");
-              setAuthError("");
-            }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
-              authMode === "register"
-                ? "bg-[#F5EDE1] text-black shadow-sm"
-                : "text-neutral-500 hover:text-black"
-            }`}
+
+          {/* Inner Scroll Body */}
+          <div className="w-full h-full overflow-y-auto custom-scrollbar p-5 sm:p-7 flex flex-col items-center">
+
+        {/* Capsule tabs (Login / Register) */}
+        {authMode !== "forgot" && (
+          <div
+            className="bg-neutral-100 border border-neutral-200/60 rounded-xl p-1 flex w-full mb-6 mt-2"
+            role="tablist"
           >
-            {t("Register")}
-          </button>
-        </div>
+            <button
+              role="tab"
+              aria-selected={authMode === "login"}
+              onClick={() => {
+                setAuthMode("login");
+                setAuthError("");
+                setRegStep("details");
+              }}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
+                authMode === "login"
+                  ? "bg-[#F5EDE1] text-black shadow-sm"
+                  : "text-neutral-500 hover:text-black"
+              }`}
+            >
+              {t("Login")}
+            </button>
+            <button
+              role="tab"
+              aria-selected={authMode === "register"}
+              onClick={() => {
+                setAuthMode("register");
+                setAuthError("");
+              }}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
+                authMode === "register"
+                  ? "bg-[#F5EDE1] text-black shadow-sm"
+                  : "text-neutral-500 hover:text-black"
+              }`}
+            >
+              {t("Register")}
+            </button>
+          </div>
+        )}
+
+        {/* Info Banner */}
+        {otpInfoMsg && (
+          <div className="w-full mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-[11px] text-emerald-700 flex items-center justify-center gap-2">
+            <span>✓</span>
+            <span>{otpInfoMsg}</span>
+          </div>
+        )}
 
         {/* Error Banner */}
         {authError && (
@@ -425,12 +682,14 @@ export default function AuthModal({
               <div className="flex justify-end -mb-1 mt-1">
                 <button
                   type="button"
-                  onClick={() =>
-                    alert(
-                      "Forgot password service is temporarily unavailable. Please contact support.",
-                    )
-                  }
-                  className="text-[10px] text-neutral-500 hover:text-black transition-colors"
+                  onClick={() => {
+                    setAuthMode("forgot");
+                    setForgotStep("email");
+                    setForgotEmail(loginEmail);
+                    setAuthError("");
+                    setOtpInfoMsg("");
+                  }}
+                  className="text-[10px] text-neutral-500 hover:text-black transition-colors cursor-pointer"
                 >
                   {t("Forgot Password?")}
                 </button>
@@ -461,9 +720,209 @@ export default function AuthModal({
 
             {renderGoogleSection()}
           </form>
-        ) : (
+        ) : authMode === "forgot" ? (
+          forgotStep === "email" ? (
+            /* Forgot Password Step 1: Enter Email */
+            <form onSubmit={handleSendForgotPasswordOtp} className="w-full flex flex-col">
+              <div className="text-center mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-[#F5EDE1] text-[#0B1528] flex items-center justify-center mx-auto mb-3 text-xl shadow-sm select-none">
+                  🔐
+                </div>
+                <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
+                  {t("Reset Password")}
+                </h2>
+                <p className="text-[11px] text-neutral-500 leading-relaxed px-2">
+                  {t("Enter your registered email address to receive a verification code.")}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 my-2">
+                <input
+                  type="email"
+                  placeholder={t("Email Address")}
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  disabled={authSubmitting}
+                  className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authSubmitting || !forgotEmail.trim()}
+                className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] disabled:opacity-50 text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-3 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {authSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    {t("Sending Code...")}
+                  </>
+                ) : (
+                  t("Send Reset Code")
+                )}
+              </button>
+
+              <div className="flex justify-center mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setAuthError("");
+                    setOtpInfoMsg("");
+                  }}
+                  className="text-neutral-500 hover:text-black text-[11px] transition-colors"
+                >
+                  ← {t("Back to Login")}
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* Forgot Password Step 2: OTP & New Password */
+            <form onSubmit={handleResetPasswordSubmit} className="w-full flex flex-col">
+              <div className="text-center mb-5">
+                <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
+                  {t("Reset Password")}
+                </h2>
+                <p className="text-[11px] text-neutral-500 leading-relaxed px-2">
+                  {t("We sent a 6-digit verification code to")} <br />
+                  <span className="font-semibold text-neutral-800">{forgotEmail}</span>
+                </p>
+              </div>
+
+              <div className="space-y-4 my-2">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-2 text-center">
+                    {t("OTP Verification")}
+                  </label>
+                  <OtpBoxes
+                    value={forgotOtpCode}
+                    onChange={setForgotOtpCode}
+                    disabled={authSubmitting}
+                    idPrefix="forgot-otp"
+                  />
+                </div>
+
+                <PasswordInput
+                  value={forgotNewPassword}
+                  onChange={setForgotNewPassword}
+                  placeholder={t("New Password")}
+                  disabled={authSubmitting}
+                />
+
+                <PasswordInput
+                  value={forgotConfirmPassword}
+                  onChange={setForgotConfirmPassword}
+                  placeholder={t("Confirm Password")}
+                  disabled={authSubmitting}
+                />
+
+                {/* Password Requirement Checklist */}
+                <div className="bg-white border border-[#EBE6DC] rounded-xl p-3 text-[11px] space-y-1.5 transition-all text-left rtl:text-right">
+                  <p className="font-semibold text-neutral-700 text-[11px] mb-1">
+                    {t("Password Requirements:")}
+                  </p>
+                  <ul className="space-y-1.5">
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      forgotHasMinLength ? "text-emerald-700 font-medium" : forgotNewPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        forgotHasMinLength ? "bg-emerald-100 text-emerald-700" : forgotNewPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {forgotHasMinLength ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least 8 characters")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      forgotHasUpper ? "text-emerald-700 font-medium" : forgotNewPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        forgotHasUpper ? "bg-emerald-100 text-emerald-700" : forgotNewPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {forgotHasUpper ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least one uppercase letter (A-Z)")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      forgotHasLower ? "text-emerald-700 font-medium" : forgotNewPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        forgotHasLower ? "bg-emerald-100 text-emerald-700" : forgotNewPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {forgotHasLower ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least one lowercase letter (a-z)")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      forgotHasNumberOrSpecial ? "text-emerald-700 font-medium" : forgotNewPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        forgotHasNumberOrSpecial ? "bg-emerald-100 text-emerald-700" : forgotNewPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {forgotHasNumberOrSpecial ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least one number or symbol")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      forgotPasswordsMatch ? "text-emerald-700 font-medium" : forgotConfirmPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        forgotPasswordsMatch ? "bg-emerald-100 text-emerald-700" : forgotConfirmPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {forgotPasswordsMatch ? "✓" : "✕"}
+                      </span>
+                      <span>{forgotConfirmPassword && !forgotPasswordsMatch ? t("Passwords do not match") : t("Passwords match")}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authSubmitting || forgotOtpCode.length !== 6 || !isForgotPasswordValid || !forgotPasswordsMatch}
+                className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] disabled:opacity-50 text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-5 mb-3 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {authSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    {t("Saving Changes...")}
+                  </>
+                ) : (
+                  t("Reset Password")
+                )}
+              </button>
+
+              <div className="flex items-center justify-between mt-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotStep("email");
+                    setAuthError("");
+                  }}
+                  className="text-neutral-500 hover:text-black text-[11px] transition-colors"
+                >
+                  ← {t("Edit Info")}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={resendTimer > 0 || authSubmitting}
+                  onClick={handleSendForgotPasswordOtp}
+                  className="text-[11px] font-semibold text-[#0B1528] disabled:text-neutral-400 hover:underline transition-all"
+                >
+                  {resendTimer > 0
+                    ? `${t("Resend Code")} (${resendTimer}s)`
+                    : t("Resend Code")}
+                </button>
+              </div>
+            </form>
+          )
+        ) : regStep === "details" ? (
           <form
-            onSubmit={handleRegisterSubmit}
+            onSubmit={handleSendOtp}
             className="w-full flex flex-col"
           >
             <div className="text-center mb-5">
@@ -521,6 +980,76 @@ export default function AuthModal({
                 placeholder={t("Password (Min. 8 characters)")}
                 disabled={authSubmitting}
               />
+
+              <PasswordInput
+                value={regConfirmPassword}
+                onChange={setRegConfirmPassword}
+                placeholder={t("Confirm Password")}
+                disabled={authSubmitting}
+              />
+
+              {/* Dynamic Password Requirement Checklist */}
+              <div className="bg-[#FAF7F2] border border-[#EBE6DC] rounded-xl p-3 text-[11px] space-y-1.5 transition-all text-left rtl:text-right">
+                <p className="font-semibold text-neutral-700 text-[11px] mb-1">
+                  {t("Password Requirements:")}
+                </p>
+                <ul className="space-y-1.5">
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasMinLength ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasMinLength ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasMinLength ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least 8 characters")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasUpper ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasUpper ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasUpper ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least one uppercase letter (A-Z)")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasLower ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasLower ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasLower ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least one lowercase letter (a-z)")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    hasNumberOrSpecial ? "text-emerald-700 font-medium" : regPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      hasNumberOrSpecial ? "bg-emerald-100 text-emerald-700" : regPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {hasNumberOrSpecial ? "✓" : "✕"}
+                    </span>
+                    <span>{t("At least one number or symbol")}</span>
+                  </li>
+
+                  <li className={`flex items-center gap-2 transition-colors ${
+                    passwordsMatch ? "text-emerald-700 font-medium" : regConfirmPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                  }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                      passwordsMatch ? "bg-emerald-100 text-emerald-700" : regConfirmPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                    }`}>
+                      {passwordsMatch ? "✓" : "✕"}
+                    </span>
+                    <span>{regConfirmPassword && !passwordsMatch ? t("Passwords do not match") : t("Passwords match")}</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <button
@@ -531,16 +1060,82 @@ export default function AuthModal({
               {authSubmitting ? (
                 <>
                   <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                  {t("Registering...")}
+                  {t("Sending Code...")}
                 </>
               ) : (
-                t("Register")
+                t("Send Code")
               )}
             </button>
 
             {renderGoogleSection()}
           </form>
+        ) : (
+          /* Step 2: Registration OTP Code Verification Screen */
+          <form onSubmit={handleRegisterSubmit} className="w-full flex flex-col">
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 rounded-2xl bg-[#F5EDE1] text-[#0B1528] flex items-center justify-center mx-auto mb-3 text-xl shadow-sm select-none">
+                ✉️
+              </div>
+              <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
+                {t("Verify Email")}
+              </h2>
+              <p className="text-[11px] text-neutral-500 leading-relaxed px-2">
+                {t("We sent a 6-digit verification code to")} <br />
+                <span className="font-semibold text-neutral-800">{regEmail}</span>
+              </p>
+            </div>
+
+            <div className="my-2">
+              <OtpBoxes
+                value={otpCode}
+                onChange={setOtpCode}
+                disabled={authSubmitting}
+                idPrefix="reg-otp"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={authSubmitting || otpCode.length !== 6}
+              className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] disabled:opacity-50 text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-colors shadow-sm mt-6 mb-3 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {authSubmitting ? (
+                <>
+                  <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                  {t("Registering...")}
+                </>
+              ) : (
+                t("Verify & Complete Registration")
+              )}
+            </button>
+
+            <div className="flex items-center justify-between mt-2 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setRegStep("details");
+                  setAuthError("");
+                }}
+                className="text-neutral-500 hover:text-black text-[11px] transition-colors flex items-center gap-1"
+              >
+                <span>←</span> {t("Edit Info")}
+              </button>
+
+              <button
+                type="button"
+                disabled={resendTimer > 0 || authSubmitting}
+                onClick={handleSendOtp}
+                className="text-[11px] font-semibold text-[#0B1528] disabled:text-neutral-400 hover:underline transition-all"
+              >
+                {resendTimer > 0
+                  ? `${t("Resend Code")} (${resendTimer}s)`
+                  : t("Resend Code")}
+              </button>
+            </div>
+          </form>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

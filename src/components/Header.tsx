@@ -25,7 +25,7 @@ export default function Header({
   const { lang, setLang, t } = useLanguage();
 
   return (
-    <header className="h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-6 sm:px-10 flex items-center justify-between sticky top-0 z-40">
+    <header className="h-16 sm:h-20 bg-[#0B1528] border-b border-[#1E2E4A] px-4 sm:px-10 flex items-center justify-between sticky top-0 z-40">
       <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
         <div className="w-8 h-8 rounded-full border border-[#1E2E4A] flex items-center justify-center bg-[#101F35] shadow-sm shrink-0 overflow-hidden relative">
           <Image
@@ -36,7 +36,7 @@ export default function Header({
             className="object-contain"
           />
         </div>
-        <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B]">Mazoom</span>
+        <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B]">Mazoomen</span>
       </Link>
 
       {/* Right controls wrapper */}
@@ -52,18 +52,22 @@ export default function Header({
         {/* Auth details & Login button wrapper */}
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
-            // Logged in controls (Desktop Only)
-            <div className="hidden sm:flex items-center gap-3">
+            /* Logged in controls (Visible on mobile and desktop) */
+            <div className="flex items-center gap-2 sm:gap-3">
               {user && (
-                <span className="text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] rounded-full px-3 py-1 font-sans">
+                <span className="hidden sm:inline-block text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] rounded-full px-3 py-1 font-sans">
                   {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
                 </span>
               )}
               <button
                 onClick={handleLogout}
-                className="px-4 h-9 text-xs font-semibold text-neutral-300 border border-[#1E2E4A] hover:text-[#E5C38B] hover:bg-[#1A2D4C] rounded-lg transition-all cursor-pointer"
+                className="px-3 sm:px-4 h-9 text-xs font-semibold text-neutral-300 border border-[#1E2E4A] hover:text-[#E5C38B] hover:bg-[#1A2D4C] rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+                title={t("Sign Out")}
               >
-                {t("Sign Out")}
+                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>{t("Sign Out")}</span>
               </button>
             </div>
           ) : (

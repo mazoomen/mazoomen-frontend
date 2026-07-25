@@ -36,6 +36,12 @@ export interface PurchaseInvitation {
   showMoments?: boolean;
   allowCompanions?: boolean;
   isActive: boolean;
+  moments?: string[];
+  hiddenMoments?: string[];
+  deletedMoments?: string[];
+  deletedImages?: string[];
+  hiddenImages?: string[];
+  galleryOrder?: string[];
 }
 
 export interface PurchaseData {
@@ -48,12 +54,65 @@ export interface PurchaseData {
   invitation: PurchaseInvitation | null;
 }
 
+export interface CouponUsageUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string | null;
+}
+
+export interface CouponUsageTemplate {
+  id: string;
+  title: string;
+  previewImage?: string;
+  price?: number | string;
+}
+
+export interface CouponPurchaseRequest {
+  id: string;
+  userId: string;
+  contactEmail: string;
+  contactPhone: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  discountAmount?: number | string | null;
+  finalPrice?: number | string | null;
+  createdAt: string;
+  user?: CouponUsageUser | null;
+  template?: CouponUsageTemplate | null;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountPercent: number;
+  maxUses?: number | null;
+  usedCount?: number;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    purchaseRequests: number;
+  };
+  purchaseRequests?: CouponPurchaseRequest[];
+}
+
 export interface PurchaseRequestData {
   id: string;
   templateId: string;
   contactEmail: string;
   contactPhone: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  couponId?: string | null;
+  couponCode?: string | null;
+  discountAmount?: number | string | null;
+  finalPrice?: number | string | null;
+  coupon?: {
+    id: string;
+    code: string;
+    discountPercent: number;
+  } | null;
   createdAt: string;
   template: PurchaseTemplate;
   purchase?: {

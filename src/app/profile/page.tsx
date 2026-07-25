@@ -10,6 +10,73 @@ import { Spinner, ErrorState, PasswordInput } from "@/components/ui";
 import type { UserProfile } from "@/types/auth";
 import type { AxiosError } from "axios";
 
+// ── 6-Digit OTP Box Component ──────────────────────────────────────────
+function OtpBoxes({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}) {
+  const digits = Array.from({ length: 6 }).map((_, i) => value[i] || "");
+
+  const handleChange = (index: number, val: string) => {
+    const char = val.slice(-1);
+    if (!/^\d*$/.test(char)) return;
+
+    const newDigits = [...digits];
+    newDigits[index] = char;
+    const nextVal = newDigits.join("").slice(0, 6);
+    onChange(nextVal);
+
+    if (char && index < 5) {
+      const nextInput = document.getElementById(`profile-otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      const prevInput = document.getElementById(`profile-otp-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted) {
+      onChange(pasted);
+      const targetIndex = Math.min(pasted.length, 5);
+      const targetInput = document.getElementById(`profile-otp-${targetIndex}`);
+      targetInput?.focus();
+    }
+  };
+
+  return (
+    <div className="flex justify-center gap-2 dir-ltr">
+      {Array.from({ length: 6 }).map((_, idx) => (
+        <input
+          key={idx}
+          id={`profile-otp-${idx}`}
+          type="text"
+          inputMode="numeric"
+          pattern="\d*"
+          maxLength={1}
+          value={digits[idx] || ""}
+          onChange={(e) => handleChange(idx, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(idx, e)}
+          onPaste={handlePaste}
+          disabled={disabled}
+          className="w-10 h-12 text-center text-lg font-bold bg-white border border-[#E6E2DA] rounded-xl outline-none focus:border-black focus:ring-1 focus:ring-black transition-all shadow-sm disabled:opacity-50 text-neutral-800"
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -23,12 +90,37 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
 
   // Status states
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Change Password Modal & OTP state
+  const [isPwdModalOpen, setIsPwdModalOpen] = useState(false);
+  const [pwdOtpCode, setPwdOtpCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwdSubmitting, setPwdSubmitting] = useState(false);
+  const [pwdErrorMsg, setPwdErrorMsg] = useState("");
+  const [pwdSuccessMsg, setPwdSuccessMsg] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Password complexity checks
+  const hasMinLength = newPassword.length >= 8;
+  const hasUpper = /[A-Z]/.test(newPassword);
+  const hasLower = /[a-z]/.test(newPassword);
+  const hasNumberOrSpecial = /[0-9\W]/.test(newPassword);
+  const isPasswordValid = hasMinLength && hasUpper && hasLower && hasNumberOrSpecial;
+  const passwordsMatch = newPassword.length > 0 && confirmPassword.length > 0 && newPassword === confirmPassword;
+
+  // Countdown timer for Resend OTP
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -66,27 +158,18 @@ export default function ProfilePage() {
     setErrorMessage(null);
 
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !phoneNumber.trim()) {
-      setErrorMessage(t("All fields except new password are required."));
-      return;
-    }
-
-    if (password && password.length < 8) {
-      setErrorMessage(t("Password must be at least 8 characters long."));
+      setErrorMessage(t("All fields are required."));
       return;
     }
 
     setSaving(true);
     try {
-      const updatePayload: Record<string, string> = {
+      const updatePayload = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim(),
         phoneNumber: phoneNumber.trim(),
       };
-
-      if (password) {
-        updatePayload.password = password;
-      }
 
       const res = await api.put<UserProfile>("/users/profile", updatePayload);
       const updatedProfile = res.data;
@@ -96,7 +179,6 @@ export default function ProfilePage() {
       setLastName(updatedProfile.lastName);
       setEmail(updatedProfile.email);
       setPhoneNumber(updatedProfile.phoneNumber || "");
-      setPassword("");
 
       // Synchronize update back to localStorage
       const userMeta = {
@@ -122,6 +204,87 @@ export default function ProfilePage() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ── Open Change Password Modal and Send OTP ─────────────────────────
+  const handleOpenPasswordModal = async () => {
+    setIsPwdModalOpen(true);
+    setPwdOtpCode("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPwdErrorMsg("");
+    setPwdSuccessMsg("");
+
+    setPwdSubmitting(true);
+    try {
+      await api.post("/users/change-password/send-otp");
+      setResendTimer(60);
+      setPwdSuccessMsg(t("Code sent! Please check your email inbox."));
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      const msg = error.response?.data?.message;
+      const key = Array.isArray(msg) ? msg[0] : msg;
+      setPwdErrorMsg(t(key || "Failed to send verification code. Please try again."));
+    } finally {
+      setPwdSubmitting(false);
+    }
+  };
+
+  const handleResendPasswordOtp = async () => {
+    setPwdErrorMsg("");
+    setPwdSuccessMsg("");
+    setPwdSubmitting(true);
+    try {
+      await api.post("/users/change-password/send-otp");
+      setResendTimer(60);
+      setPwdSuccessMsg(t("Code sent! Please check your email inbox."));
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      const msg = error.response?.data?.message;
+      const key = Array.isArray(msg) ? msg[0] : msg;
+      setPwdErrorMsg(t(key || "Failed to send verification code. Please try again."));
+    } finally {
+      setPwdSubmitting(false);
+    }
+  };
+
+  const handleChangePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdErrorMsg("");
+
+    if (!pwdOtpCode || pwdOtpCode.length !== 6) {
+      setPwdErrorMsg(t("Please enter a valid 6-digit verification code."));
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setPwdErrorMsg(t("errors.password_weak"));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPwdErrorMsg(t("Passwords do not match. Please try again."));
+      return;
+    }
+
+    setPwdSubmitting(true);
+    try {
+      await api.post("/users/change-password", {
+        otp: pwdOtpCode.trim(),
+        newPassword,
+      });
+
+      setSuccessMessage(t("Password updated successfully."));
+      setIsPwdModalOpen(false);
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      const msg = error.response?.data?.message;
+      const key = Array.isArray(msg) ? msg[0] : msg;
+      setPwdErrorMsg(t(key || "Failed to update password. Please check your OTP."));
+    } finally {
+      setPwdSubmitting(false);
     }
   };
 
@@ -153,7 +316,7 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column: Summary Card */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 flex flex-col gap-6">
               <div className="bg-white border border-[#E6E2DA] rounded-[24px] p-6 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#FAF8F5] pointer-events-none" />
                 <div className="w-20 h-20 rounded-full border border-[#E6E2DA] bg-[#FAF9F6] flex items-center justify-center text-3xl mb-4 shadow-inner relative z-10 select-none">
@@ -169,7 +332,7 @@ export default function ProfilePage() {
 
                 <hr className="w-full my-5 border-[#FAF8F5]" />
 
-                <div className="w-full text-left space-y-3.5 text-xs text-[#7F8487]">
+                <div className="w-full text-left rtl:text-right space-y-3.5 text-xs text-[#7F8487]">
                   <div>
                     <span className="block text-[9px] uppercase tracking-wider text-neutral-400 font-bold">{t("Email Address")}</span>
                     <span className="font-medium text-[#2D3142] break-all">{profile?.email}</span>
@@ -185,6 +348,25 @@ export default function ProfilePage() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Security & Password Card */}
+              <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[24px] p-6 shadow-sm flex flex-col gap-3">
+                <div className="flex items-center gap-2 text-[#2D3142]">
+                  <span className="text-lg select-none">🔒</span>
+                  <h4 className="font-sans font-bold text-xs">{t("Security & Password")}</h4>
+                </div>
+                <p className="text-[11px] text-neutral-500 leading-relaxed">
+                  {t("Change your password securely by verifying your identity with an email OTP code.")}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleOpenPasswordModal}
+                  className="w-full mt-2 bg-white border border-[#E6E2DA] hover:bg-neutral-50 text-[#0B1528] font-semibold py-2.5 rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>🔐</span>
+                  <span>{t("Change Password")}</span>
+                </button>
               </div>
             </div>
 
@@ -264,16 +446,6 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("New Password (leave blank to keep current)")}</label>
-                    <PasswordInput
-                      value={password}
-                      onChange={setPassword}
-                      placeholder={t("Enter at least 8 characters")}
-                      disabled={saving}
-                    />
-                  </div>
-
                   <div className="pt-2">
                     <button
                       type="submit"
@@ -292,6 +464,180 @@ export default function ProfilePage() {
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Change Password OTP Modal */}
+        {isPwdModalOpen && (
+          <div
+            className="fixed inset-0 bg-[#2D3142]/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-hidden"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setIsPwdModalOpen(false);
+            }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("Change Password")}
+          >
+            <div className="bg-[#FAF8F5] border border-[#EBE7DF] rounded-[28px] max-w-sm sm:max-w-md w-full p-6 sm:p-8 shadow-2xl relative flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar">
+              {/* Close Button */}
+              <button
+                onClick={() => setIsPwdModalOpen(false)}
+                className="absolute top-4 right-4 rtl:right-auto rtl:left-4 text-neutral-400 hover:text-black transition-colors cursor-pointer p-1.5 rounded-full hover:bg-neutral-200/50"
+                aria-label="Close dialog"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              <div className="text-center mb-5">
+                <div className="w-12 h-12 rounded-2xl bg-[#F5EDE1] text-[#0B1528] flex items-center justify-center mx-auto mb-3 text-xl shadow-sm select-none">
+                  🔐
+                </div>
+                <h2 className="text-2xl font-serif font-medium text-neutral-800 mb-1">
+                  {t("Change Password")}
+                </h2>
+                <p className="text-[11px] text-neutral-500 leading-relaxed px-2">
+                  {t("We sent a 6-digit verification code to")} <br />
+                  <span className="font-semibold text-neutral-800">{email}</span>
+                </p>
+              </div>
+
+              {/* Status Alerts */}
+              {pwdSuccessMsg && (
+                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-[11px] text-emerald-700 flex items-center justify-center gap-2">
+                  <span>✓</span>
+                  <span>{pwdSuccessMsg}</span>
+                </div>
+              )}
+
+              {pwdErrorMsg && (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-600 flex items-center gap-2">
+                  <span>✕</span>
+                  <span>{pwdErrorMsg}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-2 text-center">
+                    {t("OTP Verification")}
+                  </label>
+                  <OtpBoxes
+                    value={pwdOtpCode}
+                    onChange={setPwdOtpCode}
+                    disabled={pwdSubmitting}
+                  />
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <PasswordInput
+                    value={newPassword}
+                    onChange={setNewPassword}
+                    placeholder={t("New Password")}
+                    disabled={pwdSubmitting}
+                  />
+
+                  <PasswordInput
+                    value={confirmPassword}
+                    onChange={setConfirmPassword}
+                    placeholder={t("Confirm Password")}
+                    disabled={pwdSubmitting}
+                  />
+                </div>
+
+                {/* Password Requirement Checklist */}
+                <div className="bg-white border border-[#EBE6DC] rounded-xl p-3 text-[11px] space-y-1.5 transition-all text-left rtl:text-right">
+                  <p className="font-semibold text-neutral-700 text-[11px] mb-1">
+                    {t("Password Requirements:")}
+                  </p>
+                  <ul className="space-y-1.5">
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      hasMinLength ? "text-emerald-700 font-medium" : newPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        hasMinLength ? "bg-emerald-100 text-emerald-700" : newPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {hasMinLength ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least 8 characters")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      hasUpper ? "text-emerald-700 font-medium" : newPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        hasUpper ? "bg-emerald-100 text-emerald-700" : newPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {hasUpper ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least one uppercase letter (A-Z)")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      hasLower ? "text-emerald-700 font-medium" : newPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        hasLower ? "bg-emerald-100 text-emerald-700" : newPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {hasLower ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least one lowercase letter (a-z)")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      hasNumberOrSpecial ? "text-emerald-700 font-medium" : newPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        hasNumberOrSpecial ? "bg-emerald-100 text-emerald-700" : newPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {hasNumberOrSpecial ? "✓" : "✕"}
+                      </span>
+                      <span>{t("At least one number or symbol")}</span>
+                    </li>
+
+                    <li className={`flex items-center gap-2 transition-colors ${
+                      passwordsMatch ? "text-emerald-700 font-medium" : confirmPassword ? "text-red-500 font-medium" : "text-neutral-500"
+                    }`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                        passwordsMatch ? "bg-emerald-100 text-emerald-700" : confirmPassword ? "bg-red-100 text-red-600" : "bg-neutral-200 text-neutral-500"
+                      }`}>
+                        {passwordsMatch ? "✓" : "✕"}
+                      </span>
+                      <span>{confirmPassword && !passwordsMatch ? t("Passwords do not match") : t("Passwords match")}</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={pwdSubmitting || pwdOtpCode.length !== 6 || !isPasswordValid || !passwordsMatch}
+                  className="w-full bg-[#0B1528] border border-[#1E2E4A] hover:bg-[#1A2D4C] disabled:opacity-50 text-[#E5C38B] font-semibold py-3 rounded-xl text-xs transition-all shadow-sm mt-4 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {pwdSubmitting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                      {t("Saving Changes...")}
+                    </>
+                  ) : (
+                    t("Verify & Change Password")
+                  )}
+                </button>
+
+                <div className="flex items-center justify-end mt-2">
+                  <button
+                    type="button"
+                    disabled={resendTimer > 0 || pwdSubmitting}
+                    onClick={handleResendPasswordOtp}
+                    className="text-[11px] font-semibold text-[#0B1528] disabled:text-neutral-400 hover:underline transition-all"
+                  >
+                    {resendTimer > 0
+                      ? `${t("Resend Code")} (${resendTimer}s)`
+                      : t("Resend Code")}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

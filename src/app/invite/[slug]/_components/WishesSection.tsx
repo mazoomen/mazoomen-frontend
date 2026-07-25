@@ -76,7 +76,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
       if (stored && ownerId) {
         try {
           const user = JSON.parse(stored);
-          if (user && user.id === ownerId) {
+          if (user && (user.id === ownerId || user.role === "ADMIN")) {
             setIsOwner(true);
           }
         } catch { }
@@ -192,7 +192,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   };
 
   const canUpload = allowGuestUploads;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mazoomen-backend.onrender.com';
 
   return (
     <div id="rsvp-section" className="space-y-8" dir={isEn ? "ltr" : "rtl"}>
@@ -429,7 +429,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
           </div>
 
           {/* Wish entry list container */}
-          <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px]" style={{ scrollbarWidth: 'none' }}>
+          <div className="space-y-3 overflow-y-auto px-2 wishes-scroll max-h-[420px] no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {wishes.map((wish, index) => (
               <div
                 key={index}

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getS3Url } from "@/lib/s3";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
-import { InvitationEditor, RsvpTracker } from "./_components";
+import { InvitationEditor, RsvpTracker, ShareModal, generateQrCodeFile } from "./_components";
 import type { PurchaseData } from "@/types/invitation";
 import { Spinner, ErrorState, Button } from "@/components/ui";
 
@@ -21,9 +21,33 @@ export default function ClientDashboardPage() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState<PurchaseData | null>(null);
 
-  // RSVP panel state
+  // Share modal state
+  const [shareModalData, setShareModalData] = useState<{
+    isOpen: boolean;
+    title: string;
+    inviteUrl: string;
+    slug: string;
+  }>({
+    isOpen: false,
+    title: "",
+    inviteUrl: "",
+    slug: "",
+  });
+
+  // RSVP / Tracking panel state
   const [trackingInvitationId, setTrackingInvitationId] = useState<string | null>(null);
   const [trackingTemplateTitle, setTrackingTemplateTitle] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"rsvps" | "image">("rsvps");
+  const [selectedLightboxMoment, setSelectedLightboxMoment] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
+
+  // Drag and Drop refs for mobile touch interaction
+  const touchStartPosRef = useRef<{ x: number; y: number; index: number } | null>(null);
+  const isTouchDraggingRef = useRef<boolean>(false);
+  const touchDraggedIndexRef = useRef<number | null>(null);
+  const currentFeedImagesRef = useRef<any[]>([]);
+  const preventClickRef = useRef<boolean>(false);
 
   // Copy status
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -78,6 +102,45 @@ export default function ClientDashboardPage() {
     }
   };
 
+  // ── Share invitation with link & QR Code ─────────────────────────────
+  const handleShare = async (purchase: PurchaseData) => {
+    if (!purchase.invitation?.slug) return;
+    const baseUrl =
+      typeof window !== "undefined" ? window.location.origin : "http://localhost:3001";
+    const inviteUrl = `${baseUrl}/invite/${purchase.invitation.slug}`;
+    const title = purchase.template.title;
+    const slug = purchase.invitation.slug;
+
+    if (typeof window !== "undefined" && navigator.share) {
+      try {
+        const { file } = await generateQrCodeFile(inviteUrl, `qr-${slug}.png`);
+        const shareData: ShareData = {
+          title: title,
+          text: `${title}\n${inviteUrl}`,
+          url: inviteUrl,
+        };
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          shareData.files = [file];
+        }
+
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    setShareModalData({
+      isOpen: true,
+      title,
+      inviteUrl,
+      slug,
+    });
+  };
+
   // ── Toggle Link Activation ──────────────────────────────────────────
   const handleToggleLinkActivation = async (invitationId: string, newState: boolean) => {
     try {
@@ -95,6 +158,556 @@ export default function ClientDashboardPage() {
     } catch (err) {
       logger.error("Failed to toggle link activation", err);
     }
+  };
+
+  // ── Delete a guest photo/moment or host gallery image ─────────────
+  const handleDeleteMoment = async (invitationId: string, urlToDelete: string) => {
+    const confirmed = window.confirm(
+      lang === "ar"
+        ? "هل أنت متأكد من رغبتك في حذف هذه الصورة؟"
+        : "Are you sure you want to delete this image?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const purchase = purchases.find((p) => p.invitation?.id === invitationId);
+      if (!purchase || !purchase.invitation) return;
+
+      const hostImages = purchase.invitation.images || [];
+      const hiddenImages = purchase.invitation.hiddenImages || [];
+      const currentMoments = purchase.invitation.moments || [];
+      const currentHidden = purchase.invitation.hiddenMoments || [];
+      const isHostImage = hostImages.includes(urlToDelete) || hiddenImages.includes(urlToDelete);
+
+      const updatedGalleryOrder = (purchase.invitation.galleryOrder || []).filter(
+        (url) => url !== urlToDelete
+      );
+
+      if (isHostImage) {
+        const updatedImages = hostImages.filter((url) => url !== urlToDelete);
+        const updatedHiddenImages = hiddenImages.filter((url) => url !== urlToDelete);
+        const updatedDeletedImages = [
+          ...Array.from(new Set([...(purchase.invitation.deletedImages || []), urlToDelete])),
+        ];
+
+        await api.put(`/invitations/${invitationId}`, {
+          images: updatedImages,
+          hiddenImages: updatedHiddenImages,
+          deletedImages: updatedDeletedImages,
+          galleryOrder: updatedGalleryOrder,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? { 
+                        ...p.invitation, 
+                        images: updatedImages,
+                        hiddenImages: updatedHiddenImages,
+                        deletedImages: updatedDeletedImages,
+                        galleryOrder: updatedGalleryOrder
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
+      } else {
+        const updatedMoments = currentMoments.filter((url) => url !== urlToDelete);
+        const updatedHidden = currentHidden.filter((url) => url !== urlToDelete);
+        const updatedDeletedMoments = [
+          ...Array.from(new Set([...(purchase.invitation.deletedMoments || []), urlToDelete])),
+        ];
+
+        await api.put(`/invitations/${invitationId}`, {
+          moments: updatedMoments,
+          hiddenMoments: updatedHidden,
+          deletedMoments: updatedDeletedMoments,
+          galleryOrder: updatedGalleryOrder,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? { 
+                        ...p.invitation, 
+                        moments: updatedMoments,
+                        hiddenMoments: updatedHidden,
+                        deletedMoments: updatedDeletedMoments,
+                        galleryOrder: updatedGalleryOrder
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
+      }
+      setSelectedLightboxMoment(null);
+    } catch (err) {
+      logger.error("Failed to delete image", err);
+      alert(
+        lang === "ar"
+          ? "فشل حذف الصورة. يرجى المحاولة مرة أخرى."
+          : "Failed to delete image. Please try again."
+      );
+    }
+  };
+
+  // ── Toggle visibility of guest photo/moment ──────────────────────
+  const handleToggleHideMoment = async (invitationId: string, urlToToggle: string) => {
+    try {
+      const purchase = purchases.find((p) => p.invitation?.id === invitationId);
+      if (!purchase || !purchase.invitation) return;
+
+      const hostImages = purchase.invitation.images || [];
+      const hiddenImages = purchase.invitation.hiddenImages || [];
+      const currentMoments = purchase.invitation.moments || [];
+      const currentHidden = purchase.invitation.hiddenMoments || [];
+
+      const isHostImage = hostImages.includes(urlToToggle) || hiddenImages.includes(urlToToggle);
+
+      if (isHostImage) {
+        const isCurrentlyHidden = hiddenImages.includes(urlToToggle);
+        let updatedImages: string[];
+        let updatedHiddenImages: string[];
+
+        if (isCurrentlyHidden) {
+          // Move from hidden to visible
+          updatedHiddenImages = hiddenImages.filter((url) => url !== urlToToggle);
+          updatedImages = hostImages.includes(urlToToggle)
+            ? hostImages
+            : [...hostImages, urlToToggle];
+        } else {
+          // Move from visible to hidden
+          updatedHiddenImages = [...hiddenImages, urlToToggle];
+          updatedImages = hostImages.filter((url) => url !== urlToToggle);
+        }
+
+        await api.put(`/invitations/${invitationId}`, {
+          images: updatedImages,
+          hiddenImages: updatedHiddenImages,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? {
+                        ...p.invitation,
+                        images: updatedImages,
+                        hiddenImages: updatedHiddenImages,
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
+      } else {
+        const isCurrentlyHidden = currentHidden.includes(urlToToggle);
+        let updatedMoments: string[];
+        let updatedHidden: string[];
+
+        if (isCurrentlyHidden) {
+          // Move from hidden to visible
+          updatedHidden = currentHidden.filter((url) => url !== urlToToggle);
+          updatedMoments = currentMoments.includes(urlToToggle)
+            ? currentMoments
+            : [...currentMoments, urlToToggle];
+        } else {
+          // Move from visible to hidden
+          updatedHidden = [...currentHidden, urlToToggle];
+          updatedMoments = currentMoments.filter((url) => url !== urlToToggle);
+        }
+
+        await api.put(`/invitations/${invitationId}`, {
+          moments: updatedMoments,
+          hiddenMoments: updatedHidden,
+        });
+
+        // Update local state so UI updates instantly
+        setPurchases((prev) =>
+          prev.map((p) =>
+            p.invitation?.id === invitationId
+              ? {
+                  ...p,
+                  invitation: p.invitation
+                    ? {
+                        ...p.invitation,
+                        moments: updatedMoments,
+                        hiddenMoments: updatedHidden,
+                      }
+                    : null,
+                }
+              : p
+          )
+        );
+      }
+    } catch (err) {
+      logger.error("Failed to toggle hide moment", err);
+      alert(
+        lang === "ar"
+          ? "فشل تعديل حالة ظهور الصورة. يرجى المحاولة مرة أخرى."
+          : "Failed to update image visibility. Please try again."
+      );
+    }
+  };
+
+  // ── Drag and Drop Image Reordering ────────────────────────────────
+  const reorderImages = useCallback(
+    (fromIndex: number, toIndex: number, list: any[]) => {
+      if (fromIndex === null || fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || toIndex >= list.length) return;
+
+      const updatedList = [...list];
+      const draggedItem = updatedList[fromIndex];
+      updatedList.splice(fromIndex, 1);
+      updatedList.splice(toIndex, 0, draggedItem);
+
+      const newImages = updatedList.filter((item) => !item.isGuest).map((item) => item.url);
+      const newMoments = updatedList.filter((item) => item.isGuest && !item.isHidden).map((item) => item.url);
+      const newHidden = updatedList.filter((item) => item.isGuest && item.isHidden).map((item) => item.url);
+      const newGalleryOrder = updatedList.map((item) => item.url);
+
+      setPurchases((prev) =>
+        prev.map((p) => {
+          if (p.invitation?.id === trackingInvitationId) {
+            return {
+              ...p,
+              invitation: p.invitation
+                ? {
+                    ...p.invitation,
+                    images: newImages,
+                    moments: newMoments,
+                    hiddenMoments: newHidden,
+                    galleryOrder: newGalleryOrder,
+                  }
+                : null,
+            };
+          }
+          return p;
+        })
+      );
+
+      setDraggedIndex(toIndex);
+      touchDraggedIndexRef.current = toIndex;
+      currentFeedImagesRef.current = updatedList;
+    },
+    [trackingInvitationId]
+  );
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, targetIndex: number, allFeedImages: any[]) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+    reorderImages(draggedIndex, targetIndex, allFeedImages);
+  };
+
+  const handleDragEnd = async () => {
+    setDraggedIndex(null);
+    if (!trackingInvitationId) return;
+
+    const purchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
+    if (!purchase || !purchase.invitation) return;
+
+    try {
+      await api.put(`/invitations/${trackingInvitationId}`, {
+        images: purchase.invitation.images || [],
+        moments: purchase.invitation.moments || [],
+        hiddenMoments: purchase.invitation.hiddenMoments || [],
+        galleryOrder: purchase.invitation.galleryOrder || [],
+      });
+    } catch (err) {
+      logger.error("Failed to save reordered images", err);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, index: number, allFeedImages: any[]) => {
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY, index };
+    touchDraggedIndexRef.current = index;
+    currentFeedImagesRef.current = allFeedImages;
+    isTouchDraggingRef.current = false;
+
+    const onTouchMove = (moveEvent: TouchEvent) => {
+      if (!touchStartPosRef.current) return;
+      const currentTouch = moveEvent.touches[0];
+      const dx = Math.abs(currentTouch.clientX - touchStartPosRef.current.x);
+      const dy = Math.abs(currentTouch.clientY - touchStartPosRef.current.y);
+
+      if (!isTouchDraggingRef.current) {
+        if (dx > 8 || dy > 8) {
+          isTouchDraggingRef.current = true;
+          setDraggedIndex(touchStartPosRef.current.index);
+        }
+      }
+
+      if (isTouchDraggingRef.current) {
+        if (moveEvent.cancelable) {
+          moveEvent.preventDefault();
+        }
+
+        const elem = document.elementFromPoint(currentTouch.clientX, currentTouch.clientY);
+        const cardElem = elem?.closest("[data-drag-index]") as HTMLElement | null;
+
+        if (cardElem && cardElem.dataset.dragIndex !== undefined) {
+          const targetIndex = parseInt(cardElem.dataset.dragIndex, 10);
+          if (!isNaN(targetIndex) && touchDraggedIndexRef.current !== null && targetIndex !== touchDraggedIndexRef.current) {
+            reorderImages(touchDraggedIndexRef.current, targetIndex, currentFeedImagesRef.current);
+          }
+        }
+      }
+    };
+
+    const onTouchEnd = () => {
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+
+      if (isTouchDraggingRef.current) {
+        preventClickRef.current = true;
+        setTimeout(() => {
+          preventClickRef.current = false;
+        }, 300);
+
+        handleDragEnd();
+      }
+
+      touchStartPosRef.current = null;
+      touchDraggedIndexRef.current = null;
+      isTouchDraggingRef.current = false;
+    };
+
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
+  };
+
+  const downloadRsvpsPdf = async (invitationId: string, withHidden: boolean) => {
+    const isAr = lang === "ar";
+    try {
+      const res = await api.get(`/invitations/${invitationId}/rsvps`);
+      const allRsvps = res.data.rsvps || [];
+      const statistics = res.data.statistics || { totalResponses: 0, totalAttending: 0, totalExcused: 0, totalCompanions: 0 };
+      const filteredRsvps = withHidden ? allRsvps : allRsvps.filter((r: any) => !r.isHidden);
+
+      const title = isAr ? `قائمة الحضور - ${trackingTemplateTitle}` : `RSVPs List - ${trackingTemplateTitle}`;
+      
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+
+      const totalResponsesStr = isAr ? "إجمالي الردود" : "Total Responses";
+      const totalAttendingStr = isAr ? "إجمالي الحضور" : "Total Attending";
+      const excusedStr = isAr ? "المعتذرين" : "Excused";
+      const totalCompanionsStr = isAr ? "إجمالي المرافقين" : "Total Companions";
+      const guestNameStr = isAr ? "اسم الضيف" : "Guest Name";
+      const statusStr = isAr ? "الحالة" : "Status";
+      const companionsStr = isAr ? "عدد المرافقين" : "Number of Companions";
+      const messageStr = isAr ? "الرسالة" : "Message";
+      const dateStr = isAr ? "تاريخ الرد" : "Date Responded";
+      const attendingVal = isAr ? "حاضر" : "Attending";
+      const declinedVal = isAr ? "معتذر" : "Declined";
+
+      const rsvpsRows = filteredRsvps.map((rsvp: any) => {
+        const dateFormatted = new Date(rsvp.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const statusText = rsvp.attendance === 'YES' ? attendingVal : declinedVal;
+        return `
+          <tr>
+            <td>${rsvp.name}</td>
+            <td>${statusText}</td>
+            <td>${rsvp.guestsCount}</td>
+            <td>${rsvp.message || '-'}</td>
+            <td>${dateFormatted}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}">
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              color: #333;
+              padding: 40px;
+              margin: 0;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 24px;
+              color: #111;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #666;
+              font-size: 14px;
+            }
+            .stats-container {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 20px;
+              margin-bottom: 35px;
+            }
+            .stat-card {
+              border: 1px solid #EBE7DF;
+              background-color: #FAF8F5;
+              padding: 15px;
+              border-radius: 12px;
+              text-align: center;
+            }
+            .stat-card .value {
+              font-size: 20px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            .stat-card .label {
+              font-size: 11px;
+              color: #666;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              font-size: 13px;
+            }
+            th, td {
+              border-bottom: 1px solid #EBE7DF;
+              padding: 12px 15px;
+              text-align: start;
+            }
+            th {
+              background-color: #FAF8F5;
+              font-weight: 600;
+              color: #555;
+            }
+            tr:hover {
+              background-color: rgba(250, 248, 245, 0.5);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${title}</h1>
+            <p>${new Date().toLocaleString(isAr ? 'ar-EG' : 'en-US')}</p>
+          </div>
+          
+          <div class="stats-container">
+            <div class="stat-card">
+              <div class="value">${statistics.totalResponses}</div>
+              <div class="label">${totalResponsesStr}</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: #10B981;">${statistics.totalAttending}</div>
+              <div class="label">${totalAttendingStr}</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: #EF4444;">${statistics.totalExcused}</div>
+              <div class="label">${excusedStr}</div>
+            </div>
+            <div class="stat-card">
+              <div class="value" style="color: #F59E0B;">${statistics.totalCompanions}</div>
+              <div class="label">${totalCompanionsStr}</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>${guestNameStr}</th>
+                <th>${statusStr}</th>
+                <th>${companionsStr}</th>
+                <th>${messageStr}</th>
+                <th>${dateStr}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rsvpsRows}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => { window.close(); }, 500);
+            };
+          </script>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+    } catch (err) {
+      logger.error("Failed to generate PDF", err);
+      alert(isAr ? "فشل إنشاء ملف PDF" : "Failed to generate PDF");
+    }
+  };
+
+  const downloadAllImages = async (invitationId: string, withHidden: boolean) => {
+    const purchase = purchases.find((p) => p.invitation?.id === invitationId);
+    if (!purchase || !purchase.invitation) return;
+
+    const hostImages = purchase.invitation.images || [];
+    const hiddenImages = purchase.invitation.hiddenImages || [];
+    const moments = purchase.invitation.moments || [];
+    const hiddenMoments = purchase.invitation.hiddenMoments || [];
+    
+    const urls = [
+      ...hostImages,
+      ...(withHidden ? hiddenImages : []),
+      ...moments,
+      ...(withHidden ? hiddenMoments : [])
+    ];
+
+    if (urls.length === 0) {
+      alert(lang === "ar" ? "لا توجد صور لتحميلها" : "No images to download");
+      return;
+    }
+
+    for (let i = 0; i < urls.length; i++) {
+      const fullUrl = getS3Url(urls[i]);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      handleDownloadImage(fullUrl);
+    }
+  };
+
+  const handleDownloadImage = (url: string) => {
+    const baseApiUrl = api.defaults.baseURL || "http://localhost:3000";
+    const downloadUrl = `${baseApiUrl}/invitations/download-file?url=${encodeURIComponent(url)}`;
+    
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.target = "_self";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // ── Open Editor (Create or Edit) ──────────────────────────────────
@@ -302,12 +915,12 @@ export default function ClientDashboardPage() {
                       <span>{t("Create Invitation")}</span>
                     </Button>
                   ) : (
-                    <div className="w-full flex gap-2">
+                    <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenEditor(purchase)}
-                        className="flex-1"
+                        className="w-full"
                       >
                         {t("Edit Details")}
                       </Button>
@@ -315,9 +928,17 @@ export default function ClientDashboardPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleCopyLink(purchase.id, purchase.invitation!.slug)}
-                        className="flex-1"
+                        className="w-full"
                       >
                         {copiedId === purchase.id ? t("Copied!") : t("Copy Link")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare(purchase)}
+                        className="w-full"
+                      >
+                        {t("Share")}
                       </Button>
                       <Button
                         variant={
@@ -329,13 +950,14 @@ export default function ClientDashboardPage() {
                         onClick={() => {
                           setTrackingInvitationId(purchase.invitation!.id);
                           setTrackingTemplateTitle(purchase.template.title);
+                          setActiveTab("rsvps");
                           document
                             .getElementById("rsvp-tracker-section")
                             ?.scrollIntoView({ behavior: "smooth" });
                         }}
-                        className="flex-1"
+                        className="w-full"
                       >
-                        {t("Track RSVPs")}
+                        {t("Track")}
                       </Button>
                     </div>
                   )}
@@ -346,33 +968,322 @@ export default function ClientDashboardPage() {
         </div>
       )}
 
-      {/* ── RSVP Tracker Panel (Only if selected) ───────────────────── */}
-      {trackingInvitationId && (
-        <section
-          id="rsvp-tracker-section"
-          className="bg-white border border-[#EBE7DF] rounded-[32px] p-6 sm:p-8 shadow-sm transition-all duration-300"
-        >
-          <div
-            className={`border-b border-[#F4F1EA] pb-4 mb-6 flex justify-between items-start gap-4 ${
-              lang === "ar" ? "flex-row-reverse" : "flex-row"
-            }`}
+      {/* ── Tracking Dashboard Panel (Only if selected) ──────────────── */}
+      {trackingInvitationId && (() => {
+        const trackingPurchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
+        const hostImages = trackingPurchase?.invitation?.images || [];
+        const hiddenImages = trackingPurchase?.invitation?.hiddenImages || [];
+        const moments = trackingPurchase?.invitation?.moments || [];
+        const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
+        const galleryOrder = trackingPurchase?.invitation?.galleryOrder || [];
+        const allFeedImages = [
+          ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
+          ...hiddenImages.map((url) => ({ url, isGuest: false, isHidden: true })),
+          ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
+          ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
+        ];
+
+        if (galleryOrder.length > 0) {
+          allFeedImages.sort((a, b) => {
+            const idxA = galleryOrder.indexOf(a.url);
+            const idxB = galleryOrder.indexOf(b.url);
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+          });
+        }
+
+        return (
+          <section
+            id="rsvp-tracker-section"
+            className="bg-white border border-[#EBE7DF] rounded-[32px] p-6 sm:p-8 shadow-sm transition-all duration-300"
           >
-            <div className={lang === "ar" ? "text-right" : "text-left"}>
-              <h2 className="text-xl font-serif font-medium text-neutral-800">
-                {t("Audience RSVPs")} —{" "}
-                <span className="text-[#B89C72]">{trackingTemplateTitle}</span>
-              </h2>
-              <p className="text-xs text-[#7F8487] mt-1">
-                {t("Live guest feedback and attendance metrics.")}
-              </p>
+            <div
+              className={`border-b border-[#F4F1EA] pb-4 mb-6 flex justify-between items-start gap-4 ${
+                lang === "ar" ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <div className={lang === "ar" ? "text-right" : "text-left"}>
+                <h2 className="text-xl font-serif font-medium text-neutral-800">
+                  {t("Track")} —{" "}
+                  <span className="text-[#B89C72]">{trackingTemplateTitle}</span>
+                </h2>
+                <p className="text-xs text-[#7F8487] mt-1">
+                  {t("Live guest RSVPs and uploaded photos.")}
+                </p>
+              </div>
+              <div className="flex gap-2 items-center relative select-none">
+                <button
+                  onClick={() => setIsDownloadDropdownOpen(!isDownloadDropdownOpen)}
+                  className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 h-8 text-xs font-semibold rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 transition-colors border border-neutral-200 cursor-pointer ${
+                    lang === "ar" ? "flex-row-reverse" : "flex-row"
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  {t("Download All")}
+                </button>
+
+                {isDownloadDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setIsDownloadDropdownOpen(false)} />
+                    <div 
+                      className={`absolute top-full mt-2 w-52 bg-white border border-[#EBE7DF] rounded-xl shadow-lg z-20 py-1.5 ${
+                        lang === "ar" ? "left-0" : "right-0"
+                      }`}
+                    >
+                      {activeTab === "rsvps" ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              downloadRsvpsPdf(trackingInvitationId, false);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل بدون المخفي (PDF)" : "Download without hidden (PDF)"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              downloadRsvpsPdf(trackingInvitationId, true);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer border-t border-[#F4F1EA] ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل مع المخفي (PDF)" : "Download with hidden (PDF)"}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              downloadAllImages(trackingInvitationId, false);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل الصور بدون المخفي" : "Download images without hidden"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              downloadAllImages(trackingInvitationId, true);
+                              setIsDownloadDropdownOpen(false);
+                            }}
+                            className={`w-full text-start px-4 py-2.5 text-xs font-semibold text-neutral-700 hover:bg-[#FAF8F5] transition-colors cursor-pointer border-t border-[#F4F1EA] ${
+                              lang === "ar" ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {lang === "ar" ? "تحميل الصور مع المخفي" : "Download images with hidden"}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <Button variant="outline" size="sm" onClick={() => setTrackingInvitationId(null)}>
+                  {t("Close")}
+                </Button>
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setTrackingInvitationId(null)}>
-              {t("Close")}
-            </Button>
+
+            {/* Tabs Header */}
+            <div
+              className={`flex border-b border-[#F4F1EA] mb-6 gap-1 ${
+                lang === "ar" ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <button
+                onClick={() => setActiveTab("rsvps")}
+                className={`px-6 py-3 text-sm font-semibold transition-all border-b-2 -mb-px cursor-pointer ${
+                  activeTab === "rsvps"
+                    ? "border-[#B89C72] text-[#B89C72]"
+                    : "border-transparent text-[#7F8487] hover:text-neutral-800"
+                }`}
+              >
+                {t("RSVPs")}
+              </button>
+              <button
+                onClick={() => setActiveTab("image")}
+                className={`px-6 py-3 text-sm font-semibold transition-all border-b-2 -mb-px cursor-pointer ${
+                  activeTab === "image"
+                    ? "border-[#B89C72] text-[#B89C72]"
+                    : "border-transparent text-[#7F8487] hover:text-neutral-800"
+                }`}
+              >
+                {t("Image")}
+              </button>
+            </div>
+
+            {/* Active Tab Content */}
+            {activeTab === "rsvps" && (
+              <RsvpTracker invitationId={trackingInvitationId} />
+            )}
+
+            {activeTab === "image" && (
+              <div className="space-y-6">
+                {allFeedImages.length === 0 ? (
+                  <div className="rounded-2xl border border-[#EBE7DF] bg-[#FAF8F5] p-10 text-center shadow-inner">
+                    <p className="text-4xl block mb-2 select-none">📸</p>
+                    <h4 className="font-bold text-sm text-neutral-800">
+                      {t("No guest photos uploaded yet.")}
+                    </h4>
+                    <p className="mt-1 text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
+                      {t("Photos uploaded by guests using the moments gallery will appear here.")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {allFeedImages.map((item, index) => {
+                      return (
+                        <div
+                          key={index}
+                          data-drag-index={index}
+                          draggable
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={(e) => handleDragOver(e, index, allFeedImages)}
+                          onDragEnd={handleDragEnd}
+                          onTouchStart={(e) => handleTouchStart(e, index, allFeedImages)}
+                          className={`relative aspect-square overflow-hidden shadow-md cursor-grab active:scale-[0.97] transition-all duration-300 select-none ${
+                            draggedIndex === index
+                              ? "opacity-40 scale-[0.95] border-2 border-dashed border-[#B89C72]"
+                              : ""
+                          }`}
+                          style={{
+                            background: "rgba(255, 255, 255, 0.55)",
+                            backdropFilter: "blur(12px)",
+                            border: draggedIndex === index ? undefined : "1px solid rgba(0, 0, 0, 0.08)",
+                            borderRadius: "22px",
+                            touchAction: "pan-y",
+                            WebkitUserSelect: "none",
+                          }}
+                          onClick={() => {
+                            if (preventClickRef.current) return;
+                            setSelectedLightboxMoment(item.url);
+                          }}
+                        >
+                          {/* Image Thumbnail */}
+                          <img
+                            src={getS3Url(item.url)}
+                            alt=""
+                            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 pointer-events-none select-none"
+                            draggable={false}
+                          />
+
+                          {item.isHidden && (
+                            <span className="absolute top-2 right-2 px-2 py-0.5 text-[9px] font-bold bg-black/60 backdrop-blur-xs text-white rounded-full border border-white/10 shadow-md z-10 select-none">
+                              {t("Hidden")}
+                            </span>
+                          )}
+
+                          {item.isGuest && (
+                            <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-black/40 text-white/90 rounded backdrop-blur-[2px] uppercase tracking-wider select-none z-10">
+                              {lang === "ar" ? "ضيف" : "Guest"}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        );
+      })()}
+
+      {/* ── Image Lightbox Popup Modal ──────────────────────────────── */}
+      {selectedLightboxMoment && ((moment: string) => {
+        const trackingPurchase = purchases.find((p) => p.invitation?.id === trackingInvitationId);
+        const hostImages = trackingPurchase?.invitation?.images || [];
+        const hiddenImages = trackingPurchase?.invitation?.hiddenImages || [];
+        const moments = trackingPurchase?.invitation?.moments || [];
+        const hiddenMoments = trackingPurchase?.invitation?.hiddenMoments || [];
+        const galleryOrder = trackingPurchase?.invitation?.galleryOrder || [];
+        const allFeedImages = [
+          ...hostImages.map((url) => ({ url, isGuest: false, isHidden: false })),
+          ...hiddenImages.map((url) => ({ url, isGuest: false, isHidden: true })),
+          ...moments.map((url) => ({ url, isGuest: true, isHidden: false })),
+          ...hiddenMoments.map((url) => ({ url, isGuest: true, isHidden: true })),
+        ];
+
+        if (galleryOrder.length > 0) {
+          allFeedImages.sort((a, b) => {
+            const idxA = galleryOrder.indexOf(a.url);
+            const idxB = galleryOrder.indexOf(b.url);
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+          });
+        }
+        const selectedItem = allFeedImages.find((item) => item.url === moment);
+        const isGuest = selectedItem?.isGuest;
+        const isHidden = selectedItem?.isHidden;
+        const displayUrl = getS3Url(moment);
+
+        return (
+          <div
+            className="fixed inset-0 bg-[#2D3142]/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setSelectedLightboxMoment(null)}
+          >
+            <div
+              className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl shadow-2xl flex items-center justify-center bg-black/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top Left Controls */}
+              <div className="absolute top-4 left-4 flex gap-2 z-10">
+                <button
+                  onClick={() => handleToggleHideMoment(trackingInvitationId!, moment)}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                >
+                  {isHidden ? t("Show") : t("Hide")}
+                </button>
+                <button
+                  onClick={() => handleDeleteMoment(trackingInvitationId!, moment)}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                >
+                  {lang === "ar" ? "حذف" : "Delete"}
+                </button>
+                <button
+                  onClick={() => handleDownloadImage(displayUrl)}
+                  className="flex items-center gap-1.5 px-4 h-9 rounded-full text-xs font-semibold text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer select-none"
+                >
+                  {lang === "ar" ? "تحميل" : "Download"}
+                </button>
+              </div>
+
+              {/* Close Button Top Right */}
+              <button
+                onClick={() => setSelectedLightboxMoment(null)}
+                className="absolute top-4 right-4 text-white bg-black/40 hover:bg-black/70 hover:scale-105 transition-all cursor-pointer p-2 rounded-full z-10"
+                aria-label="Close preview"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+
+              {/* Fullscreen Image */}
+              <img
+                src={displayUrl}
+                alt="Preview"
+                className="max-w-full max-h-[85vh] object-contain rounded-xl select-none"
+              />
+            </div>
           </div>
-          <RsvpTracker invitationId={trackingInvitationId} />
-        </section>
-      )}
+        );
+      })(selectedLightboxMoment)}
 
       {/* ── Invitation Editor Overlay Modal (Create / Edit Popup) ───── */}
       {isEditorOpen && editingPurchase && (
@@ -414,6 +1325,15 @@ export default function ClientDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* ── Share Modal (QR Code & Phone/Link Sharing) ───────────── */}
+      <ShareModal
+        isOpen={shareModalData.isOpen}
+        onClose={() => setShareModalData((prev) => ({ ...prev, isOpen: false }))}
+        title={shareModalData.title}
+        inviteUrl={shareModalData.inviteUrl}
+        slug={shareModalData.slug}
+      />
     </div>
   );
 }

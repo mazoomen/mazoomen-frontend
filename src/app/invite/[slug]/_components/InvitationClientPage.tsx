@@ -129,6 +129,18 @@ export default function InvitationClientPage({
     );
   }
 
+  const isOwnerOrAdmin = isOwner || isAdmin;
+
+  // Respect saved preferences for public guests; enable preview for owner/admin
+  const displayInvitation = localInvitation
+    ? {
+        ...localInvitation,
+        showMoments: isOwnerOrAdmin ? true : localInvitation.showMoments !== false,
+        allowGuestUploads: isOwnerOrAdmin ? true : localInvitation.allowGuestUploads !== false,
+        allowCompanions: isOwnerOrAdmin ? true : localInvitation.allowCompanions !== false,
+      }
+    : undefined;
+
   let pageContent: React.ReactNode;
 
   const tTitle = (localInvitation.template?.title || '') + ' ' + (localInvitation.template?.titleEn || '');
@@ -136,7 +148,7 @@ export default function InvitationClientPage({
   if (tTitle.includes('Garden') || tTitle.includes('حديقة')) {
     pageContent = (
       <InvitationClientPageGarden
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -146,7 +158,7 @@ export default function InvitationClientPage({
   } else if (tTitle.includes('Emerald') || tTitle.includes('الزمرد')) {
     pageContent = (
       <InvitationClientPageEmerald
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -156,7 +168,7 @@ export default function InvitationClientPage({
   } else if (tTitle.includes('Boho') || tTitle.includes('Terracotta') || tTitle.includes('البوهو')) {
     pageContent = (
       <InvitationClientPageBohoTerracotta
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -166,7 +178,7 @@ export default function InvitationClientPage({
   } else if (tTitle.includes('Lily') || tTitle.includes('زنبق')) {
     pageContent = (
       <InvitationClientPageWatercolorLily
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -176,7 +188,7 @@ export default function InvitationClientPage({
   } else if (tTitle.includes('Gypsophila') || tTitle.includes('الجبسوفيلا')) {
     pageContent = (
       <InvitationClientPageWhiteGypsophila
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -186,7 +198,7 @@ export default function InvitationClientPage({
   } else if (tTitle.includes('Flow') || tTitle.includes('انسيابي')) {
     pageContent = (
       <InvitationClientPageFlow
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -196,7 +208,7 @@ export default function InvitationClientPage({
   } else if (tTitle.includes('Forest') || tTitle.includes('Foliage') || tTitle.includes('أوراق الشجر')) {
     pageContent = (
       <InvitationClientPageForestFoliage
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -207,7 +219,7 @@ export default function InvitationClientPage({
     // Default fallback to Royal Gold Wedding
     pageContent = (
       <InvitationClientPageRoyalGold
-        invitation={localInvitation}
+        invitation={displayInvitation!}
         slug={slug}
         isDeactivatedInitial={isDeactivatedInitial}
         viewingLangProp={viewingLang}
@@ -216,7 +228,7 @@ export default function InvitationClientPage({
     );
   }
 
-  const showEditButton = isOwner || isAdmin;
+  const showEditButton = isOwnerOrAdmin;
 
   return (
     <>
@@ -228,7 +240,7 @@ export default function InvitationClientPage({
           <button
             id="floating-edit-invitation-btn"
             onClick={() => setIsEditorOpen(true)}
-            className="fixed bottom-6 left-6 z-[99999] px-5 py-3.5 rounded-full bg-gradient-to-r from-[#0b1528] to-[#15243f] text-[#E5C38B] border border-[#E5C38B]/35 shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2 cursor-pointer font-sans font-bold text-xs select-none"
+            className="fixed top-6 left-6 z-[99999] px-5 py-3.5 rounded-full bg-gradient-to-r from-[#0b1528] to-[#15243f] text-[#E5C38B] border border-[#E5C38B]/35 shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2 cursor-pointer font-sans font-bold text-xs select-none"
             style={{
               boxShadow: 'rgba(229, 195, 139, 0.25) 0px 8px 24px',
             }}
@@ -263,8 +275,11 @@ export default function InvitationClientPage({
                   purchaseId={localInvitation.purchaseId || ""}
                   invitation={localInvitation}
                   templateTitle={localInvitation.template?.title || ""}
-                  onSaved={() => {
+                  onSaved={(updatedInv) => {
                     setIsEditorOpen(false);
+                    if (updatedInv) {
+                      setLocalInvitation(updatedInv);
+                    }
                     fetchFreshInvitation();
                   }}
                 />

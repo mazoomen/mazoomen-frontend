@@ -164,7 +164,7 @@ export default function InvitationClientPageForestFoliage({
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
-      videoRef.current.muted = false;
+      videoRef.current.muted = true;
       videoRef.current.play().catch((err) => console.log('Video play error:', err));
     }
   }, [isOpen]);
@@ -588,7 +588,15 @@ export default function InvitationClientPageForestFoliage({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled white/silver seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/forest-foliage-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.40)' }} textColor="#103020" />
+      <EnvelopeOverlay
+        eventTitle={eventTitle}
+        onOpen={handleOpenInvitation}
+        sealImage="/images/forest-foliage-seal.png"
+        viewingLang={isEn ? "en" : "ar"}
+        customSealStyle={{ transform: 'translate(0px, -1px) scale(1.40)' }}
+        textColor="#103020"
+        videoUrl={`${S3_BASE_URL}/templates/videos/Animated_wallpaper_simple_moveme__1080p_202607141412_9c837d61.mp4`}
+      />
 
       {/* Falling Flowers Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
@@ -862,10 +870,10 @@ export default function InvitationClientPageForestFoliage({
           </div>
 
           <div className="relative z-10 w-full max-w-lg mx-auto space-y-12">
-            {/* Gallery widget */}
-            {invitation.images && invitation.images.length > 0 && (
+            {/* Unified Guest Photo Feed Section */}
+            {((invitation.images && invitation.images.length > 0) || invitation.allowGuestUploads !== false || invitation.showMoments !== false) && (
               <div
-                className="p-6 animate-on-scroll fade-up"
+                className="p-6 animate-on-scroll fade-up space-y-6"
                 style={{
                   backdropFilter: 'blur(16px) saturate(120%)',
                   background: 'rgba(255, 255, 255, 0.75)',
@@ -874,89 +882,101 @@ export default function InvitationClientPageForestFoliage({
                   borderRadius: '28px'
                 }}
               >
-                <h4 className="text-center text-xs tracking-widest font-bold text-[#B89C72] mb-4 uppercase">{isEn ? "GALLERY" : "معرض الصور"}</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  {invitation.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setSelectedImage(img)}
-                      className="aspect-square rounded-xl overflow-hidden shadow-xs border border-slate-100 hover:scale-[1.02] cursor-pointer transition-all"
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                <h4 className="text-center text-xs tracking-widest font-bold text-[#B89C72] uppercase">
+                  {isEn ? "GUEST PHOTO FEED" : "صور ضيوفنا الكرام"}
+                </h4>
 
-            {/* Moments Capture widget */}
-            {invitation.allowGuestUploads !== false && (
-              <div
-                className="p-6 animate-on-scroll fade-up"
-                style={{
-                  backdropFilter: 'blur(16px) saturate(120%)',
-                  background: 'rgba(255, 255, 255, 0.75)',
-                  border: '1px solid rgba(226, 232, 240, 0.8)',
-                  boxShadow: '0 8px 32px 0 rgba(148, 163, 184, 0.08)',
-                  borderRadius: '28px'
-                }}
-              >
-                <div className="text-center space-y-4">
-                  <div className="w-12 h-12 rounded-full bg-[#103020]/10 border border-[#103020]/20 flex items-center justify-center mx-auto text-[#103020] shadow-xs">
-                    <Camera className="w-6 h-6 text-[#64748B]" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-[#103020]">{isEn ? "Share Your Moments" : "شاركونا لحظاتكم الجميلة"}</h4>
-                    <p className="text-[11px] text-[#B89C72]/85 font-semibold mt-1 leading-relaxed">
-                      {isEn ? "Upload photos directly from your camera to the shared album!" : "التقطوا صورًا وشاركوها مباشرة في المعرض الحي للحفل!"}
-                    </p>
-                  </div>
-                  <div className="flex justify-center relative">
-                    <label className="flex items-center gap-2 px-6 py-3 bg-[#103020] text-white hover:bg-[#1A3022] text-xs font-bold rounded-full shadow-md cursor-pointer transition-all">
-                      <Camera className="w-4 h-4" />
-                      {isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCameraUpload}
-                        className="hidden"
-                        disabled={isUploading}
-                      />
-                    </label>
-                  </div>
-                  {isUploading && (
-                    <p className="text-[10px] font-bold text-[#64748B] animate-pulse">
-                      {isEn ? "Uploading your moment..." : "جاري رفع الصورة..."}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Moments Slideshow/Showcase */}
-            {invitation.showMoments !== false && invitation.moments && invitation.moments.length > 0 && (
-              <div
-                className="p-6 animate-on-scroll fade-up"
-                style={{
-                  backdropFilter: 'blur(16px) saturate(120%)',
-                  background: 'rgba(255, 255, 255, 0.75)',
-                  border: '1px solid rgba(226, 232, 240, 0.8)',
-                  boxShadow: '0 8px 32px 0 rgba(148, 163, 184, 0.08)',
-                  borderRadius: '28px'
-                }}
-              >
-                <h4 className="text-center text-xs tracking-widest font-bold text-[#B89C72] mb-4 uppercase">{isEn ? "GUEST PHOTO FEED" : "صور ضيوفنا الكرام"}</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  {invitation.moments.map((momentUrl, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setSelectedImage(momentUrl)}
-                      className="aspect-square rounded-lg overflow-hidden border border-slate-100 cursor-pointer shadow-xs hover:scale-[1.03] transition-all"
-                    >
-                      <img src={momentUrl} alt="" className="w-full h-full object-cover" />
+                {/* Moments Capture widget */}
+                {invitation.allowGuestUploads !== false && (
+                  <div className="text-center space-y-3 py-4 bg-[#103020]/5 rounded-2xl border border-[#B89C72]/15 p-4">
+                    <div className="w-10 h-10 rounded-full bg-[#103020]/10 border border-[#103020]/20 flex items-center justify-center mx-auto text-[#103020] shadow-xs">
+                      <Camera className="w-5 h-5 text-[#64748B]" />
                     </div>
-                  ))}
-                </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-[#103020]">{isEn ? "Share Your Moments" : "شاركونا لحظاتكم الجميلة"}</h4>
+                      <p className="text-[10px] text-[#B89C72]/85 font-semibold mt-0.5 leading-relaxed">
+                        {isEn ? "Upload photos directly from your camera to the shared album!" : "التقطوا صورًا وشاركوها مباشرة في المعرض الحي للحفل!"}
+                      </p>
+                    </div>
+                    <div className="flex justify-center relative">
+                      <label className="flex items-center gap-2 px-5 py-2.5 bg-[#103020] text-white hover:bg-[#1A3022] text-[10px] font-bold rounded-full shadow-md cursor-pointer transition-all">
+                        <Camera className="w-3.5 h-3.5" />
+                        {isEn ? "Open Camera / Upload Photo" : "افتح الكاميرا أو ارفع صورة"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCameraUpload}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                      </label>
+                    </div>
+                    {isUploading && (
+                      <p className="text-[9px] font-bold text-[#64748B] animate-pulse">
+                        {isEn ? "Uploading your moment..." : "جاري رفع الصورة..."}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Unified Photo Feed Grid */}
+                {invitation.showMoments !== false && (
+                  <div className="space-y-3">
+                    {(() => {
+                      const hostImages = invitation.images || [];
+                      const guestImages = invitation.moments || [];
+                      const galleryOrder = (invitation as any).galleryOrder || [];
+                      const allFeedImages = [
+                        ...hostImages.map((url) => ({ url, isGuest: false })),
+                        ...guestImages.map((url) => ({ url, isGuest: true }))
+                      ];
+
+                      if (galleryOrder.length > 0) {
+                        allFeedImages.sort((a, b) => {
+                          const idxA = galleryOrder.indexOf(a.url);
+                          const idxB = galleryOrder.indexOf(b.url);
+                          if (idxA === -1 && idxB === -1) return 0;
+                          if (idxA === -1) return 1;
+                          if (idxB === -1) return -1;
+                          return idxA - idxB;
+                        });
+                      }
+
+                      return allFeedImages.length > 0 ? (
+                        <div 
+                          className="max-h-[280px] sm:max-h-[350px] overflow-y-auto no-scrollbar pr-0.5"
+                          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        >
+                          <div className="grid grid-cols-2 gap-3">
+                            {allFeedImages.map((item, idx) => (
+                              <div
+                                key={idx}
+                                onClick={() => setSelectedImage(item.url)}
+                                className="relative aspect-square rounded-xl overflow-hidden border border-slate-100 cursor-pointer shadow-xs hover:scale-[1.02] transition-all"
+                              >
+                                <img src={item.url} alt="" className="w-full h-full object-cover" />
+                                {item.isGuest && (
+                                  <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 bg-black/40 text-white/90 rounded backdrop-blur-[2px] uppercase tracking-wider select-none">
+                                    {isEn ? "guest" : "ضيف"}
+                                  </span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <style>{`
+                            .no-scrollbar::-webkit-scrollbar {
+                              display: none;
+                            }
+                          `}</style>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-[#B89C72]/60 text-[10px] font-medium bg-[#103020]/5 rounded-xl border border-dashed border-[#B89C72]/20">
+                          {isEn ? "No guest photos yet. Be the first to share!" : "لا توجد صور في المعرض بعد. كن أول من يشاركنا صورته!"}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1133,7 +1153,7 @@ export default function InvitationClientPageForestFoliage({
                 }}
               >
                 <h4 className="text-center text-xs tracking-widest font-bold text-[#B89C72] mb-4 uppercase">{isEn ? "CONGRATULATIONS ALBUM" : "دفتر التهاني والتبريكات"}</h4>
-                <div className="max-h-[300px] overflow-y-auto pr-2 space-y-4">
+                <div className="max-h-[300px] overflow-y-auto no-scrollbar pr-2 space-y-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {wishes.map((wish, idx) => (
                     <div
                       key={idx}
@@ -1174,7 +1194,7 @@ export default function InvitationClientPageForestFoliage({
               {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <a href="/" className="text-[9px] uppercase tracking-[0.25em] text-slate-400 font-bold hover:underline transition-all cursor-pointer block">
-              {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
+              {isEn ? "Made with love on Mazoomen platform" : "صنع بكل حب عبر منصة معزومين"}
             </a>
             {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
             <div className="h-24" />

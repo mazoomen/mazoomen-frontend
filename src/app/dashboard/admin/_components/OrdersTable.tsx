@@ -27,6 +27,10 @@ export interface Order {
   userId: string;
   templateId: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+  couponId?: string | null;
+  couponCode?: string | null;
+  discountAmount?: number | string | null;
+  finalPrice?: number | string | null;
   createdAt: string;
   user: OrderUser;
   template: OrderTemplate;
@@ -45,6 +49,7 @@ interface OrdersTableProps {
   onStatusUpdated: (orderId: string, newStatus: "APPROVED" | "REJECTED") => void;
   onLinkStatusUpdated?: (invitationId: string, isActive: boolean) => void;
   onEditInvitation?: (purchase: any) => void;
+  onTrackInvitation?: (invitation: any) => void;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -54,6 +59,7 @@ export default function OrdersTable({
   onStatusUpdated,
   onLinkStatusUpdated,
   onEditInvitation,
+  onTrackInvitation,
 }: OrdersTableProps) {
   const { lang } = useLanguage();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -292,7 +298,21 @@ export default function OrdersTable({
                         </div>
                         <div>
                           <p className="font-semibold text-neutral-800">{order.template.title}</p>
-                          <p className="text-[10px] text-neutral-500 font-sans">{order.template.price} JOD</p>
+                          {order.couponCode ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] text-neutral-400 font-sans line-through">
+                                {order.template.price} JOD
+                              </span>
+                              <span className="text-[10px] text-emerald-600 font-bold font-sans">
+                                {order.finalPrice} JOD
+                              </span>
+                              <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
+                                {order.couponCode}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-neutral-500 font-sans">{order.template.price} JOD</p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -392,16 +412,26 @@ export default function OrdersTable({
                           </button>
                         </div>
                       ) : order.status === "APPROVED" && order.purchase?.invitation ? (
-                        <button
-                          onClick={() => {
-                            if (onEditInvitation) {
-                              onEditInvitation(order.purchase);
-                            }
-                          }}
-                          className="inline-flex items-center gap-1 rounded bg-[#0B1528] px-2.5 py-1 text-[10px] font-bold text-[#E5C38B] hover:bg-[#15243F] transition-colors select-none cursor-pointer"
-                        >
-                          {lang === "ar" ? "تعديل الدعوة" : "Edit Invitation"}
-                        </button>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            onClick={() => {
+                              if (onEditInvitation) {
+                                onEditInvitation(order.purchase);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 rounded bg-[#0B1528] px-2.5 py-1 text-[10px] font-bold text-[#E5C38B] hover:bg-[#15243F] transition-colors select-none cursor-pointer"
+                          >
+                            {lang === "ar" ? "تعديل الدعوة" : "Edit Invitation"}
+                          </button>
+                          {onTrackInvitation && (
+                            <button
+                              onClick={() => onTrackInvitation(order.purchase?.invitation)}
+                              className="inline-flex items-center gap-1 rounded border border-[#B89C72] bg-[#FAF9F6] px-2 py-1 text-[10px] font-bold text-[#B89C72] hover:bg-[#F4F1EA] transition-colors select-none cursor-pointer"
+                            >
+                              {lang === "ar" ? "متابعة (الردود والصور)" : "Track (RSVPs & Photos)"}
+                            </button>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-neutral-400 font-sans">—</span>
                       )}

@@ -6,19 +6,19 @@ export default function HowItWorks() {
   const { t } = useLanguage();
 
   return (
-    <section id="features" className="px-6 sm:px-10 py-16 bg-white border-t border-b border-[#E6E2DA]">
-      <div className="max-w-[1700px] mx-auto flex flex-col gap-10">
+    <section id="features" className="px-4 sm:px-10 py-10 sm:py-16 bg-white border-t border-b border-[#E6E2DA]">
+      <div className="max-w-[1700px] mx-auto flex flex-col gap-6 sm:gap-10">
         <div className="text-center flex flex-col gap-1.5">
-          <h2 className="text-2xl font-serif font-medium text-neutral-800">
+          <h2 className="text-xl sm:text-2xl font-serif font-medium text-neutral-800">
             {t("How It Works")}
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-8 items-stretch">
           {/* Couple Illustration */}
-          <div className="flex justify-center items-center bg-[#FAF8F5] border border-[#E9E4DC] rounded-3xl p-6 shadow-sm h-48 w-full max-w-[240px] mx-auto lg:mx-0 shrink-0">
+          <div className="col-span-2 sm:col-span-2 lg:col-span-1 flex justify-center items-center bg-[#FAF8F5] border border-[#E9E4DC] rounded-3xl p-4 sm:p-6 shadow-sm h-36 sm:h-48 w-full max-w-[240px] mx-auto shrink-0">
             <svg
-              className="w-32 h-32 text-[#B89C72]"
+              className="w-24 h-24 sm:w-32 sm:h-32 text-[#B89C72]"
               viewBox="0 0 120 120"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -54,10 +54,10 @@ export default function HowItWorks() {
           </div>
 
           {/* Step 1 */}
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
+          <div className="flex flex-col items-center text-center gap-2 sm:gap-3 p-3 sm:p-0 rounded-2xl sm:rounded-none bg-neutral-50/50 sm:bg-transparent border border-neutral-100 sm:border-0 justify-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm shrink-0">
               <svg
-                className="w-5 h-5 text-black"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -71,10 +71,10 @@ export default function HowItWorks() {
                 />
               </svg>
             </div>
-            <h3 className="font-sans font-bold text-sm text-neutral-800">
+            <h3 className="font-sans font-bold text-xs sm:text-sm text-neutral-800">
               {t("Select a Design")}
             </h3>
-            <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-neutral-400 max-w-[200px] leading-relaxed">
               {t(
                 "Curate your design layout by browsing and selecting from our premium template gallery."
               )}
@@ -82,10 +82,10 @@ export default function HowItWorks() {
           </div>
 
           {/* Step 2 */}
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
+          <div className="flex flex-col items-center text-center gap-2 sm:gap-3 p-3 sm:p-0 rounded-2xl sm:rounded-none bg-neutral-50/50 sm:bg-transparent border border-neutral-100 sm:border-0 justify-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm shrink-0">
               <svg
-                className="w-5 h-5 text-black"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -95,25 +95,25 @@ export default function HowItWorks() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
+                  d="M2.25 8.25h19.5M2.25 9h19.5M3.75 6h16.5a1.5 1.5 0 011.5 1.5v9a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5v-9a1.5 1.5 0 011.5-1.5z"
                 />
               </svg>
             </div>
-            <h3 className="font-sans font-bold text-sm text-neutral-800">
-              {t("Request to Unlock")}
+            <h3 className="font-sans font-bold text-xs sm:text-sm text-neutral-800">
+              {t("Pay & Unlock")}
             </h3>
-            <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-neutral-400 max-w-[200px] leading-relaxed">
               {t(
-                "Submit a quick request with your contact info. Once approved by our team, your template becomes fully editable."
+                "Pay securely online using KNET, Mada, Credit Card, or Apple Pay to immediately activate your template."
               )}
             </p>
           </div>
 
           {/* Step 3 */}
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
+          <div className="flex flex-col items-center text-center gap-2 sm:gap-3 p-3 sm:p-0 rounded-2xl sm:rounded-none bg-neutral-50/50 sm:bg-transparent border border-neutral-100 sm:border-0 justify-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm shrink-0">
               <svg
-                className="w-5 h-5 text-black"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -127,10 +127,10 @@ export default function HowItWorks() {
                 />
               </svg>
             </div>
-            <h3 className="font-sans font-bold text-sm text-neutral-800">
+            <h3 className="font-sans font-bold text-xs sm:text-sm text-neutral-800">
               {t("Customize Details")}
             </h3>
-            <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-neutral-400 max-w-[200px] leading-relaxed">
               {t(
                 "Personalize event date, location coordinates, program timeline, background music, and guidelines on your dashboard."
               )}
@@ -138,10 +138,10 @@ export default function HowItWorks() {
           </div>
 
           {/* Step 4 */}
-          <div className="flex flex-col items-center text-center gap-3">
-            <div className="w-12 h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm">
+          <div className="flex flex-col items-center text-center gap-2 sm:gap-3 p-3 sm:p-0 rounded-2xl sm:rounded-none bg-neutral-50/50 sm:bg-transparent border border-neutral-100 sm:border-0 justify-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-neutral-300 flex items-center justify-center bg-white shadow-sm shrink-0">
               <svg
-                className="w-5 h-5 text-black"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-black"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="1.5"
@@ -155,10 +155,10 @@ export default function HowItWorks() {
                 />
               </svg>
             </div>
-            <h3 className="font-sans font-bold text-sm text-neutral-800">
+            <h3 className="font-sans font-bold text-xs sm:text-sm text-neutral-800">
               {t("Share & Track RSVPs")}
             </h3>
-            <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-neutral-400 max-w-[200px] leading-relaxed">
               {t(
                 "Share your interactive invitation link to gather real-time RSVPs, beautiful wishes, and photos from your guests."
               )}

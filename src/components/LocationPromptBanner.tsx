@@ -7,7 +7,7 @@ import { Button } from "./ui";
 
 export default function LocationPromptBanner() {
   const { lang } = useLanguage();
-  const { permissionStatus, requestLocationPermission, setDefaultCurrency, changeCurrencyManually, availableRates } = useCurrency();
+  const { currency, permissionStatus, requestLocationPermission, setDefaultCurrency, changeCurrencyManually, availableRates } = useCurrency();
   const [mounted, setMounted] = useState(false);
   const [showManualPicker, setShowManualPicker] = useState(false);
   const [cookieConsentCompleted, setCookieConsentCompleted] = useState(false);
@@ -44,15 +44,15 @@ export default function LocationPromptBanner() {
   const t = {
     title: isAr ? "تخصيص العملة المحلية" : "Currency Localization",
     desc: isAr
-      ? "تستخدم منصة مازوم موقعك الجغرافي لعرض تفاصيل الأسعار بعملة بلدك المحلية."
-      : "Mazoom uses your location to display prices in your local currency.",
+      ? "تستخدم منصة معزومين موقعك الجغرافي لعرض تفاصيل الأسعار بعملة بلدك المحلية."
+      : "Mazoomen uses your location to display prices in your local currency.",
     allowBtn: isAr ? "السماح بالوصول للموقع" : "Allow Location Access",
     useJod: isAr ? "متابعة بالدينار الأردني" : "Use Jordanian Dinar",
     orChoose: isAr ? "أو اختر العملة يدوياً" : "Or select manually",
   };
 
   return (
-    <div 
+    <div
       className="fixed bottom-6 right-6 left-6 md:left-auto md:max-w-md z-50 animate-fadeIn"
       dir={isAr ? "rtl" : "ltr"}
     >
@@ -115,7 +115,7 @@ export default function LocationPromptBanner() {
               <select
                 onChange={(e) => changeCurrencyManually(e.target.value)}
                 className="text-[10px] font-bold bg-[#14233C] border border-neutral-700 rounded-md px-2 py-1 outline-none text-[#E5C38B] cursor-pointer"
-                defaultValue="JOD"
+                value={currency}
               >
                 {Object.keys(availableRates).map((cCode) => (
                   <option key={cCode} value={cCode}>

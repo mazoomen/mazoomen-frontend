@@ -35,14 +35,14 @@ export default function CookieConsentBanner() {
   const t = {
     title: isAr ? "إشعار ملفات تعريف الارتباط" : "Cookie Preferences",
     desc: isAr
-      ? "تستخدم منصة مازوم ملفات تعريف الارتباط لتحسين تجربتك وتوفير ميزات مخصصة وضمان عمل الموقع بشكل صحيح."
-      : "Mazoom uses cookies to improve your experience, provide personalized features, and ensure the website functions properly.",
+      ? "تستخدم منصة معزومين ملفات تعريف الارتباط لتحسين تجربتك وتوفير ميزات مخصصة وضمان عمل الموقع بشكل صحيح."
+      : "Mazoomen uses cookies to improve your experience, provide personalized features, and ensure the website functions properly.",
     acceptBtn: isAr ? "قبول الكل" : "Accept All",
     declineBtn: isAr ? "رفض" : "Decline",
   };
 
   return (
-    <div 
+    <div
       className="fixed bottom-6 left-6 right-6 md:right-auto md:max-w-md z-50 animate-fadeIn"
       dir={isAr ? "rtl" : "ltr"}
     >

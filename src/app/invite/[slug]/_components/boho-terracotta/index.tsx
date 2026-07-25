@@ -149,7 +149,15 @@ export default function InvitationClientPageBohoTerracotta({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled terracotta seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/terracotta-seal.png" viewingLang={viewingLang} customSealStyle={{ transform: 'translate(0px, -1px) scale(2.55)' }} textColor="#8A4E35" />
+      <EnvelopeOverlay
+        eventTitle={eventTitle}
+        onOpen={handleOpenInvitation}
+        sealImage="/images/terracotta-seal.png"
+        viewingLang={viewingLang}
+        customSealStyle={{ transform: 'translate(0px, -1px) scale(2.55)' }}
+        textColor="#8A4E35"
+        videoUrl={`${S3_BASE_URL}/templates/videos/template-1_64de6afe.mp4`}
+      />
 
       {/* Snowfall/Leafy Animation overlay */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
@@ -279,7 +287,7 @@ export default function InvitationClientPageBohoTerracotta({
                 {new Date(invitation.eventDate).toLocaleDateString(viewingLang === 'en' ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <a href="/" className="text-xs uppercase tracking-[0.2em] text-[#C8C8C8] hover:underline transition-all cursor-pointer block">
-                {viewingLang === 'en' ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
+                {viewingLang === 'en' ? "Made with love on Mazoomen platform" : "صنع بكل حب عبر منصة معزومين"}
               </a>
               {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
               <div className="h-24" />

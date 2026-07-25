@@ -164,7 +164,7 @@ export default function InvitationClientPageFlow({
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
-      videoRef.current.muted = false;
+      videoRef.current.muted = true;
       videoRef.current.play().catch((err) => console.log('Video play error:', err));
     }
   }, [isOpen]);
@@ -588,7 +588,15 @@ export default function InvitationClientPageFlow({
       )}
 
       {/* Wax seal cover splitting envelope with custom scaled lavender seal */}
-      <EnvelopeOverlay eventTitle={eventTitle} onOpen={handleOpenInvitation} sealImage="/images/flow-seal.png" viewingLang={isEn ? "en" : "ar"} customSealStyle={{ transform: 'translate(0px, -1px) scale(1.60)' }} textColor="#B07070" />
+      <EnvelopeOverlay
+        eventTitle={eventTitle}
+        onOpen={handleOpenInvitation}
+        sealImage="/images/flow-seal.png"
+        viewingLang={isEn ? "en" : "ar"}
+        customSealStyle={{ transform: 'translate(0px, -1px) scale(1.60)' }}
+        textColor="#B07070"
+        videoUrl={`${S3_BASE_URL}/templates/videos/Flow_1080p_202607141304_1c6bb044.mp4`}
+      />
 
       {/* Falling Leaves and Petals Animation overlay over the entire screen */}
       <div className="fixed inset-0 pointer-events-none z-20 overflow-hidden">
@@ -906,7 +914,7 @@ export default function InvitationClientPageFlow({
                   <div className="max-h-[380px] md:max-h-[500px] overflow-y-auto pr-1 no-scrollbar" style={{ scrollbarWidth: 'none' }}>
                     <div className="grid grid-cols-2 gap-3">
                       {invitation.moments.map((src, index) => {
-                        const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com') + src : src;
+                        const fullUrl = src.startsWith('/public') ? (process.env.NEXT_PUBLIC_API_URL || 'https://mazoomen-backend.onrender.com') + src : src;
                         return (
                           <div
                             key={index}
@@ -1122,7 +1130,7 @@ export default function InvitationClientPageFlow({
                   <p className="text-xs tracking-wider uppercase text-[#701020]/80 font-bold">{isEn ? "Guests wishes & congratulations" : "تبريكات وتهاني المهنئين"}</p>
                 </div>
 
-                <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px]" style={{ scrollbarWidth: 'none' }}>
+                <div className="space-y-3 overflow-y-auto px-1 wishes-scroll max-h-[300px] no-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {wishes.map((wish, index) => (
                     <div
                       key={index}
@@ -1167,7 +1175,7 @@ export default function InvitationClientPageFlow({
               {new Date(invitation.eventDate).toLocaleDateString(isEn ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <a href="/" className="text-[9px] uppercase tracking-[0.25em] text-[#701020]/50 font-bold hover:underline transition-all cursor-pointer block">
-              {isEn ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
+              {isEn ? "Made with love on Mazoomen platform" : "صنع بكل حب عبر منصة معزومين"}
             </a>
             {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
             <div className="h-24" />
