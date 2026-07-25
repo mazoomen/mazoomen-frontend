@@ -44,8 +44,8 @@ export default function LocationPromptBanner() {
   const t = {
     title: isAr ? "تخصيص العملة المحلية" : "Currency Localization",
     desc: isAr
-      ? "تستخدم منصة معزوم موقعك الجغرافي لعرض تفاصيل الأسعار بعملة بلدك المحلية."
-      : "Mazoom uses your location to display prices in your local currency.",
+      ? "تستخدم منصة معزومين موقعك الجغرافي لعرض تفاصيل الأسعار بعملة بلدك المحلية."
+      : "Mazoomen uses your location to display prices in your local currency.",
     allowBtn: isAr ? "السماح بالوصول للموقع" : "Allow Location Access",
     useJod: isAr ? "متابعة بالدينار الأردني" : "Use Jordanian Dinar",
     orChoose: isAr ? "أو اختر العملة يدوياً" : "Or select manually",

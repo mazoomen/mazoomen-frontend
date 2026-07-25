@@ -15,7 +15,7 @@ interface InvitePageProps {
 // ── Data Fetching (Server-Side) ────────────────────────────────────────
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://mazoom-backend.onrender.com";
+  process.env.NEXT_PUBLIC_API_URL || "https://mazoomen-backend.onrender.com";
 
 async function getInvitation(slug: string): Promise<InvitationData | null> {
   try {

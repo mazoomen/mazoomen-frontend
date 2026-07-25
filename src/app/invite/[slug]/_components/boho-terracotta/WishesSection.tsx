@@ -192,7 +192,7 @@ export const WishesSection: React.FC<WishesSectionProps> = ({
   };
 
   const canUpload = allowGuestUploads;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mazoom-backend.onrender.com';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mazoomen-backend.onrender.com';
 
   return (
     <div id="rsvp-section" className="space-y-8" dir={isEn ? "ltr" : "rtl"}>

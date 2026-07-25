@@ -283,7 +283,7 @@ export default function InvitationClientPageRoyalGold({
                 {new Date(invitation.eventDate).toLocaleDateString(viewingLang === 'en' ? 'en-US' : 'ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
               <a href="/" className="text-xs uppercase tracking-[0.2em] text-[#C8C8C8] hover:underline transition-all cursor-pointer block">
-                {viewingLang === 'en' ? "Made with love on Mazoom platform" : "صنع بكل حب عبر منصة معزوم"}
+                {viewingLang === 'en' ? "Made with love on Mazoomen platform" : "صنع بكل حب عبر منصة معزومين"}
               </a>
               {/* Spacer inside the section relative div to keep the video background flowing behind the bottom bar */}
               <div className="h-24" />

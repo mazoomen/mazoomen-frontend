@@ -29,7 +29,7 @@ export async function generateQrCodeFile(
     margin: 2,
     errorCorrectionLevel: "H",
     color: {
-      dark: "#0B1528",  // Mazoom signature navy
+      dark: "#0B1528",  // Mazoomen signature navy
       light: "#FFFFFF", // Crisp white background
     },
   });
@@ -81,7 +81,7 @@ export async function generateQrCodeFile(
           logoRadius * 2
         );
       } else {
-        // Fallback Mazoom Monogram
+        // Fallback Mazoomen Monogram
         ctx.fillStyle = "#0B1528";
         ctx.font = "bold 56px serif";
         ctx.textAlign = "center";

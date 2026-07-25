@@ -97,7 +97,7 @@ export default function Sidebar({
     }
   };
 
-  const isMazoom = pathname === "/";
+  const isMazoomen = pathname === "/";
   const isProfile = pathname.startsWith("/profile");
   const isPurchases = pathname.startsWith("/dashboard/client");
 
@@ -147,7 +147,7 @@ export default function Sidebar({
               }`}
             >
               <span className="text-base font-serif font-semibold tracking-tight text-[#E5C38B]">
-                Mazoom
+                Mazoomen
               </span>
             </div>
           </button>

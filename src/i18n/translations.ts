@@ -6,7 +6,8 @@ export type Language = "en" | "ar";
 
 export const translations: Record<string, Record<Language, string>> = {
   // Navigation & General UI
-  "Mazoom": { en: "Mazoom", ar: "سوق القوالب" },
+  "Mazoom": { en: "Mazoomen", ar: "سوق القوالب" },
+  "Mazoomen": { en: "Mazoomen", ar: "سوق القوالب" },
   "My Profile": { en: "My Profile", ar: "الملف الشخصي" },
   "Tickets": { en: "Tickets", ar: "التذاكر" },
   "My Purchases": { en: "My Purchases", ar: "مشترياتي" },
@@ -265,7 +266,8 @@ export const translations: Record<string, Record<Language, string>> = {
     en: "You haven't purchased any templates yet, or your orders are still pending admin approval.",
     ar: "لم تقم بشراء أي قوالب بعد، أو أن طلباتك لا تزال قيد الانتظار لموافقة المشرف.",
   },
-  "Browse Mazoom": { en: "Browse Mazoom", ar: "تصفح سوق القوالب" },
+  "Browse Mazoom": { en: "Browse Mazoomen", ar: "تصفح سوق القوالب" },
+  "Browse Mazoomen": { en: "Browse Mazoomen", ar: "تصفح سوق القوالب" },
   "Purchased": { en: "Purchased", ar: "تم الشراء في" },
   "Pending Setup": { en: "Pending Setup", ar: "إعداد معلق" },
   "Edit Details": { en: "Edit Details", ar: "تعديل التفاصيل" },

@@ -484,7 +484,7 @@ export default function CouponsTable({
                 required
                 value={formCode}
                 onChange={(e) => setFormCode(e.target.value.toUpperCase())}
-                placeholder="MAZOOM"
+                placeholder="MAZOOMEN"
                 className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] font-mono uppercase"
                 dir="ltr"
               />

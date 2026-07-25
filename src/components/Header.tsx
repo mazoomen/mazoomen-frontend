@@ -36,7 +36,7 @@ export default function Header({
             className="object-contain"
           />
         </div>
-        <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B]">Mazoom</span>
+        <span className="text-lg font-serif font-semibold tracking-tight text-[#E5C38B]">Mazoomen</span>
       </Link>
 
       {/* Right controls wrapper */}

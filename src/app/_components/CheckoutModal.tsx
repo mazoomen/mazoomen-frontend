@@ -338,7 +338,7 @@ export default function CheckoutModal({
                     type="text"
                     value={couponCodeInput}
                     onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                    placeholder={lang === "ar" ? "أدخل الكوبون (مثلاً: mazoom)" : "Enter code (e.g. mazoom)"}
+                    placeholder={lang === "ar" ? "أدخل الكوبون (مثلاً: mazoomen)" : "Enter code (e.g. mazoomen)"}
                     className="flex-1 px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] font-mono uppercase"
                     dir="ltr"
                   />

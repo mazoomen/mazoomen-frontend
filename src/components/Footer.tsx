@@ -92,7 +92,7 @@ export default function Footer({ onOpenAuth }: FooterProps) {
       </div>
 
       <div className="max-w-[1700px] mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium" dir={lang === "ar" ? "rtl" : "ltr"}>
-        <p>&copy; {new Date().getFullYear()} Mazoom. {lang === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}</p>
+        <p>&copy; {new Date().getFullYear()} Mazoomen. {lang === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}</p>
         <div className="flex gap-6">
           <a href="#" className="hover:text-black transition-colors">{lang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</a>
           <a href="#" className="hover:text-black transition-colors">{lang === "ar" ? "شروط الخدمة" : "Terms of Service"}</a>

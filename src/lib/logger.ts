@@ -9,7 +9,7 @@ type LogLevel = "error" | "warn" | "info" | "debug";
 function log(level: LogLevel, message: string, context?: unknown): void {
   if (level === "debug" && !IS_DEV) return;
 
-  const prefix = `[Mazoom:${level.toUpperCase()}]`;
+  const prefix = `[Mazoomen:${level.toUpperCase()}]`;
 
   switch (level) {
     case "error":
