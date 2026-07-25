@@ -208,7 +208,7 @@ export default function Sidebar({
         <nav className="flex flex-col gap-4 w-full">
           <SidebarNavItem
             onClick={() => handleNav("/")}
-            isActive={isMazoom}
+            isActive={isMazoomen}
             isSidebarExpanded={isSidebarExpanded}
             label={t("Mazoom")}
             icon={
