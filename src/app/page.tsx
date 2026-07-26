@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import type { Template } from "@/types/template";
 import PageLayout from "@/components/PageLayout";
 import AuthModal from "@/components/AuthModal";
+import ContactModal from "@/components/ContactModal";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -35,6 +36,9 @@ export default function Home() {
 
   // Checkout modal template
   const [buyingTemplate, setBuyingTemplate] = useState<Template | null>(null);
+
+  // Contact modal state
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -140,15 +144,23 @@ export default function Home() {
         <TestimonialsSection testimonials={testimonials} />
       </main>
 
-      <Footer onOpenAuth={(mode) => {
-        setAuthMode(mode);
-        setIsAuthOpen(true);
-      }} />
+      <Footer
+        onOpenAuth={(mode) => {
+          setAuthMode(mode);
+          setIsAuthOpen(true);
+        }}
+        onOpenContact={() => setIsContactOpen(true)}
+      />
 
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         initialMode={authMode}
+      />
+
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
       />
 
       <CheckoutModal
