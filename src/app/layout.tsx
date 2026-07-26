@@ -38,11 +38,11 @@ const cinzel = Cinzel({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mazoomen.com"),
   title: {
-    default: "Mazoomen — Digital Wedding Invitations",
-    template: "%s | Mazoomen",
+    default: "Mazoomen - معزومين | دعوات زفاف رقمية",
+    template: "%s | Mazoomen - معزومين",
   },
   description:
-    "Create and share beautiful digital wedding invitations with Mazoomen.",
+    "صمم وشارك أجمل دعوات الزفاف الرقمية مع معزومين. Create and share beautiful digital wedding invitations with Mazoomen.",
 };
 
 export default function RootLayout({
