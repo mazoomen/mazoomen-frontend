@@ -192,8 +192,13 @@ export default function Sidebar({
         {/* User Info Badge (Mobile Drawer) */}
         {isLoggedIn && user && (
           <div className="sm:hidden w-full p-3 rounded-xl bg-[#101F35] border border-[#1E2E4A] flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#1A2D4C] text-[#E5C38B] flex items-center justify-center font-bold text-xs border border-[#1E2E4A] shrink-0">
-              {user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"}
+            <div className="w-8 h-8 rounded-full bg-[#1A2D4C] text-[#E5C38B] flex items-center justify-center font-bold text-xs border border-[#1E2E4A] shrink-0 overflow-hidden">
+              {user.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"
+              )}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-xs font-semibold text-[#E5C38B] truncate">

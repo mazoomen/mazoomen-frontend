@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { AuthUser } from "@/types/invitation";
 import { useLanguage } from "@/components/LanguageContext";
+import NotificationBell from "@/components/NotificationBell";
 
 interface HeaderProps {
   isMobileMenuOpen: boolean;
@@ -54,10 +55,19 @@ export default function Header({
           {isLoggedIn ? (
             /* Logged in controls (Visible on mobile and desktop) */
             <div className="flex items-center gap-2 sm:gap-3">
+              <NotificationBell />
               {user && (
-                <span className="hidden sm:inline-block text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] rounded-full px-3 py-1 font-sans">
-                  {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
-                </span>
+                <Link href="/profile" className="hidden sm:flex items-center gap-2 text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] hover:border-[#E5C38B] rounded-full pl-1.5 pr-3 py-1 font-sans transition-colors cursor-pointer">
+                  <div className="w-6 h-6 rounded-full bg-[#1A2D4C] flex items-center justify-center font-bold text-[10px] overflow-hidden shrink-0 border border-[#1E2E4A]">
+                    {user.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      user.firstName ? user.firstName.charAt(0).toUpperCase() : "U"
+                    )}
+                  </div>
+                  <span>{user.firstName ? `${user.firstName} ${user.lastName}` : user.email}</span>
+                </Link>
               )}
               <button
                 onClick={handleLogout}

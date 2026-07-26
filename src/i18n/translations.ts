@@ -252,6 +252,13 @@ export const translations: Record<string, Record<Language, string>> = {
   },
   "Fetching profile details...": { en: "Fetching profile details...", ar: "جاري جلب تفاصيل الملف الشخصي..." },
   "Could Not Load Profile": { en: "Could Not Load Profile", ar: "لم نتمكن من تحميل الملف الشخصي" },
+  "Upload Profile Picture": { en: "Upload Profile Picture", ar: "تحميل صورة الملف الشخصي" },
+  "Upload Photo": { en: "Upload Photo", ar: "رفع صورة" },
+  "Remove Photo": { en: "Remove Photo", ar: "إزالة الصورة" },
+  "Uploading...": { en: "Uploading...", ar: "جاري الرفع..." },
+  "Profile picture updated successfully.": { en: "Profile picture updated successfully.", ar: "تم تحديث صورة الملف الشخصي بنجاح." },
+  "Profile picture removed.": { en: "Profile picture removed.", ar: "تم إزالة صورة الملف الشخصي." },
+  "Failed to upload profile picture.": { en: "Failed to upload profile picture.", ar: "فشل تحميل صورة الملف الشخصي." },
 
   // Client Dashboard Alerts & Layout
   "Loading your dashboard...": { en: "Loading your dashboard...", ar: "جاري تحميل لوحة التحكم..." },

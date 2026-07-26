@@ -1,71 +1,94 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { useLanguage } from "@/components/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import ContactModal from "@/components/ContactModal";
 
 interface FooterProps {
   onOpenAuth?: (mode: "login" | "register") => void;
+  onOpenContact?: () => void;
 }
 
-export default function Footer({ onOpenAuth }: FooterProps) {
+export default function Footer({ onOpenAuth, onOpenContact }: FooterProps) {
   const { t, lang } = useLanguage();
   const { isLoggedIn } = useAuth();
+  const [isContactOpen, setIsContactOpen] = useState(false);
+
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      onOpenAuth?.("login");
+      return;
+    }
+
+    if (onOpenContact) {
+      onOpenContact();
+    } else {
+      setIsContactOpen(true);
+    }
+  };
 
   return (
-    <footer className="bg-[#FAF8F5] border-t border-[#E6E2DA] px-6 sm:px-10 py-16 mt-auto">
-      <div className="max-w-[1700px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-xs mb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
-        <div className="flex flex-col gap-4">
-          <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
-            {lang === "ar" ? "استكشف" : "Explore"}
-          </h4>
-          <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
-            <a href="/" className="hover:text-black transition-colors">{lang === "ar" ? "الرئيسية" : "Home"}</a>
-            <a href="#templates" className="hover:text-black transition-colors">{lang === "ar" ? "القوالب" : "Templates"}</a>
-            <a href="#features" className="hover:text-black transition-colors">{lang === "ar" ? "المميزات" : "Features"}</a>
-            <a href="#pricing" className="hover:text-black transition-colors">{lang === "ar" ? "آراء العملاء" : "Testimonials"}</a>
-          </nav>
-        </div>
+    <>
+      <footer className="bg-[#FAF8F5] border-t border-[#E6E2DA] px-6 sm:px-10 py-16 mt-auto">
+        <div className="max-w-[1700px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 text-xs mb-12" dir={lang === "ar" ? "rtl" : "ltr"}>
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
+              {lang === "ar" ? "استكشف" : "Explore"}
+            </h4>
+            <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
+              <a href="/" className="hover:text-black transition-colors">{lang === "ar" ? "الرئيسية" : "Home"}</a>
+              <a href="#templates" className="hover:text-black transition-colors">{lang === "ar" ? "القوالب" : "Templates"}</a>
+              <a href="#features" className="hover:text-black transition-colors">{lang === "ar" ? "المميزات" : "Features"}</a>
+              <a href="#pricing" className="hover:text-black transition-colors">{lang === "ar" ? "آراء العملاء" : "Testimonials"}</a>
+            </nav>
+          </div>
 
-        <div className="flex flex-col gap-4">
-          <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
-            {lang === "ar" ? "الحساب" : "Account"}
-          </h4>
-          <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
-            {isLoggedIn ? (
-              <>
-                <a href="/dashboard/client" className="hover:text-black transition-colors">{lang === "ar" ? "لوحة التحكم" : "Dashboard"}</a>
-                <a href="/profile" className="hover:text-black transition-colors">{lang === "ar" ? "الملف الشخصي" : "Profile"}</a>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => onOpenAuth?.("login")}
-                  className="text-left hover:text-black transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-neutral-500 font-medium w-full"
-                >
-                  {t("Login")}
-                </button>
-                <button
-                  onClick={() => onOpenAuth?.("register")}
-                  className="text-left hover:text-black transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-neutral-500 font-medium w-full"
-                >
-                  {t("Register")}
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
+              {lang === "ar" ? "الحساب" : "Account"}
+            </h4>
+            <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
+              {isLoggedIn ? (
+                <>
+                  <a href="/dashboard/client" className="hover:text-black transition-colors">{lang === "ar" ? "لوحة التحكم" : "Dashboard"}</a>
+                  <a href="/profile" className="hover:text-black transition-colors">{lang === "ar" ? "الملف الشخصي" : "Profile"}</a>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => onOpenAuth?.("login")}
+                    className="text-start rtl:text-right ltr:text-left hover:text-black transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-neutral-500 font-medium w-full"
+                  >
+                    {t("Login")}
+                  </button>
+                  <button
+                    onClick={() => onOpenAuth?.("register")}
+                    className="text-start rtl:text-right ltr:text-left hover:text-black transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-neutral-500 font-medium w-full"
+                  >
+                    {t("Register")}
+                  </button>
+                </>
+              )}
+            </nav>
+          </div>
 
-        <div className="flex flex-col gap-4">
-          <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
-            {lang === "ar" ? "الدعم" : "Support"}
-          </h4>
-          <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
-            <a href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT_NUMBER || "962793809686"}`} target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors">
-              {lang === "ar" ? "تواصل معنا" : "Contact Us"}
-            </a>
-            <a href="#" className="hover:text-black transition-colors">{lang === "ar" ? "التعليمات" : "FAQs"}</a>
-          </nav>
-        </div>
+          <div className="flex flex-col gap-4">
+            <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
+              {lang === "ar" ? "الدعم" : "Support"}
+            </h4>
+            <nav className="flex flex-col gap-2.5 text-neutral-500 font-medium">
+              <button
+                onClick={handleContactClick}
+                className="text-start rtl:text-right ltr:text-left hover:text-black transition-colors cursor-pointer bg-transparent border-none p-0 text-xs text-neutral-500 font-medium w-full"
+              >
+                {lang === "ar" ? "تواصل معنا" : "Contact Us"}
+              </button>
+              <Link href="/faq" className="hover:text-black transition-colors">{lang === "ar" ? "الأسئلة الشائعة" : "FAQs"}</Link>
+            </nav>
+          </div>
 
         <div className="flex flex-col gap-4">
           <h4 className="font-bold text-neutral-800 text-[13px] tracking-wide uppercase">
@@ -82,22 +105,27 @@ export default function Footer({ onOpenAuth }: FooterProps) {
                 <path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
               </svg>
             </a>
-            <a href="#" className="w-7 h-7 rounded-full bg-neutral-200 hover:bg-black hover:text-white transition-all flex items-center justify-center text-neutral-600 shadow-sm" aria-label="Twitter">
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-              </svg>
-            </a>
           </div>
         </div>
       </div>
 
       <div className="max-w-[1700px] mx-auto pt-8 border-t border-[#E6E2DA] flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-neutral-400 font-medium" dir={lang === "ar" ? "rtl" : "ltr"}>
-        <p>&copy; {new Date().getFullYear()} Mazoomen. {lang === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}</p>
+        <p>
+          &copy; {new Date().getFullYear()} Mazoomen. {lang === "ar" ? "جميع الحقوق محفوظة." : "All rights reserved."}{" "}
+          <span className="mx-1 opacity-40">|</span>{" "}
+          <span>{lang === "ar" ? "صُنع بواسطة أيمن بني هاني" : "Made with ❤️ by Aiman Banihani"}</span>
+        </p>
         <div className="flex gap-6">
-          <a href="#" className="hover:text-black transition-colors">{lang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</a>
-          <a href="#" className="hover:text-black transition-colors">{lang === "ar" ? "شروط الخدمة" : "Terms of Service"}</a>
+          <Link href="/privacy" className="hover:text-black transition-colors">{lang === "ar" ? "سياسة الخصوصية" : "Privacy Policy"}</Link>
+          <Link href="/terms" className="hover:text-black transition-colors">{lang === "ar" ? "شروط الخدمة" : "Terms of Service"}</Link>
         </div>
       </div>
+
+      <ContactModal
+        isOpen={isContactOpen}
+        onClose={() => setIsContactOpen(false)}
+      />
     </footer>
+    </>
   );
 }

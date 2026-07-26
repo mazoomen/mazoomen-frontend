@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
@@ -80,10 +80,14 @@ function OtpBoxes({
 export default function ProfilePage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Avatar upload state
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Form states
   const [firstName, setFirstName] = useState("");
@@ -188,6 +192,7 @@ export default function ProfilePage() {
         firstName: updatedProfile.firstName,
         lastName: updatedProfile.lastName,
         phoneNumber: updatedProfile.phoneNumber,
+        avatarUrl: updatedProfile.avatarUrl,
       };
       localStorage.setItem("user", JSON.stringify(userMeta));
 
@@ -204,6 +209,91 @@ export default function ProfilePage() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  // ── Avatar Upload and Delete Handlers ─────────────────────────────────────
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage(t("Please select a valid image file."));
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      setErrorMessage(t("File size exceeds the allowed limit of 20MB."));
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await api.post<UserProfile>("/users/profile/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const updatedProfile = res.data;
+      setProfile(updatedProfile);
+
+      const userMeta = {
+        id: updatedProfile.id,
+        email: updatedProfile.email,
+        role: updatedProfile.role,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        phoneNumber: updatedProfile.phoneNumber,
+        avatarUrl: updatedProfile.avatarUrl,
+      };
+      localStorage.setItem("user", JSON.stringify(userMeta));
+
+      setSuccessMessage(t("Profile picture updated successfully."));
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      logger.error("Error uploading profile photo", err);
+      const error = err as AxiosError<{ message?: string | string[] }>;
+      const msg = error.response?.data?.message;
+      setErrorMessage(t(Array.isArray(msg) ? msg[0] : msg || "Failed to upload profile picture."));
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const res = await api.delete<UserProfile>("/users/profile/avatar");
+      const updatedProfile = res.data;
+      setProfile(updatedProfile);
+
+      const userMeta = {
+        id: updatedProfile.id,
+        email: updatedProfile.email,
+        role: updatedProfile.role,
+        firstName: updatedProfile.firstName,
+        lastName: updatedProfile.lastName,
+        phoneNumber: updatedProfile.phoneNumber,
+        avatarUrl: null,
+      };
+      localStorage.setItem("user", JSON.stringify(userMeta));
+
+      setSuccessMessage(t("Profile picture removed."));
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      logger.error("Error deleting profile photo", err);
+      setErrorMessage(t("Failed to remove profile picture."));
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -319,8 +409,86 @@ export default function ProfilePage() {
             <div className="lg:col-span-1 flex flex-col gap-6">
               <div className="bg-white border border-[#E6E2DA] rounded-[24px] p-6 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-[#FAF8F5] pointer-events-none" />
-                <div className="w-20 h-20 rounded-full border border-[#E6E2DA] bg-[#FAF9F6] flex items-center justify-center text-3xl mb-4 shadow-inner relative z-10 select-none">
-                  👤
+                {/* Avatar Upload Container */}
+                <div className="relative mb-3 group z-10">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleAvatarSelect}
+                    className="hidden"
+                  />
+                  <div
+                    onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+                    className="w-24 h-24 rounded-full border-2 border-[#E6E2DA] bg-[#FAF9F6] shadow-md relative overflow-hidden flex items-center justify-center cursor-pointer group-hover:border-[#0B1528] transition-all"
+                    title={t("Upload Photo")}
+                  >
+                    {uploadingAvatar && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20">
+                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      </div>
+                    )}
+
+                    {profile?.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profile.avatarUrl}
+                        alt={`${profile.firstName} ${profile.lastName}`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#101F35] to-[#1E2E4A] text-[#E5C38B] font-serif font-bold text-2xl select-none">
+                        {profile?.firstName ? profile.firstName.charAt(0).toUpperCase() : "U"}
+                      </div>
+                    )}
+
+                    {/* Camera Badge Overlay */}
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Quick Camera Edit Button (Bottom Right) */}
+                  <button
+                    type="button"
+                    onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute bottom-0 right-0 rtl:right-auto rtl:left-0 bg-[#0B1528] text-[#E5C38B] border border-[#1E2E4A] p-2 rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer"
+                    title={t("Upload Photo")}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Action buttons (Change Photo / Delete Photo) */}
+                <div className="flex items-center gap-2 mb-3 z-10 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => !uploadingAvatar && fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="text-[#0B1528] font-semibold hover:underline cursor-pointer"
+                  >
+                    {t("Upload Photo")}
+                  </button>
+                  {profile?.avatarUrl && (
+                    <>
+                      <span className="text-neutral-300">•</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        disabled={uploadingAvatar}
+                        className="text-red-500 font-semibold hover:underline cursor-pointer"
+                      >
+                        {t("Remove Photo")}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <h3 className="font-sans font-bold text-[#2D3142] text-[16px] leading-tight">

@@ -17,15 +17,17 @@ import {
   AdminCharts,
   CouponsTable,
   AdminInvitationTracker,
+  ContactMessagesTable,
   type Order,
   type User,
+  type ContactMessageItem,
 } from "./_components";
 import type { Coupon } from "@/types/purchase";
 import InvitationEditor from "../client/_components/InvitationEditor";
 import { Spinner, ErrorState, Modal, Button } from "@/components/ui";
 
 type LoadStatus = "loading" | "loaded" | "error";
-type TabType = "overview" | "users" | "requests" | "templates" | "reviews" | "coupons";
+type TabType = "overview" | "users" | "requests" | "templates" | "reviews" | "coupons" | "contact";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -37,6 +39,7 @@ export default function AdminDashboardPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessageItem[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
 
   // Reactive UI Navigation state
@@ -79,18 +82,20 @@ export default function AdminDashboardPage() {
   // ── Fetch all data simultaneously ────────────────────────────────────
   const fetchDashboardData = useCallback(async () => {
     try {
-      const [ordersRes, usersRes, templatesRes, reviewsRes, couponsRes] = await Promise.all([
+      const [ordersRes, usersRes, templatesRes, reviewsRes, couponsRes, contactRes] = await Promise.all([
         api.get<Order[]>("/purchase-requests"),
         api.get<User[]>("/users"),
         api.get<Template[]>("/templates?includeInactive=true"),
         api.get<any[]>("/testimonials/admin"),
         api.get<Coupon[]>("/coupons"),
+        api.get<ContactMessageItem[]>("/contact/admin"),
       ]);
       setOrders(ordersRes.data);
       setUsers(usersRes.data);
       setTemplates(templatesRes.data);
       setReviews(reviewsRes.data);
       setCoupons(couponsRes.data);
+      setContactMessages(contactRes.data);
       setStatus("loaded");
     } catch (err) {
       logger.error("Dashboard data fetching error", err);
@@ -344,6 +349,11 @@ export default function AdminDashboardPage() {
       labelAr: "إدارة الكوبونات",
       labelEn: "Coupons Management",
     },
+    {
+      id: "contact" as const,
+      labelAr: "رسائل الدعم والاتصال",
+      labelEn: "Contact Messages",
+    },
   ];
 
   return (
@@ -523,7 +533,29 @@ export default function AdminDashboardPage() {
                   />
                 </svg>
               )}
-              <span className="truncate">{lang === "ar" ? item.labelAr : item.labelEn}</span>
+              {item.id === "contact" && (
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  className="shrink-0"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              )}
+              <span className="truncate flex-1 text-start">{lang === "ar" ? item.labelAr : item.labelEn}</span>
+              {item.id === "contact" && contactMessages.filter((m) => m.status === "UNREAD").length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500 text-black">
+                  {contactMessages.filter((m) => m.status === "UNREAD").length}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -642,9 +674,13 @@ export default function AdminDashboardPage() {
                             ? lang === "ar"
                               ? "إدارة مراجعات العملاء"
                               : "Client Reviews Management"
-                            : lang === "ar"
-                              ? "إدارة كوبونات الخصم"
-                              : "Coupons Management"}
+                            : activeTab === "coupons"
+                              ? lang === "ar"
+                                ? "إدارة كوبونات الخصم"
+                                : "Coupons Management"
+                              : lang === "ar"
+                                ? "رسائل الدعم والاتصال"
+                                : "Contact Messages"}
                 </h1>
                 <p className="text-[11px] text-neutral-400 mt-1 font-sans">
                   {activeTab === "overview"
@@ -663,13 +699,17 @@ export default function AdminDashboardPage() {
                           ? lang === "ar"
                             ? "إضافة وتعديل وحذف النماذج والقوالب المتوفرة على المنصة."
                             : "Configure templates, prices, preview images, and edit default categories."
-                          : activeTab === "reviews"
-                            ? lang === "ar"
-                              ? "عرض والبحث وحذف تقييمات العملاء للنماذج والخدمات."
-                              : "Browse, filter, and delete customer reviews and ratings."
-                            : lang === "ar"
-                              ? "إضافة وتعديل وتفعيل أو تعطيل وحذف كوبونات الخصم المئوية."
-                              : "Add, edit, activate, deactivate, and soft-delete percentage discount coupons."}
+                        : activeTab === "reviews"
+                          ? lang === "ar"
+                            ? "عرض والبحث وحذف تقييمات العملاء للنماذج والخدمات."
+                            : "Browse, filter, and delete customer reviews and ratings."
+                        : activeTab === "coupons"
+                          ? lang === "ar"
+                            ? "إضافة وتعديل وتفعيل أو تعطيل وحذف كوبونات الخصم المئوية."
+                            : "Add, edit, activate, deactivate, and soft-delete percentage discount coupons."
+                          : lang === "ar"
+                            ? "متابعة واستقبال الرسائل والمشاكل المرسلة من زوار وعملاء المنصة."
+                            : "Review and respond to contact submissions and support inquiries."}
                 </p>
               </div>
 
@@ -957,6 +997,15 @@ export default function AdminDashboardPage() {
                 <div className="animate-fadeIn">
                   <CouponsTable
                     coupons={coupons}
+                    onRefresh={fetchDashboardData}
+                  />
+                </div>
+              )}
+
+              {activeTab === "contact" && (
+                <div className="animate-fadeIn">
+                  <ContactMessagesTable
+                    messages={contactMessages}
                     onRefresh={fetchDashboardData}
                   />
                 </div>
