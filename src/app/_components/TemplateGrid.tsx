@@ -8,6 +8,8 @@ import { useCurrency } from "@/components/CurrencyContext";
 import type { Template } from "@/types/template";
 import { Spinner, Button } from "@/components/ui";
 
+import { getTemplateTitle, getTemplateDescription } from "@/lib/template-utils";
+
 interface TemplateGridProps {
   templates: Template[];
   loading: boolean;
@@ -135,7 +137,7 @@ export default function TemplateGrid({
                   <div className="w-full h-full rounded-lg overflow-hidden shadow-sm relative">
                     <Image
                       src={getS3Url(template.previewImage)}
-                      alt={t(template.title)}
+                      alt={getTemplateTitle(template, lang)}
                       fill
                       unoptimized
                       className="object-cover group-hover:scale-[1.04] transition-all duration-500"
@@ -153,14 +155,14 @@ export default function TemplateGrid({
                   <div className="flex flex-col gap-1">
                     <div className="flex items-start justify-between gap-1.5">
                       <h3 className="font-bold text-neutral-800 text-xs sm:text-[13px] leading-snug group-hover:text-black transition-colors line-clamp-1">
-                        {template.title}
+                        {getTemplateTitle(template, lang)}
                       </h3>
                       <span className="text-[10px] sm:text-[11px] font-extrabold text-neutral-700 border border-neutral-200 px-1.5 py-0.5 rounded bg-[#FAF9F6] shrink-0 font-sans">
                         {formatPrice(template.price)}
                       </span>
                     </div>
                     <p className="text-[10px] sm:text-[11px] text-neutral-400 line-clamp-2 leading-relaxed">
-                      {t(template.description)}
+                      {getTemplateDescription(template, lang)}
                     </p>
                   </div>
 

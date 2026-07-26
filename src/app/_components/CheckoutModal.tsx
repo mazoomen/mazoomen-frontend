@@ -8,6 +8,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { useCurrency } from "@/components/CurrencyContext";
 import type { Template } from "@/types/template";
 import { Modal, Button } from "@/components/ui";
+import { getTemplateTitle, getTemplateDescription } from "@/lib/template-utils";
 import type { AxiosError } from "axios";
 
 interface CheckoutModalProps {
@@ -280,10 +281,10 @@ export default function CheckoutModal({
               {lang === "ar" ? "شراء قالب" : "BUY TEMPLATE"}
             </span>
             <h3 className="text-xl font-serif font-medium text-neutral-800 mt-1">
-              {buyingTemplate.title}
+              {getTemplateTitle(buyingTemplate, lang)}
             </h3>
             <p className="text-xs text-neutral-400 mt-2">
-              {t(buyingTemplate.description)}
+              {getTemplateDescription(buyingTemplate, lang)}
             </p>
           </div>
 

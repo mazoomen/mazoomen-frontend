@@ -93,9 +93,11 @@ export default function Home() {
     const matchesSearch =
       !q ||
       (template.title || "").toLowerCase().includes(q) ||
-      ((template as any).titleEn || "").toLowerCase().includes(q) ||
+      (template.titleAr || "").toLowerCase().includes(q) ||
+      (template.titleEn || "").toLowerCase().includes(q) ||
       (template.description || "").toLowerCase().includes(q) ||
-      ((template as any).descriptionEn || "").toLowerCase().includes(q);
+      (template.descriptionAr || "").toLowerCase().includes(q) ||
+      (template.descriptionEn || "").toLowerCase().includes(q);
 
     // Category selection
     const matchesCategory = selectedCategory

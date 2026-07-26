@@ -13,6 +13,8 @@ export interface Template {
   titleAr?: string | null;
   titleEn?: string | null;
   description: string;
+  descriptionAr?: string | null;
+  descriptionEn?: string | null;
   previewImage: string;
   price: string | number;
   editableFields: Record<string, unknown>;
