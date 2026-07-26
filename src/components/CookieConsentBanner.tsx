@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "./LanguageContext";
 
 export default function CookieConsentBanner() {
+  const pathname = usePathname();
   const { lang } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -16,7 +18,7 @@ export default function CookieConsentBanner() {
     }
   }, []);
 
-  if (!mounted || !visible) return null;
+  if (pathname !== "/" || !mounted || !visible) return null;
 
   const handleAccept = () => {
     localStorage.setItem("cookie_consent", "accepted");
@@ -43,7 +45,7 @@ export default function CookieConsentBanner() {
 
   return (
     <div
-      className="fixed bottom-6 left-6 right-6 md:right-auto md:max-w-md z-50 animate-fadeIn"
+      className="fixed bottom-6 left-6 right-6 md:right-auto md:w-full md:max-w-md z-50 animate-fadeIn"
       dir={isAr ? "rtl" : "ltr"}
     >
       <div className="bg-[#0B1528] text-white border border-[#E5C38B]/20 rounded-2xl p-5 shadow-2xl backdrop-blur-md relative overflow-hidden font-sans">

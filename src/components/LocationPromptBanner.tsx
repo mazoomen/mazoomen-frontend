@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "./LanguageContext";
 import { useCurrency } from "./CurrencyContext";
 import { Button } from "./ui";
 
 export default function LocationPromptBanner() {
+  const pathname = usePathname();
   const { lang } = useLanguage();
   const { currency, permissionStatus, requestLocationPermission, setDefaultCurrency, changeCurrencyManually, availableRates } = useCurrency();
   const [mounted, setMounted] = useState(false);
@@ -27,9 +29,7 @@ export default function LocationPromptBanner() {
     };
   }, []);
 
-  if (!mounted) return null;
-  if (!cookieConsentCompleted) return null;
-  if (permissionStatus !== "prompt") return null;
+  if (pathname !== "/" || !mounted || !cookieConsentCompleted || permissionStatus !== "prompt") return null;
 
   const handleAllow = async () => {
     await requestLocationPermission();
@@ -53,7 +53,7 @@ export default function LocationPromptBanner() {
 
   return (
     <div
-      className="fixed bottom-6 right-6 left-6 md:left-auto md:max-w-md z-50 animate-fadeIn"
+      className="fixed bottom-6 left-6 right-6 md:right-auto md:w-full md:max-w-md z-50 animate-fadeIn"
       dir={isAr ? "rtl" : "ltr"}
     >
       <div className="bg-[#0B1528] text-white border border-[#E5C38B]/20 rounded-2xl p-5 shadow-2xl backdrop-blur-md relative overflow-hidden font-sans">
