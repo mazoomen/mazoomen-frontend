@@ -7,6 +7,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
+import { getTemplateTitle } from "@/lib/template-utils";
 import { useCurrency } from "@/components/CurrencyContext";
 import type { PurchaseRequestData } from "@/types/invitation";
 import { Spinner, ErrorState, Button, Modal } from "@/components/ui";
@@ -142,9 +143,10 @@ export default function ClientOrdersPage() {
   // ── WhatsApp expedition link builder ────────────────────────────────
   const getWhatsAppLink = (request: PurchaseRequestData) => {
     const isAr = lang === "ar";
+    const title = getTemplateTitle(request.template, lang);
     const msg = isAr
-      ? `مرحباً، لقد أرسلت طلباً لشراء القالب "${request.template.title}" . أرجو تسريع تفعيله. هاتف التواصل: ${request.contactPhone}.`
-      : `Hi, I would like to expedite my purchase request for the template "${request.template.title}" . Contact phone: ${request.contactPhone}.`;
+      ? `مرحباً، لقد أرسلت طلباً لشراء القالب "${title}" . أرجو تسريع تفعيله. هاتف التواصل: ${request.contactPhone}.`
+      : `Hi, I would like to expedite my purchase request for the template "${title}" . Contact phone: ${request.contactPhone}.`;
 
     const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_SUPPORT_NUMBER || "962793809686";
     return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
@@ -221,7 +223,7 @@ export default function ClientOrdersPage() {
                   <div className="w-24 h-24 rounded-xl bg-[#FAF8F5] border border-[#F0ECE3] overflow-hidden shrink-0 shadow-sm relative">
                     <Image
                       src={getS3Url(request.template.previewImage)}
-                      alt={request.template.title}
+                      alt={getTemplateTitle(request.template, lang)}
                       fill
                       unoptimized
                       className="object-cover"
@@ -233,7 +235,7 @@ export default function ClientOrdersPage() {
                     <div>
                       <div className="flex justify-between items-start">
                         <h3 className="font-sans font-bold text-neutral-800 text-[14px] leading-tight">
-                          {request.template.title}
+                          {getTemplateTitle(request.template, lang)}
                         </h3>
                         {request.couponCode ? (
                           <div className="flex flex-col items-end">

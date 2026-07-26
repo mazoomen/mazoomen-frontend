@@ -7,6 +7,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
+import { getTemplateTitle } from "@/lib/template-utils";
 import { InvitationEditor, RsvpTracker, ShareModal, generateQrCodeFile } from "./_components";
 import type { PurchaseData } from "@/types/invitation";
 import { Spinner, ErrorState, Button } from "@/components/ui";
@@ -64,7 +65,7 @@ export default function ClientDashboardPage() {
       const firstActive = res.data.find((p) => p.invitation !== null);
       if (firstActive && firstActive.invitation) {
         setTrackingInvitationId(firstActive.invitation.id);
-        setTrackingTemplateTitle(firstActive.template.title);
+        setTrackingTemplateTitle(getTemplateTitle(firstActive.template, lang));
       }
     } catch (err) {
       logger.error("Error fetching purchases", err);
@@ -108,7 +109,7 @@ export default function ClientDashboardPage() {
     const baseUrl =
       typeof window !== "undefined" ? window.location.origin : "http://localhost:3001";
     const inviteUrl = `${baseUrl}/invite/${purchase.invitation.slug}`;
-    const title = purchase.template.title;
+    const title = getTemplateTitle(purchase.template, lang);
     const slug = purchase.invitation.slug;
 
     if (typeof window !== "undefined" && navigator.share) {
@@ -802,7 +803,7 @@ export default function ClientDashboardPage() {
                   <div className="w-24 h-24 rounded-xl bg-[#FAF8F5] border border-[#F0ECE3] overflow-hidden shrink-0 shadow-sm relative">
                     <Image
                       src={getS3Url(purchase.template.previewImage)}
-                      alt={t(purchase.template.title)}
+                      alt={getTemplateTitle(purchase.template, lang)}
                       fill
                       unoptimized
                       className="object-cover"
@@ -812,7 +813,7 @@ export default function ClientDashboardPage() {
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-sans font-bold text-neutral-800 text-[14px] leading-tight">
-                          {purchase.template.title}
+                          {getTemplateTitle(purchase.template, lang)}
                         </h3>
                         {/* Toggle Switch - top right */}
                         {hasInvite && (
@@ -949,7 +950,7 @@ export default function ClientDashboardPage() {
                         size="sm"
                         onClick={() => {
                           setTrackingInvitationId(purchase.invitation!.id);
-                          setTrackingTemplateTitle(purchase.template.title);
+                          setTrackingTemplateTitle(getTemplateTitle(purchase.template, lang));
                           setActiveTab("rsvps");
                           document
                             .getElementById("rsvp-tracker-section")
@@ -1318,7 +1319,7 @@ export default function ClientDashboardPage() {
             <InvitationEditor
               purchaseId={editingPurchase.id}
               invitation={editingPurchase.invitation}
-              templateTitle={editingPurchase.template.title}
+              templateTitle={getTemplateTitle(editingPurchase.template, lang)}
               onSaved={handleInvitationSaved}
               editableFields={editingPurchase.template?.editableFields}
             />

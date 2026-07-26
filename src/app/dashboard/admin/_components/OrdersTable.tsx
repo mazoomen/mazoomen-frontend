@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { getS3Url } from "@/lib/s3";
 import api from "@/lib/api";
 import { useLanguage } from "@/components/LanguageContext";
+import { getTemplateTitle } from "@/lib/template-utils";
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -292,12 +293,12 @@ export default function OrdersTable({
                         <div className="relative h-8 w-12 shrink-0 overflow-hidden rounded border border-[#EBE7DF] bg-[#FAF8F5]">
                           <img
                             src={getS3Url(order.template.previewImage)}
-                            alt={order.template.title}
+                            alt={getTemplateTitle(order.template, lang)}
                             className="h-full w-full object-cover"
                           />
                         </div>
                         <div>
-                          <p className="font-semibold text-neutral-800">{order.template.title}</p>
+                          <p className="font-semibold text-neutral-800">{getTemplateTitle(order.template, lang)}</p>
                           {order.couponCode ? (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[10px] text-neutral-400 font-sans line-through">

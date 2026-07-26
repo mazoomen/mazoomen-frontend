@@ -6,6 +6,11 @@ import type { EventProgramItem, EventDetailItem } from "./invitation";
 export interface PurchaseTemplate {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
+  description?: string | null;
+  descriptionAr?: string | null;
+  descriptionEn?: string | null;
   previewImage: string;
   price: string | number;
   editableFields?: any;

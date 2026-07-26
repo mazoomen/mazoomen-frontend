@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import type { Template, AuthUser } from "@/types/invitation";
 import { useLanguage } from "@/components/LanguageContext";
+import { getTemplateTitle, getTemplateDescription } from "@/lib/template-utils";
 import {
   OrdersTable,
   AddTemplateForm,
@@ -884,10 +885,10 @@ export default function AdminDashboardPage() {
                             <div className="p-4 flex-1 flex flex-col justify-between gap-4 font-sans text-xs">
                               <div>
                                 <h4 className="font-bold text-neutral-850 truncate">
-                                  {tpl.title}
+                                  {getTemplateTitle(tpl, lang)}
                                 </h4>
                                 <p className="text-[10px] text-neutral-450 mt-1 line-clamp-2 leading-relaxed">
-                                  {tpl.description}
+                                  {getTemplateDescription(tpl, lang)}
                                 </p>
                               </div>
 
