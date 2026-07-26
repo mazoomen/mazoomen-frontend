@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { AuthUser } from "@/types/invitation";
 import { useLanguage } from "@/components/LanguageContext";
+import NotificationBell from "@/components/NotificationBell";
 
 interface HeaderProps {
   isMobileMenuOpen: boolean;
@@ -54,6 +55,7 @@ export default function Header({
           {isLoggedIn ? (
             /* Logged in controls (Visible on mobile and desktop) */
             <div className="flex items-center gap-2 sm:gap-3">
+              <NotificationBell />
               {user && (
                 <span className="hidden sm:inline-block text-xs text-[#E5C38B] font-semibold bg-[#101F35] border border-[#1E2E4A] rounded-full px-3 py-1 font-sans">
                   {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
