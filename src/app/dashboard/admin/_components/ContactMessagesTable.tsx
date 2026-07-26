@@ -163,7 +163,7 @@ export default function ContactMessagesTable({
       ) : (
         <div className="space-y-4">
           {filteredMessages.map((msg) => {
-            const cleanPhone = msg.phone.replace(/[^0-9]/g, "");
+            const cleanPhone = (msg.phone || "").replace(/[^0-9]/g, "");
             const isUnread = msg.status === "UNREAD";
             const isReplying = replyingId === msg.id;
 

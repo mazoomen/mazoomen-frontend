@@ -159,10 +159,10 @@ export default function AdminDashboardPage() {
   const openEditUserModal = (user: User) => {
     setEditingUser(user);
     setModalForm({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+      phoneNumber: user.phoneNumber || "",
       password: "", // Leave blank unless updating password
       role: user.role,
       isActive: user.isActive,
