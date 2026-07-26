@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /payment/
+Disallow: /profile/
+
+Sitemap: https://mazoomen.com/sitemap.xml

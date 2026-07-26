@@ -35,6 +35,7 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mazoomen.com"),
   title: {
     default: "Mazoomen — Digital Wedding Invitations",
     template: "%s | Mazoomen",
