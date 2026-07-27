@@ -31,6 +31,7 @@ export default function PhoneInput({
       <PhoneInputWithCountrySelect
         international
         countryCallingCodeEditable={false}
+        limitMaxLength={true}
         defaultCountry={defaultCountryCode}
         value={value || ""}
         onChange={(val) => onChange(val || "")}

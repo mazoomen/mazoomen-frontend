@@ -8,6 +8,7 @@ import type { LoginResponse } from "@/types/invitation";
 import type { AxiosError } from "axios";
 import { useLanguage } from "@/components/LanguageContext";
 import { PasswordInput, PhoneInput } from "@/components/ui";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -359,8 +360,7 @@ export default function AuthModal({
       return;
     }
 
-    const phoneRegex = /^\+?[1-9]\d{7,14}$/;
-    if (!phoneRegex.test(regPhone.trim())) {
+    if (!regPhone || !isValidPhoneNumber(regPhone)) {
       setAuthError(
         t("Phone number must be a valid international format (e.g. +966501234567)")
       );
