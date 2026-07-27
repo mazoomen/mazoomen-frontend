@@ -125,6 +125,8 @@ export const translations: Record<string, Record<Language, string>> = {
   "errors.invalid_otp": { en: "Invalid or expired verification code.", ar: "رمز التحقق غير صحيح أو منتهي الصلاحية." },
   "errors.email_registered": { en: "Email is already registered.", ar: "البريد الإلكتروني مسجل بالفعل." },
   "errors.phone_registered": { en: "Phone number is already registered.", ar: "رقم الهاتف مسجل بالفعل." },
+  "Please provide a valid email address": { en: "Please provide a valid email address.", ar: "يرجى إدخال بريد إلكتروني صحيح." },
+  "Phone number must be a valid international format (e.g. +966501234567)": { en: "Phone number must be a valid international format (e.g. +966501234567)", ar: "يجب أن يكون رقم الهاتف بصيغة دولية صحيحة (مثال: +966501234567)" },
   "Verify Email": { en: "Verify Email", ar: "التحقق من البريد الإلكتروني" },
   "Enter Verification Code": { en: "Enter Verification Code", ar: "أدخل رمز التحقق" },
   "We sent a 6-digit verification code to": { en: "We sent a 6-digit verification code to", ar: "أرسلنا رمز تحقق مكون من 6 أرقام إلى" },

@@ -7,7 +7,7 @@ import { logger } from "@/lib/logger";
 import { useLanguage } from "@/components/LanguageContext";
 import { useCurrency } from "@/components/CurrencyContext";
 import type { Template } from "@/types/template";
-import { Modal, Button } from "@/components/ui";
+import { Modal, Button, PhoneInput } from "@/components/ui";
 import { getTemplateTitle, getTemplateDescription } from "@/lib/template-utils";
 import type { AxiosError } from "axios";
 
@@ -295,15 +295,9 @@ export default function CheckoutModal({
               <label htmlFor="checkoutPhone" className="block text-xs font-semibold text-neutral-700 mb-1">
                 {lang === "ar" ? "رقم الجوال للتواصل" : "Contact Phone"}
               </label>
-              <input
-                id="checkoutPhone"
-                type="tel"
-                required
+              <PhoneInput
                 value={contactPhone}
-                onChange={(e) => setContactPhone(e.target.value)}
-                placeholder="+966500000000"
-                className="w-full px-4 py-2.5 bg-white border border-[#E6E2DA] rounded-xl text-xs focus:outline-none focus:border-[#B89C72] text-left font-mono"
-                dir="ltr"
+                onChange={setContactPhone}
               />
             </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { useLanguage } from "./LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
+import { PhoneInput } from "@/components/ui";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -153,13 +154,9 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
                 <label className="block text-[11px] font-semibold text-neutral-300 mb-1">
                   {isAr ? "رقم الهاتف / واتساب" : "Phone / WhatsApp Number"} *
                 </label>
-                <input
-                  type="tel"
-                  required
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+962 79 000 0000"
-                  className="w-full bg-[#101F35] border border-[#1E2E4A] focus:border-[#E5C38B] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-500 outline-none transition-colors"
+                  onChange={setPhone}
                 />
               </div>
 

@@ -8,6 +8,7 @@ import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import type { Template, AuthUser } from "@/types/invitation";
 import { useLanguage } from "@/components/LanguageContext";
+import { PhoneInput } from "@/components/ui";
 import { getTemplateTitle, getTemplateDescription } from "@/lib/template-utils";
 import {
   OrdersTable,
@@ -1103,13 +1104,9 @@ export default function AdminDashboardPage() {
             <label className="block text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-1">
               {lang === "ar" ? "رقم الهاتف" : "Phone Number"} *
             </label>
-            <input
-              type="text"
-              required
-              placeholder="+966501234567"
+            <PhoneInput
               value={modalForm.phoneNumber}
-              onChange={(e) => setModalForm({ ...modalForm, phoneNumber: e.target.value })}
-              className="w-full bg-[#FAF9F6] border border-[#EBE7DF] rounded-lg px-3 py-2 text-xs text-neutral-800 placeholder-neutral-400 outline-none focus:border-[#B89C72] text-right"
+              onChange={(val) => setModalForm({ ...modalForm, phoneNumber: val })}
             />
           </div>
 

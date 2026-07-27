@@ -6,7 +6,7 @@ import api from "@/lib/api";
 import { logger } from "@/lib/logger";
 import PageLayout from "@/components/PageLayout";
 import { useLanguage } from "@/components/LanguageContext";
-import { Spinner, ErrorState, PasswordInput } from "@/components/ui";
+import { Spinner, ErrorState, PasswordInput, PhoneInput } from "@/components/ui";
 import type { UserProfile } from "@/types/auth";
 import type { AxiosError } from "axios";
 
@@ -604,13 +604,10 @@ export default function ProfilePage() {
 
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-neutral-400 font-bold mb-1.5">{t("Phone Number")}</label>
-                    <input
-                      type="tel"
-                      placeholder={t("Phone Number (e.g. +966501234567)")}
+                    <PhoneInput
                       value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      onChange={setPhoneNumber}
                       disabled={saving}
-                      className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
                     />
                   </div>
 

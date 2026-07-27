@@ -7,7 +7,7 @@ import { isGoogleOAuthEnabled, GOOGLE_CLIENT_ID, IS_DEV } from "@/lib/env";
 import type { LoginResponse } from "@/types/invitation";
 import type { AxiosError } from "axios";
 import { useLanguage } from "@/components/LanguageContext";
-import { PasswordInput } from "@/components/ui";
+import { PasswordInput, PhoneInput } from "@/components/ui";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -353,6 +353,20 @@ export default function AuthModal({
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(regEmail.trim())) {
+      setAuthError(t("Please provide a valid email address"));
+      return;
+    }
+
+    const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+    if (!phoneRegex.test(regPhone.trim())) {
+      setAuthError(
+        t("Phone number must be a valid international format (e.g. +966501234567)")
+      );
+      return;
+    }
+
     if (!isPasswordValid) {
       setAuthError(t("errors.password_weak"));
       return;
@@ -370,6 +384,7 @@ export default function AuthModal({
         lastName: regLastName.trim(),
         email: regEmail.trim(),
         phoneNumber: regPhone.trim(),
+        password: regPassword,
       });
       setRegStep("otp");
       setResendTimer(60);
@@ -965,13 +980,10 @@ export default function AuthModal({
                 className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
               />
 
-              <input
-                type="tel"
-                placeholder={t("Phone Number (e.g. +966501234567)")}
+              <PhoneInput
                 value={regPhone}
-                onChange={(e) => setRegPhone(e.target.value)}
+                onChange={setRegPhone}
                 disabled={authSubmitting}
-                className="w-full bg-white border border-[#E6E2DA] rounded-xl px-4 py-2.5 text-xs outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
               />
 
               <PasswordInput
